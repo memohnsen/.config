@@ -1,0 +1,163 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import pathlib
+import re
+import sys
+
+
+DONE_STATES = {"DONE"}
+SKIP_FILES = {"calendar.org", "done.org"}
+HEADING_RE = re.compile(r"^(?P<stars>\*+)\s+(?P<todo>[A-Z]+)(?:\s+(?P<title>.*))?$")
+REPEATER_RE = re.compile(r"<[^>\n]*(?:\+\+|\.\+|\+)\d+[hdwmy][^>\n]*>")
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Move completed non-recurring Org tasks into done.org."
+    )
+    parser.add_argument(
+        "org_root",
+        nargs="?",
+        default=str(pathlib.Path.home() / "dev" / "org"),
+        help="Org root directory. Defaults to ~/dev/org.",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print what would move without changing files.",
+    )
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Archive completed non-recurring tasks from every Org file under org root.",
+    )
+    return parser.parse_args()
+
+
+def heading_level(line: str) -> int:
+    return len(line) - len(line.lstrip("*"))
+
+
+def is_completed_task(line: str) -> bool:
+    match = HEADING_RE.match(line)
+    if not match:
+        return False
+
+    title = (match.group("title") or "").strip()
+    return match.group("todo") in DONE_STATES and bool(title)
+
+
+def is_recurring(subtree: list[str]) -> bool:
+    return any(REPEATER_RE.search(line) for line in subtree)
+
+
+def collect_subtree(lines: list[str], start: int) -> tuple[int, list[str]]:
+    level = heading_level(lines[start])
+    end = start + 1
+
+    while end < len(lines):
+        line = lines[end]
+        if line.startswith("*") and heading_level(line) <= level:
+            break
+        end += 1
+
+    return end, lines[start:end]
+
+
+def split_completed_nonrecurring(lines: list[str]) -> tuple[list[str], list[list[str]]]:
+    kept: list[str] = []
+    moved: list[list[str]] = []
+    index = 0
+
+    while index < len(lines):
+        line = lines[index]
+        if line.startswith("*") and is_completed_task(line):
+            end, subtree = collect_subtree(lines, index)
+            if not is_recurring(subtree):
+                moved.append(subtree)
+                index = end
+                continue
+
+        kept.append(line)
+        index += 1
+
+    return kept, moved
+
+
+def org_files(root: pathlib.Path, include_all: bool) -> list[pathlib.Path]:
+    if not include_all:
+        todo_file = root / "todo.org"
+        return [todo_file] if todo_file.is_file() else []
+
+    return sorted(
+        path
+        for path in root.rglob("*.org")
+        if path.name not in SKIP_FILES
+        and ".git" not in path.parts
+        and path.is_file()
+    )
+
+
+def archive_block(source: pathlib.Path, root: pathlib.Path, subtree: list[str]) -> str:
+    relative_source = source.relative_to(root)
+    body = "".join(subtree).rstrip()
+    return (
+        f"\n* Archived from {relative_source}\n"
+        f":PROPERTIES:\n"
+        f":ARCHIVED_AT: {dt.datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+        f":ARCHIVED_FROM: {relative_source}\n"
+        f":END:\n"
+        f"{body}\n"
+    )
+
+
+def main() -> int:
+    args = parse_args()
+    root = pathlib.Path(args.org_root).expanduser().resolve()
+    done_file = root / "done.org"
+
+    if not root.is_dir():
+        print(f"Org root does not exist: {root}", file=sys.stderr)
+        return 1
+
+    files_to_update: list[tuple[pathlib.Path, list[str]]] = []
+    archive_entries: list[str] = []
+    moved_count = 0
+
+    for path in org_files(root, args.all):
+        lines = path.read_text().splitlines(keepends=True)
+        kept, moved = split_completed_nonrecurring(lines)
+
+        if moved:
+            files_to_update.append((path, kept))
+            moved_count += len(moved)
+            archive_entries.extend(archive_block(path, root, subtree) for subtree in moved)
+
+    if args.dry_run:
+        print(f"Would move {moved_count} completed non-recurring task(s) to {done_file}")
+        for path, _kept in files_to_update:
+            print(f"  {path}")
+        return 0
+
+    if not moved_count:
+        print("No completed non-recurring tasks found.")
+        return 0
+
+    for path, kept in files_to_update:
+        path.write_text("".join(kept))
+
+    if done_file.exists():
+        existing = done_file.read_text()
+    else:
+        existing = "#+title: Done\n"
+
+    done_file.write_text(existing.rstrip() + "\n" + "".join(archive_entries))
+    print(f"Moved {moved_count} completed non-recurring task(s) to {done_file}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
