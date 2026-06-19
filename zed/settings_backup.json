@@ -1,0 +1,99 @@
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default settings without changing your
+// custom settings, run `zed: open default settings` from the
+// command palette (cmd-shift-p / ctrl-shift-p)
+{
+  "show_edit_predictions": false,
+  "git_panel": {
+    "collapse_untracked_diff": false,
+  },
+  "word_diff_enabled": true,
+  "diff_view_style": "split",
+  "scrollbar": {
+    "git_diff": true,
+  },
+  "agent_servers": {
+    "cursor": {
+      "favorite_config_option_values": {
+        "model": [
+          "composer-1.5[]",
+          "claude-opus-4-6[thinking=true,context=200k,effort=high,fast=false]",
+          "claude-sonnet-4-6[thinking=true,context=200k,effort=medium]",
+        ],
+      },
+      "type": "registry",
+    },
+    "codex": {},
+  },
+  "agent": {
+    "inline_assistant_model": {
+      "provider": "openrouter",
+      "model": "moonshotai/kimi-k2.5",
+      "enable_thinking": false,
+    },
+    "default_model": {
+      "provider": "openrouter",
+      "model": "anthropic/claude-opus-4.6",
+      "enable_thinking": false,
+    },
+    "favorite_models": [
+      {
+        "provider": "openrouter",
+        "model": "moonshotai/kimi-k2.5",
+        "enable_thinking": false,
+      },
+      {
+        "provider": "openrouter",
+        "model": "anthropic/claude-opus-4.6",
+        "enable_thinking": false,
+      },
+      {
+        "provider": "openrouter",
+        "model": "anthropic/claude-sonnet-4.6",
+        "enable_thinking": false,
+      },
+      {
+        "provider": "openrouter",
+        "model": "openrouter/free",
+        "enable_thinking": false,
+      },
+      {
+        "provider": "openrouter",
+        "model": "openrouter/auto",
+        "enable_thinking": false,
+      },
+    ],
+    "model_parameters": [],
+  },
+  "disable_ai": false,
+  "calls": {
+    "mute_on_join": true,
+  },
+  "git": {
+    "inline_blame": {
+      "enabled": false,
+    },
+  },
+  "collaboration_panel": {
+    "button": false,
+  },
+  "session": {
+    "trust_all_worktrees": true,
+  },
+  "vim_mode": false,
+  "icon_theme": "Catppuccin Mocha",
+  "base_keymap": "Cursor",
+  "ui_font_size": 16,
+  "buffer_font_size": 15,
+  "theme": "Catppuccin Mocha",
+  "notification_panel": {
+    "button": false,
+  },
+  "outline_panel": {
+    "button": false,
+  },
+}

@@ -1,0 +1,215 @@
+// Zed keymap
+//
+// LazyVim-shaped Vim bindings. Zed's Vim layer handles the core Vim motions
+// directly; this file aligns the LazyVim leader/LSP/buffer/navigation mappings
+// to the closest native Zed actions.
+[
+  {
+    "context": "Workspace",
+    "bindings": {
+      "cmd-shift-s": "workspace::ToggleLeftDock",
+      "cmd-b": "terminal_panel::Toggle",
+      "cmd-shift-n": "workspace::NewTerminal",
+      "cmd-t": "file_finder::Toggle",
+      "space g g": "git_panel::Toggle",
+      "space e": "project_panel::Toggle",
+      "cmd-i": "agent::Toggle",
+    },
+  },
+  {
+    "context": "AgentPanel || MessageEditor > Editor",
+    "unbind": {
+      "cmd-i": "workspace::ToggleRightDock",
+    },
+  },
+  {
+    "context": "AgentPanel",
+    "unbind": {
+      "cmd-i": "agent::ToggleProfileSelector",
+    },
+  },
+  {
+    "context": "AcpThread > Editor",
+    "unbind": {
+      "cmd-i": "agent::ToggleProfileSelector",
+    },
+  },
+  {
+    "context": "DebugPanel",
+    "unbind": {
+      "cmd-i": "debugger::ToggleSessionPicker",
+    },
+  },
+  {
+    "context": "Editor",
+    "bindings": {
+      "cmd-up": "editor::MoveLineUp",
+      "cmd-down": "editor::MoveLineDown",
+    },
+    "unbind": {
+      "cmd-i": "editor::ShowSignatureHelp",
+    },
+  },
+  {
+    "context": "Workspace",
+    "unbind": {
+      "cmd-i": "agent::ToggleFocus",
+    },
+  },
+  {
+    "context": "Editor && mode == full",
+    "unbind": {
+      "cmd-i": "agent::ToggleFocus",
+    },
+  },
+
+  // LazyVim normal-mode navigation and buffer muscle memory.
+  {
+    "context": "vim_mode == normal && !menu",
+    "bindings": {
+      "shift-h": "pane::ActivatePreviousItem",
+      "shift-l": "pane::ActivateNextItem",
+      "[ b": "pane::ActivatePreviousItem",
+      "] b": "pane::ActivateNextItem",
+      "[ shift-b": "pane::ActivatePreviousItem",
+      "] shift-b": "pane::ActivateNextItem",
+
+      "[ d": "editor::GoToPreviousDiagnostic",
+      "] d": "editor::GoToDiagnostic",
+      "[ c": "editor::GoToPreviousHunk",
+      "] c": "editor::GoToHunk",
+      "[ g": "editor::GoToPreviousHunk",
+      "] g": "editor::GoToHunk",
+      "g t e": "editor::GoToDiagnostic",
+
+      // LazyVim's matchit-style percent mappings; Zed handles % itself, so g%
+      // and [%/]% are routed through the same Vim keystroke.
+      "g shift-5": ["workspace::SendKeystrokes", "%"],
+      "[ shift-5": ["workspace::SendKeystrokes", "%"],
+      "] shift-5": ["workspace::SendKeystrokes", "%"],
+      "g s {": ["workspace::SendKeystrokes", "y s i w {"],
+      "g s [": ["workspace::SendKeystrokes", "y s i w ["],
+      "g s (": ["workspace::SendKeystrokes", "y s i w ("],
+
+      // LazyVim LSP mappings.
+      "g d": "editor::GoToDefinition",
+      "g shift-d": "editor::GoToDeclaration",
+      "g y": "editor::GoToTypeDefinition",
+      "g shift-i": "editor::GoToImplementation",
+      "g o": "outline::Toggle",
+      "g r r": "editor::FindAllReferences",
+      "g r i": "editor::GoToImplementation",
+      "g r t": "editor::GoToTypeDefinition",
+      "g r n": "editor::Rename",
+      "g r a": "editor::ToggleCodeActions",
+      "g x": "editor::OpenUrl",
+
+      // LazyVim leader basics.
+      "space space": "file_finder::Toggle",
+      "space ,": "tab_switcher::Toggle",
+      "space /": "workspace::NewSearch",
+      "space :": "command_palette::Toggle",
+      "space e": "project_panel::ToggleFocus",
+      "space shift-e": "project_panel::ToggleFocus",
+
+      // Files.
+      "space f f": "file_finder::Toggle",
+      "space f shift-f": "file_finder::Toggle",
+      "space f g": "file_finder::Toggle",
+      "space f b": "tab_switcher::Toggle",
+      "space f shift-b": "tab_switcher::ToggleAll",
+      "space f e": "project_panel::ToggleFocus",
+      "space f shift-e": "project_panel::ToggleFocus",
+      "space f c": "zed::OpenSettingsFile",
+      "space f p": "projects::OpenRecent",
+      "space f r": "projects::OpenRecent",
+      "space f shift-r": "projects::OpenRecent",
+
+      // Buffers/tabs.
+      "space b b": "tab_switcher::Toggle",
+      "space b j": "tab_switcher::Toggle",
+      "space b d": "pane::CloseActiveItem",
+      "space b l": "pane::CloseItemsToTheLeft",
+      "space b r": "pane::CloseItemsToTheRight",
+      "space b p": "pane::TogglePinTab",
+      "space b shift-p": "pane::CloseCleanItems",
+
+      // Code.
+      "space c a": "editor::ToggleCodeActions",
+      "space c f": "editor::Format",
+      "space c shift-f": "editor::FormatSelections",
+      "space c r": "editor::Rename",
+      "space c o": "editor::OrganizeImports",
+      "space c m": "zed::Extensions",
+
+      // Search.
+      "space s g": "workspace::NewSearch",
+      "space s shift-g": "workspace::NewSearch",
+      "space s b": "buffer_search::Deploy",
+      "space s shift-b": "buffer_search::Deploy",
+      "space s d": "diagnostics::Deploy",
+      "space s shift-d": "diagnostics::DeployCurrentFile",
+      "space s s": "outline::Toggle",
+      "space s c": "command_palette::Toggle",
+      "space s k": "zed::OpenKeymap",
+      "space s r": "pane::DeploySearch",
+      "space s p": "project_symbols::Toggle",
+
+      // Diagnostics/Trouble equivalents.
+      "space x x": "diagnostics::Deploy",
+      "space x shift-x": "diagnostics::DeployCurrentFile",
+      "space x l": "diagnostics::DeployCurrentFile",
+      "space x q": "diagnostics::Deploy",
+
+      // Git.
+      "space g s": "git_panel::Toggle",
+      "space g d": "git::Diff",
+      "space g shift-d": "git::BranchDiff",
+      "space g b": "git::Blame",
+
+      // UI toggles.
+      "space u r": "editor::ToggleRelativeLineNumbers",
+      "space u w": "editor::ToggleSoftWrap",
+      "space u z": "workspace::ToggleZoom",
+      "space u shift-c": "theme_selector::Toggle",
+
+      // Sessions/quit approximations.
+      "space q q": "workspace::CloseWindow",
+      "space q a": "zed::Quit",
+    },
+  },
+
+  // LazyVim visual-mode LSP/comment/search behavior where Zed has equivalents.
+  {
+    "context": "vim_mode == visual && !menu",
+    "bindings": {
+      "g r a": "editor::ToggleCodeActions",
+      "g c": "vim::ToggleComments",
+      "space c f": "editor::FormatSelections",
+      "space c shift-f": "editor::FormatSelections",
+      "space s r": "pane::DeploySearch",
+      "space s w": "buffer_search::UseSelectionForFind",
+      "space s shift-w": "buffer_search::UseSelectionForFind",
+      "shift-s": "vim::PushAddSurrounds",
+    },
+  },
+
+  {
+    "context": "Dock",
+    "bindings": {
+      "ctrl-w h": "workspace::ActivatePaneLeft",
+      "ctrl-w j": "workspace::ActivatePaneDown",
+      "ctrl-w k": "workspace::ActivatePaneUp",
+      "ctrl-w l": "workspace::ActivatePaneRight",
+    },
+  },
+
+  // LazyVim does not map jk by default, but leaving this here commented makes
+  // it easy to opt in if you decide you want it.
+  {
+    "context": "vim_mode == insert",
+    "bindings": {
+      // "j k": "vim::NormalBefore",
+    },
+  },
+]

@@ -1,0 +1,18 @@
+background-opacity = 1.00
+window-show-tab-bar = always
+
+font-family = ""
+font-family = "JetBrains Mono"
+font-family = "Symbols Nerd Font Mono"
+font-family-bold = "JetBrains Mono"
+font-family-italic = "JetBrains Mono"
+font-family-bold-italic = "JetBrains Mono"
+font-codepoint-map = U+E000-U+F8FF="Symbols Nerd Font Mono"
+font-codepoint-map = U+F0000-U+FFFFD="Symbols Nerd Font Mono"
+
+# Cycle splits within the current tab. performable: only steals the key when
+# another split exists; otherwise nvim/tmux/shell get ctrl+h/j/k/l as usual.
+keybind = performable:ctrl+h=goto_split:previous
+keybind = performable:ctrl+j=goto_split:next
+keybind = performable:ctrl+k=goto_split:previous
+keybind = performable:ctrl+l=goto_split:next
