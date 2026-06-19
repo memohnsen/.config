@@ -1361,6 +1361,12 @@ If POPUP is non-nil, run in the bottom popup terminal (oT)."
        (projectile-save-known-projects)))))
 
 
+;; Configure the macOS traffic-light titlebar to match the current theme.
+(when (eq system-type 'darwin)
+  (setq ns-use-proxy-icon nil
+        frame-title-format nil))
+
+
 ;; Whenever you reconfigure a package, make sure to wrap your config in an
 ;; `with-eval-after-load' block, otherwise Doom's defaults may override your
 ;; settings. E.g.

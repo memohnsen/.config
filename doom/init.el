@@ -1,5 +1,13 @@
 ;;; init.el -*- lexical-binding: t; -*-
 
+;; Set macOS frame colors before the first GUI frame is created.  The
+;; `emacs-mac' port also uses `scroll-bar-background' to tint the native
+;; titlebar/traffic-light area.
+(when (eq system-type 'darwin)
+  (dolist (parameter '((background-color . "#282c34")))
+    (add-to-list 'initial-frame-alist parameter)
+    (add-to-list 'default-frame-alist parameter)))
+
 ;; This file controls what Doom modules are enabled and what order they load
 ;; in. Remember to run 'doom sync' after modifying it!
 
