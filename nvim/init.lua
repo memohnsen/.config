@@ -255,6 +255,38 @@ do
     group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
     callback = function() vim.hl.on_yank() end,
   })
+
+  -- Sync Org todos to Apple Reminders on exit
+  vim.api.nvim_create_autocmd('VimLeavePre', {
+    desc = 'Sync Org Reminders',
+    group = vim.api.nvim_create_augroup('custom-org-reminders', { clear = true }),
+    callback = function()
+      local sync_script = vim.fn.expand('~/.config/scripts/sync-org-reminders/sync.sh')
+      if vim.fn.executable(sync_script) == 1 then
+        vim.fn.jobstart({ sync_script }, { detach = true })
+      end
+    end,
+  })
+
+  -- Pull Apple Reminders to Org on startup
+  vim.api.nvim_create_autocmd('VimEnter', {
+    desc = 'Pull Org Reminders',
+    group = vim.api.nvim_create_augroup('custom-org-pull-reminders', { clear = true }),
+    callback = function()
+      local pull_script = vim.fn.expand('~/.config/scripts/sync-org-reminders/pull.sh')
+      if vim.fn.executable(pull_script) == 1 then
+        vim.fn.jobstart({ pull_script }, {
+          on_exit = function(_, code)
+            if code == 0 then
+              vim.schedule(function()
+                vim.cmd('checktime')
+              end)
+            end
+          end,
+        })
+      end
+    end,
+  })
 end
 
 -- ============================================================

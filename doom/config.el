@@ -572,6 +572,34 @@
 
 (add-hook 'kill-emacs-hook #'mm/git-commit-org-directory)
 
+(defun mm/sync-org-reminders-on-exit ()
+  "Sync Org todos to Apple Reminders on Emacs exit."
+  (let ((script (expand-file-name "~/.config/scripts/sync-org-reminders/sync.sh")))
+    (when (file-executable-p script)
+      (call-process script nil nil nil))))
+
+(add-hook 'kill-emacs-hook #'mm/sync-org-reminders-on-exit)
+
+(defun mm/pull-org-reminders-on-startup ()
+  "Pull new Apple Reminders to Org on Emacs startup."
+  (let ((script (expand-file-name "~/.config/scripts/sync-org-reminders/pull.sh")))
+    (when (file-executable-p script)
+      (make-process
+       :name "Pull Org Reminders"
+       :buffer "*Pull Org Reminders*"
+       :command (list script)
+       :noquery t
+       :sentinel
+       (lambda (process _event)
+         (when (and (eq (process-status process) 'exit)
+                    (zerop (process-exit-status process)))
+           (let ((todo-buf (get-file-buffer (expand-file-name "todo.org" org-directory))))
+             (when todo-buf
+               (with-current-buffer todo-buf
+                 (revert-buffer :ignore-auto :noconfirm))))))))))
+
+(add-hook 'emacs-startup-hook #'mm/pull-org-reminders-on-startup)
+
 (defun mm/open-daily-org ()
   "Open today's daily Org note."
   (interactive)
@@ -1199,9 +1227,10 @@ If POPUP is non-nil, run in the bottom popup terminal (oT)."
   (mm/with-evil-minibuffer-nav #'+default/search-emacsd))
 
 (defun mm/search-project ()
-  "Search project with Evil minibuffer navigation."
+  "Search project, including hidden files, with Evil minibuffer navigation."
   (interactive)
-  (mm/with-evil-minibuffer-nav #'+default/search-project))
+  (minibuffer-with-setup-hook #'mm/minibuffer-evil-nav-setup-h
+    (+default/search-project t)))
 
 (defun mm/search-other-project ()
   "Search another project with Evil minibuffer navigation."
@@ -1213,10 +1242,88 @@ If POPUP is non-nil, run in the bottom popup terminal (oT)."
   (interactive)
   (mm/with-evil-minibuffer-nav #'+workspace/switch-to))
 
-(defun mm/workspace-load ()
-  "Load workspace with Evil minibuffer navigation."
-  (interactive)
-  (mm/with-evil-minibuffer-nav #'+workspace/load))
+(defun mm/saved-workspace-entry (name)
+  "Return NAME's saved workspace form from Doom's workspace file."
+  (let ((file (expand-file-name +workspaces-data-file persp-save-dir)))
+    (when (file-readable-p file)
+      (with-temp-buffer
+        (insert-file-contents file)
+        (goto-char (point-min))
+        (condition-case nil
+            (cl-find name (read (current-buffer)) :key #'cadr :test #'equal)
+          (error nil))))))
+
+(defun mm/saved-workspace-buffer-files (name)
+  "Return file paths saved in workspace NAME."
+  (cl-loop for buffer in (nth 2 (mm/saved-workspace-entry name))
+           for file = (nth 2 buffer)
+           when (and (stringp file) (file-readable-p file))
+           collect file))
+
+(defun mm/saved-workspace-project-root (name)
+  "Return the saved project root for workspace NAME."
+  (let* ((entry (mm/saved-workspace-entry name))
+         (params (cadr (nth 4 entry))))
+    (or (cdr (assq '+workspace-project params))
+        (cdr (assq 'last-project-root params)))))
+
+(defun mm/workspace-file-buffer-p (buffer)
+  "Return non-nil when BUFFER is a live file buffer."
+  (and (buffer-live-p buffer)
+       (buffer-file-name buffer)))
+
+(defun mm/workspace-revive-saved-buffers (name)
+  "Put NAME back on its saved project and first real saved buffer."
+  (when-let* ((persp (+workspace-get name t)))
+    (let* ((project-root (mm/saved-workspace-project-root name))
+           (existing-buffers (cl-remove-if-not
+                              #'mm/workspace-file-buffer-p
+                              (+workspace-buffer-list persp)))
+           (saved-buffers
+            (cl-loop for file in (mm/saved-workspace-buffer-files name)
+                     collect (find-file-noselect file)))
+           (buffers (or existing-buffers saved-buffers)))
+      (when project-root
+        (set-persp-parameter '+workspace-project project-root persp)
+        (set-persp-parameter 'last-project-root project-root persp))
+      (dolist (buffer saved-buffers)
+        (persp-add-buffer buffer persp nil nil))
+      (when-let* ((buffer (car buffers)))
+        (switch-to-buffer buffer)))))
+
+(defun mm/workspace-load (name)
+  "Load workspace NAME and revive its saved file buffers."
+  (interactive
+   (list
+    (minibuffer-with-setup-hook #'mm/minibuffer-evil-nav-setup-h
+      (completing-read
+       "Load workspace: "
+       (persp-list-persp-names-in-file
+        (expand-file-name +workspaces-data-file persp-save-dir))
+       nil t))))
+  (when (+workspace-load name)
+    (+workspace/switch-to name)
+    (mm/workspace-revive-saved-buffers name)
+    (+workspace/display)))
+
+(defun mm/workspace-save-if-saved (name)
+  "Resave workspace NAME when it already exists in the saved workspace file."
+  (when (mm/saved-workspace-entry name)
+    (+workspace-save name)))
+
+(defun mm/workspace-kill (name)
+  "Close workspace NAME, updating its saved session first when it exists."
+  (interactive
+   (let ((current-name (+workspace-current-name)))
+     (list
+      (if current-prefix-arg
+          (minibuffer-with-setup-hook #'mm/minibuffer-evil-nav-setup-h
+            (completing-read (format "Close workspace (default: %s): " current-name)
+                             (+workspace-list-names)
+                             nil nil nil nil current-name))
+        current-name))))
+  (mm/workspace-save-if-saved name)
+  (+workspace/kill name))
 
 (defun mm/workspace-delete ()
   "Delete saved workspace with Evil minibuffer navigation."
@@ -1336,6 +1443,7 @@ If POPUP is non-nil, run in the bottom popup terminal (oT)."
       :desc "Project explorer" "e" #'+treemacs/toggle
       (:prefix ("TAB" . "workspace")
        :desc "Search workspace" "." #'mm/workspace-switch-to
+       :desc "Close workspace" "d" #'mm/workspace-kill
        :desc "Load workspace" "l" #'mm/workspace-load
        :desc "Delete workspace" "D" #'mm/workspace-delete
        :desc "Next workspace" "TAB" #'+workspace/switch-right))
