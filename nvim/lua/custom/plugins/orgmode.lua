@@ -2,11 +2,7 @@ local gh = function(repo) return 'https://github.com/' .. repo end
 
 local org_dir = vim.fn.expand '~/dev/org'
 local daily_dir = org_dir .. '/daily'
-local calendar_file = org_dir .. '/calendar.org'
-local doom_dir = vim.fn.expand '~/.config/doom'
-local calendar_sync_days = 14
-local calendar_include_regexp = '^(memohnsen@gmail%.com|Teamworks H2F|P&G|Home)$'
-local calendar_sync_started = false
+
 local tuxedo_sync_started = false
 
 local function complete_todo_or_enter()
@@ -244,27 +240,6 @@ local function apply_org_headline_colors()
   end
 end
 
-local function apply_org_agenda_calendar_colors() vim.api.nvim_set_hl(0, 'KickstartOrgAgendaCalendarEvent', { bg = '#2C3F4F' }) end
-
-local function is_calendar_agenda_item(agenda_item)
-  local file = agenda_item and agenda_item.headline and agenda_item.headline.file
-  local filename = file and file.filename
-  return filename and vim.fn.fnamemodify(filename, ':p') == vim.fn.fnamemodify(calendar_file, ':p')
-end
-
-local function setup_calendar_event_agenda_highlight()
-  local agenda_type = require 'orgmode.agenda.types.agenda'
-  if agenda_type.mm_calendar_event_highlight_enabled then return end
-
-  local original_build_line = agenda_type._build_line
-  agenda_type._build_line = function(self, agenda_item, metadata)
-    local line = original_build_line(self, agenda_item, metadata)
-    if is_calendar_agenda_item(agenda_item) then line.line_hl_group = 'KickstartOrgAgendaCalendarEvent' end
-    return line
-  end
-
-  agenda_type.mm_calendar_event_highlight_enabled = true
-end
 
 local function run_command(command, opts)
   opts = opts or {}
@@ -288,38 +263,6 @@ local function run_command(command, opts)
   return ok, output
 end
 
-local function sync_macos_calendar(async)
-  local script = doom_dir .. '/scripts/macos-calendar-to-org'
-  if vim.fn.executable(script) ~= 1 then
-    vim.notify('Calendar sync script is not executable: ' .. script, vim.log.levels.WARN)
-    return
-  end
-
-  vim.fn.mkdir(vim.fn.fnamemodify(calendar_file, ':h'), 'p')
-
-  local command = { script, calendar_file, tostring(calendar_sync_days), calendar_include_regexp }
-  local on_done = function(ok, output)
-    if ok then
-      vim.schedule(function() vim.notify('Synced macOS Calendar to ' .. calendar_file, vim.log.levels.INFO) end)
-      return
-    end
-
-    vim.schedule(function() vim.notify('macOS Calendar sync failed' .. (output ~= '' and (': ' .. vim.trim(output)) or ''), vim.log.levels.ERROR) end)
-  end
-
-  if async and vim.system then
-    vim.system(command, { text = true }, function(result) on_done(result.code == 0, (result.stdout or '') .. (result.stderr or '')) end)
-  else
-    local ok, output = run_command(command)
-    on_done(ok, output)
-  end
-end
-
-local function sync_macos_calendar_once()
-  if calendar_sync_started then return end
-  calendar_sync_started = true
-  sync_macos_calendar(true)
-end
 
 local function sync_org_tasks_to_tuxedo()
   local ok, added = pcall(require('custom.org_tuxedo_sync').sync, {
@@ -493,7 +436,7 @@ local opts = {
 }
 
 vim.keymap.set('n', '<leader>oc', '<cmd>Org capture<cr>', { desc = 'Org Capture' })
-vim.keymap.set('n', '<leader>oC', function() sync_macos_calendar(false) end, { desc = 'Sync macOS Calendar' })
+
 vim.keymap.set('n', '<leader>oT', sync_org_tasks_to_tuxedo, { desc = 'Sync Tuxedo Todo' })
 vim.keymap.set('n', '<leader>oG', git_commit_and_push_org_dir, { desc = 'Commit and Push Org Dir' })
 vim.api.nvim_create_user_command('OrgTuxedoSync', sync_org_tasks_to_tuxedo, { desc = 'Sync org tasks to Tuxedo todo.txt' })
@@ -519,7 +462,7 @@ vim.api.nvim_create_autocmd('FileType', {
           { '<leader>op', desc = 'Priority' },
           { '<leader>ot', desc = 'Tags' },
           { '<leader>oe', desc = 'Export' },
-          { '<leader>oC', desc = 'Sync macOS Calendar' },
+
           { '<leader>oT', desc = 'Sync Tuxedo Todo' },
           { '<leader>oG', desc = 'Commit and Push Org Dir' },
           { '<leader>ox', group = 'Clock' },
@@ -543,11 +486,10 @@ vim.api.nvim_create_autocmd('BufWritePost', {
 })
 
 vim.api.nvim_create_autocmd('VimEnter', {
-  group = vim.api.nvim_create_augroup('kickstart_org_calendar_sync', { clear = true }),
+  group = vim.api.nvim_create_augroup('kickstart_org_tuxedo_sync', { clear = true }),
   callback = function()
     if vim.tbl_isempty(vim.api.nvim_list_uis()) then return end
     vim.defer_fn(sync_org_tasks_to_tuxedo_once, 1000)
-    vim.defer_fn(sync_macos_calendar_once, 3000)
   end,
 })
 
@@ -581,15 +523,11 @@ elseif version.version_mismatch or version.outdated then
 end
 
 require('orgmode').setup(opts)
-setup_daily_todos_in_agenda()
-setup_calendar_event_agenda_highlight()
 apply_org_headline_colors()
-apply_org_agenda_calendar_colors()
 
 vim.api.nvim_create_autocmd('ColorScheme', {
   group = vim.api.nvim_create_augroup('kickstart_org_headline_colors', { clear = true }),
   callback = function()
     apply_org_headline_colors()
-    apply_org_agenda_calendar_colors()
   end,
 })

@@ -256,37 +256,7 @@ do
     callback = function() vim.hl.on_yank() end,
   })
 
-  -- Sync Org todos to Apple Reminders on exit
-  vim.api.nvim_create_autocmd('VimLeavePre', {
-    desc = 'Sync Org Reminders',
-    group = vim.api.nvim_create_augroup('custom-org-reminders', { clear = true }),
-    callback = function()
-      local sync_script = vim.fn.expand('~/.config/scripts/sync-org-reminders/sync.sh')
-      if vim.fn.executable(sync_script) == 1 then
-        vim.fn.jobstart({ sync_script }, { detach = true })
-      end
-    end,
-  })
 
-  -- Pull Apple Reminders to Org on startup
-  vim.api.nvim_create_autocmd('VimEnter', {
-    desc = 'Pull Org Reminders',
-    group = vim.api.nvim_create_augroup('custom-org-pull-reminders', { clear = true }),
-    callback = function()
-      local pull_script = vim.fn.expand('~/.config/scripts/sync-org-reminders/pull.sh')
-      if vim.fn.executable(pull_script) == 1 then
-        vim.fn.jobstart({ pull_script }, {
-          on_exit = function(_, code)
-            if code == 0 then
-              vim.schedule(function()
-                vim.cmd('checktime')
-              end)
-            end
-          end,
-        })
-      end
-    end,
-  })
 end
 
 -- ============================================================
@@ -777,7 +747,7 @@ do
   --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
   --  See `:help lsp-config` for information about keys and how to configure
   ---@type table<string, vim.lsp.Config>
-  local basedpyright = require 'kickstart.langs.basedpyright'
+  local basedpyright = require 'custom.langs.basedpyright'
 
   vim.pack.add { { src = gh 'saghen/blink.cmp', version = vim.version.range '1.*' } }
   local completion_capabilities = require('blink.cmp').get_lsp_capabilities()
@@ -1211,18 +1181,6 @@ do
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.
-
-  -- NOTE: Next step on your Neovim journey: Add/Configure additional plugins for Kickstart
-  --
-  --  Here are some example plugins that I've included in the Kickstart repository.
-  --  Uncomment any of the lines below to enable them (you will need to restart nvim).
-  --
-  -- require 'kickstart.plugins.debug'
-  -- require 'kickstart.plugins.indent_line'
-  -- require 'kickstart.plugins.lint'
-  -- require 'kickstart.plugins.autopairs'
-  -- require 'kickstart.plugins.neo-tree'
-  -- require 'kickstart.plugins.gitsigns' -- adds gitsigns recommended keymaps
 
   -- NOTE: You can add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --

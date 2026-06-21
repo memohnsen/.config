@@ -8,11 +8,6 @@ vim.keymap.set('n', 'H', '<cmd>bprevious<CR>', { desc = 'Previous Buffer' })
 vim.keymap.set('n', 'L', '<cmd>bnext<CR>', { desc = 'Next Buffer' })
 vim.keymap.set('n', '{', '<C-u>', { desc = 'Scroll Up' })
 vim.keymap.set('n', '}', '<C-d>', { desc = 'Scroll Down' })
-vim.keymap.set('n', '<M-j>', '<cmd>move .+1<CR>==', { desc = 'Move Line Down' })
-vim.keymap.set('n', '<M-k>', '<cmd>move .-2<CR>==', { desc = 'Move Line Up' })
-vim.keymap.set('v', '<M-j>', ":move '>+1<CR>gv=gv", { desc = 'Move Selection Down' })
-vim.keymap.set('v', '<M-k>', ":move '<-2<CR>gv=gv", { desc = 'Move Selection Up' })
-vim.keymap.set({ 'n', 'i', 'v' }, '<D-s>', '<cmd>write<CR>', { desc = 'Save File' })
 
 local org_dir = vim.fn.expand '~/dev/org'
 local daily_dir = org_dir .. '/daily'
@@ -126,9 +121,7 @@ local function run_shell(command, cwd)
   vim.cmd 'startinsert'
 end
 
-local function cargo_terminal(action)
-  run_shell('cargo ' .. action, cargo_root())
-end
+local function cargo_terminal(action) run_shell('cargo ' .. action, cargo_root()) end
 
 local function cargo_zellij_float(action)
   if vim.env.ZELLIJ == nil or vim.fn.executable 'zellij' ~= 1 then
@@ -136,7 +129,7 @@ local function cargo_zellij_float(action)
     return
   end
 
-  local job_id = vim.fn.jobstart({
+  local job_id = vim.fn.jobstart {
     'zellij',
     'run',
     '--floating',
@@ -147,7 +140,7 @@ local function cargo_zellij_float(action)
     '--',
     'cargo',
     action,
-  })
+  }
 
   if job_id <= 0 then cargo_terminal(action) end
 end
@@ -327,8 +320,6 @@ pcall(
       { '<leader>og', desc = 'Grep Org Notes' },
       { '<leader>oa', desc = 'Org Super Agenda' },
       { '<leader>oc', desc = 'Org Capture' },
-      { '<leader>oC', desc = 'Sync macOS Calendar' },
-      { '<leader>oG', desc = 'Commit and Push Org Dir' },
       { '<leader><Tab>', group = 'Workspace' },
       { '<leader><Tab>.', desc = 'Search Sessions' },
       { '<leader><Tab><Tab>', desc = 'Next Workspace' },
