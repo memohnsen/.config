@@ -62,7 +62,7 @@ vim.keymap.set('n', '<leader>bd', function()
   vim.api.nvim_buf_delete(bufnr, {})
 end, { desc = 'Delete Buffer' })
 
-vim.keymap.set('n', '<leader>bt', function()
+vim.keymap.set('n', '<leader>tt', function()
   vim.cmd 'enew'
   vim.cmd 'terminal'
   vim.cmd 'startinsert'
@@ -291,7 +291,7 @@ pcall(
       { '<leader>x', group = 'Diagnostics' },
       { '<leader>b', group = 'Buffer' },
       { '<leader>bd', desc = 'Delete Buffer' },
-      { '<leader>bt', desc = 'New Terminal Buffer' },
+      { '<leader>tt', desc = 'New Terminal Buffer' },
       { '<leader>w', group = 'Window' },
       { '<leader>t', group = 'Toggle' },
       { '<leader>wd', desc = 'Delete Window' },

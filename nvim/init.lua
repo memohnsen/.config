@@ -747,52 +747,11 @@ do
   --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
   --  See `:help lsp-config` for information about keys and how to configure
   ---@type table<string, vim.lsp.Config>
-  local basedpyright = require 'custom.langs.basedpyright'
 
   vim.pack.add { { src = gh 'saghen/blink.cmp', version = vim.version.range '1.*' } }
   local completion_capabilities = require('blink.cmp').get_lsp_capabilities()
 
   local servers = {
-    basedpyright = {
-      settings = basedpyright.settings(vim.fn.getcwd()),
-      on_init = function(client)
-        local root_dir = client.root_dir or vim.fn.getcwd()
-        client.settings = vim.tbl_deep_extend('force', client.settings or {}, basedpyright.settings(root_dir))
-      end,
-      on_attach = function(client) basedpyright.push_settings(client) end,
-    },
-
-    ruff = {
-      init_options = {
-        settings = {
-          lint = {
-            ignore = { 'ANN' },
-          },
-        },
-      },
-    },
-
-    eslint = {
-      settings = {
-        workingDirectories = { mode = 'auto' },
-      },
-    },
-
-    tailwindcss = {
-      filetypes = {
-        'css',
-        'javascript',
-        'javascriptreact',
-        'html',
-        'markdown',
-        'mdx',
-        'typescript',
-        'typescriptreact',
-      },
-    },
-
-    ts_ls = {},
-
     postgres_lsp = {},
 
     stylua = {},
