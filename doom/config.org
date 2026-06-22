@@ -57,11 +57,14 @@
     '(font-lock-string-face :foreground "#98c379")
     '(font-lock-function-name-face :foreground "#61afef")
     '(font-lock-keyword-face :foreground "#c678dd")
-    '(font-lock-builtin-face :foreground "#c678dd")
+    '(font-lock-builtin-face :foreground "#56b6c2")
+    '(font-lock-preprocessor-face :foreground "#56b6c2")
     '(font-lock-type-face :foreground "#e5c07b")
     '(font-lock-constant-face :foreground "#56b6c2")
     '(font-lock-number-face :foreground "#d19a66")
-    '(font-lock-variable-name-face :foreground "#e86671")
+    '(font-lock-variable-name-face :foreground "#abb2bf")
+    '(font-lock-property-name-face :foreground "#e86671")
+    '(font-lock-property-use-face :foreground "#e86671")
     '(font-lock-operator-face :foreground "#c678dd")
     '(line-number :foreground "#5c6370" :background "#282c34")
     '(line-number-current-line :foreground "#abb2bf" :background "#31353f")
@@ -340,12 +343,13 @@
        :desc "Close workspace" "d" #'mm/workspace-kill
        :desc "Load workspace" "l" #'mm/workspace-load
        :desc "Delete workspace" "D" #'mm/workspace-delete
+       :desc "New workspace from project" "n" #'mm/workspace-new-from-project
+       :desc "Unused" "N" nil
        :desc "Next workspace" "TAB" #'+workspace/switch-right))
 
 
 (map! :leader
-      :desc "Toggle terminal buffer" "o t" #'mm/toggle-terminal-buffer
-      :desc "Bottom terminal" "o T" #'mm/toggle-bottom-terminal)
+      :desc "Toggle bottom terminal" "o t" #'mm/toggle-bottom-terminal)
 
 
 (map! :leader
@@ -373,7 +377,7 @@
       :desc "Daily note" "o d" #'mm/open-daily-org
       :desc "Calendar" "o C" #'mm/open-calendar
       :desc "Find Org note" "o f" #'mm/find-org-note
-      :desc "Grep Org notes" "o g" #'mm/grep-org-notes
+      :desc "Open Ghostty in project" "o g" #'mm/open-ghostty-project
       :desc "Org agenda" "o a" #'mm/org-super-agenda
       :desc "Org capture" "o c" #'org-capture
       (:prefix-map ("r" . "Rust Commands")
@@ -386,8 +390,29 @@
 ;; Use `SPC p p` to switch projects, or `SPC p a` to add one manually.
 
 
-(map! :leader
-      :desc "Open eshell in new frame" "o E" #'mm/open-eshell-new-frame)
+
+#+end_src
+
+*** Eshell Configuration
+#+begin_src emacs-lisp
+(after! eshell
+  (setq eshell-aliases-file (expand-file-name "eshell/aliases" doom-user-dir))
+  
+  (defun eshell/z (&rest args)
+    "Navigate to directory using zoxide."
+    (if (null args)
+        (eshell/cd)
+      (let* ((cmd (concat "zoxide query " (mapconcat #'shell-quote-argument args " ")))
+             (dir (string-trim (shell-command-to-string cmd))))
+        (if (and dir (not (string-empty-p dir)) (file-accessible-directory-p dir))
+            (eshell/cd dir)
+          (eshell-printn (format "zoxide: no match found for %s" (car args)))))))
+
+  (defun mm/zoxide-add-dir ()
+    "Add current directory to zoxide."
+    (start-process "zoxide-add" nil "zoxide" "add" default-directory))
+
+  (add-hook 'eshell-directory-change-hook #'mm/zoxide-add-dir))
 #+end_src
 
 *** Vterm Configuration
@@ -561,8 +586,13 @@ Use vterm when its native module is available; fall back to `shell'."
 ** External Integrations
 * Development & Languages
 ** Project Management
-*** Flyover UI
+
+*** Flycheck & Flyover UI
 #+begin_src emacs-lisp
+(after! flycheck
+  (remove-hook 'flycheck-mode-hook #'+syntax-init-popups-h)
+  (setq flycheck-display-errors-function #'flycheck-display-error-messages))
+
 (use-package! flyover
   :hook ((flycheck-mode . flyover-mode)
          (flymake-mode . flyover-mode))
@@ -577,15 +607,14 @@ Use vterm when its native module is available; fall back to `shell'."
         flyover-icon-tint-percent 35
         flyover-icon-background-tint 'darker
         flyover-icon-background-tint-percent 45
-        flyover-error-icon "x"
-        flyover-warning-icon "!"
-        flyover-info-icon "i"
-        flyover-border-style 'pill
-        flyover-border-match-icon t
+        flyover-error-icon "■"
+        flyover-warning-icon "■"
+        flyover-info-icon "■"
+        flyover-border-style 'none
+        flyover-virtual-line-type nil
         flyover-hide-checker-name t
-        flyover-show-virtual-line t
-        flyover-virtual-line-type 'curved-dotted-arrow
-        flyover-line-position-offset 1
+        flyover-show-at-eol t
+        flyover-line-position-offset 0
         flyover-wrap-messages t
         flyover-max-line-length 100
         flyover-display-mode 'always
@@ -1175,6 +1204,44 @@ If POPUP is non-nil, run in the bottom popup terminal (oT)."
 
 ** Custom Management
 #+begin_src emacs-lisp
+(defun mm/next-error-cyclic ()
+  "Jump to the next error, wrapping to the first if at the end."
+  (interactive)
+  (if (and (bound-and-true-p flycheck-mode) flycheck-current-errors)
+      (condition-case nil
+          (flycheck-next-error)
+        (error (flycheck-next-error 1 t)))
+    (if (bound-and-true-p flymake-mode)
+        (let ((flymake-wrap-around t))
+          (call-interactively #'flymake-goto-next-error))
+      (condition-case nil
+          (next-error)
+        (error (next-error 1 t))))))
+
+(defun mm/previous-error-cyclic ()
+  "Jump to the previous error, wrapping to the last if at the beginning."
+  (interactive)
+  (if (and (bound-and-true-p flycheck-mode) flycheck-current-errors)
+      (condition-case nil
+          (flycheck-previous-error)
+        (error (flycheck-next-error -1 t)))
+    (if (bound-and-true-p flymake-mode)
+        (let ((flymake-wrap-around t))
+          (call-interactively #'flymake-goto-prev-error))
+      (condition-case nil
+          (previous-error)
+        (error nil)))))
+
+(defun mm/workspace-new-from-project ()
+  "Prompt for a project, create a workspace named after its directory, and open it."
+  (interactive)
+  (let* ((projects projectile-known-projects)
+         (project-dir (completing-read "Project to open in new workspace: " projects nil t))
+         (workspace-name (file-name-nondirectory (directory-file-name project-dir))))
+    (when (and project-dir workspace-name)
+      (+workspace-switch workspace-name t)
+      (projectile-switch-project-by-name project-dir))))
+
 (defun mm/workspace-switch-to ()
   "Switch workspace with Evil minibuffer navigation."
   (interactive)
@@ -1369,12 +1436,11 @@ If POPUP is non-nil, run in the bottom popup terminal (oT)."
   (setq ns-use-proxy-icon nil
         frame-title-format nil))
 
-(defun mm/open-eshell-new-frame ()
-  "Open eshell in a new macOS window (frame)."
+(defun mm/open-ghostty-project ()
+  "Open Ghostty in the current project root."
   (interactive)
-  (let ((frame (make-frame)))
-    (select-frame frame)
-    (eshell)))
+  (let ((dir (expand-file-name (or (doom-project-root) default-directory))))
+    (start-process "ghostty" nil "open" "-n" "-a" "Ghostty" "--args" (concat "--working-directory=" dir))))
 #+end_src
 
 * Keybindings & Navigation
@@ -1507,6 +1573,8 @@ If POPUP is non-nil, run in the bottom popup terminal (oT)."
 (map! :n "ge" #'evil-goto-line)
 (map! :n "gh" #'evil-beginning-of-line)
 (map! :n "gl" #'evil-end-of-line)
+(map! :n "gte" #'mm/next-error-cyclic)
+(map! :n "gtE" #'mm/previous-error-cyclic)
 
 ;; Cycle buffers with Shift-h/l in normal mode.
 #+end_src

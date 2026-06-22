@@ -195,8 +195,6 @@ local function run_current_line()
   run_shell(command, current_buffer_dir())
 end
 
-vim.keymap.set('n', '<leader>rl', run_current_line, { desc = 'Run Current Line' })
-
 vim.keymap.set('n', '<leader>rr', function() cargo_terminal 'run' end, { desc = 'Cargo Run' })
 vim.keymap.set('n', '<leader>rb', function() cargo_zellij_float 'build' end, { desc = 'Cargo Build' })
 vim.keymap.set('n', '<leader>rt', function() cargo_zellij_float 'test' end, { desc = 'Cargo Test' })
@@ -308,7 +306,6 @@ pcall(
       { '<leader>rb', desc = 'Cargo Build' },
       { '<leader>rt', desc = 'Cargo Test' },
       { '<leader>rc', desc = 'Cargo Clippy' },
-      { '<leader>rl', desc = 'Run Current Line' },
       { '<leader>rd', group = 'Rust Debug' },
       { '<leader>rdd', desc = 'Rust Debuggables' },
       { '<leader>rdb', desc = 'Rust Debug: Toggle Breakpoint' },

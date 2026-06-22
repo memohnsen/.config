@@ -240,7 +240,6 @@ local function apply_org_headline_colors()
   end
 end
 
-
 local function run_command(command, opts)
   opts = opts or {}
 
@@ -262,7 +261,6 @@ local function run_command(command, opts)
 
   return ok, output
 end
-
 
 local function sync_org_tasks_to_tuxedo()
   local ok, added = pcall(require('custom.org_tuxedo_sync').sync, {
@@ -437,8 +435,6 @@ local opts = {
 
 vim.keymap.set('n', '<leader>oc', '<cmd>Org capture<cr>', { desc = 'Org Capture' })
 
-vim.keymap.set('n', '<leader>oT', sync_org_tasks_to_tuxedo, { desc = 'Sync Tuxedo Todo' })
-vim.keymap.set('n', '<leader>oG', git_commit_and_push_org_dir, { desc = 'Commit and Push Org Dir' })
 vim.api.nvim_create_user_command('OrgTuxedoSync', sync_org_tasks_to_tuxedo, { desc = 'Sync org tasks to Tuxedo todo.txt' })
 
 vim.api.nvim_create_autocmd('FileType', {
@@ -462,9 +458,6 @@ vim.api.nvim_create_autocmd('FileType', {
           { '<leader>op', desc = 'Priority' },
           { '<leader>ot', desc = 'Tags' },
           { '<leader>oe', desc = 'Export' },
-
-          { '<leader>oT', desc = 'Sync Tuxedo Todo' },
-          { '<leader>oG', desc = 'Commit and Push Org Dir' },
           { '<leader>ox', group = 'Clock' },
           { '<leader>oxg', desc = 'Go to Active Clock' },
         }, { buffer = event.buf })
@@ -527,7 +520,5 @@ apply_org_headline_colors()
 
 vim.api.nvim_create_autocmd('ColorScheme', {
   group = vim.api.nvim_create_augroup('kickstart_org_headline_colors', { clear = true }),
-  callback = function()
-    apply_org_headline_colors()
-  end,
+  callback = function() apply_org_headline_colors() end,
 })

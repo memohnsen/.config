@@ -1,0 +1,17 @@
+alias ls eza --icons $*
+alias ll eza -lh --icons --git $*
+alias la eza -lah --icons --git $*
+alias tree eza --tree --icons $*
+alias cat bat $*
+alias grep rg --color=auto $*
+alias diff diff --color=auto $*
+alias df df -h $*
+alias vim nvim $*
+alias emacs /opt/homebrew/bin/emacs -nw $*
+alias nivm /opt/homebrew/bin/nvim $*
+alias nvin /opt/homebrew/bin/nvim $*
+alias glog env PAGER="less -F -X" git log $*
+alias gadog env PAGER="less -F -X" git log --all --decorate --oneline --graph $*
+alias dotfiles git --git-dir=$HOME/.dotfiles --work-tree=$HOME $*
+alias stream mpv av://v4l2:/dev/video4 --fullscreen --demuxer-lavf-o=input_format=mjpeg,framerate=30 --profile=low-latency --untimed $*
+alias - cd - $*
