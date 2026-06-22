@@ -28,3 +28,6 @@ export STARSHIP_CONFIG="$ZDOTDIR/starship.toml"
 # ---------- PATH ----------
 # Personal binaries/scripts
 export PATH="$HOME/.local/bin:$PATH"
+
+# Force TUIs (like Bubble Tea/lipgloss apps) to use true colors
+export COLORTERM=truecolor

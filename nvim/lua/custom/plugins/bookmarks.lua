@@ -23,8 +23,29 @@ vim.api.nvim_create_autocmd('VimEnter', {
     vim.keymap.set({ 'n', 'v' }, '<leader>mm', '<cmd>BookmarksMark<cr>', { desc = 'Toggle Mark' })
     vim.keymap.set({ 'n', 'v' }, '<leader>mn', '<cmd>BookmarksGotoNext<cr>', { desc = 'Toggle Next' })
     vim.keymap.set({ 'n', 'v' }, '<leader>ms', '<cmd>BookmarksGoto<cr>', { desc = 'Go to Bookmark' })
-    vim.keymap.set({ 'n', 'v' }, '<leader>ml', '<cmd>BookmarksTree<cr>', { desc = 'Toggle Bookmark List' })
     vim.keymap.set({ 'n', 'v' }, '<leader>mc', '<cmd>BookmarksCommands<cr>', { desc = 'Bookmark Commands' })
+    vim.keymap.set({ 'n', 'v' }, '<leader><cr>', function()
+      require('bookmarks.picker').pick_bookmark(function(bookmark)
+        if bookmark then
+          require('bookmarks.domain.service').goto_bookmark(bookmark.id)
+          require('bookmarks.sign').safe_refresh_signs()
+        end
+      end, {
+        bookmarks = require('bookmarks.domain.repo').get_all_bookmarks(),
+        prompt = 'All Bookmarks',
+      })
+    end, { desc = 'Find All Bookmarks' })
+
+    vim.keymap.set({ 'n', 'v' }, '<leader>md', function()
+      local repo = require 'bookmarks.domain.repo'
+      local marks = repo.get_all_bookmarks()
+      for _, mark in ipairs(marks) do
+        repo.delete_node(mark.id)
+      end
+      require('bookmarks.sign').safe_refresh_signs()
+      pcall(require('bookmarks.tree.operate').refresh)
+      vim.notify('Deleted ' .. #marks .. ' bookmarks', vim.log.levels.INFO)
+    end, { desc = 'Delete All Bookmarks' })
 
     -- Register Which-Key descriptions
     pcall(function()

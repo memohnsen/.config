@@ -377,7 +377,6 @@
       :desc "Daily note" "o d" #'mm/open-daily-org
       :desc "Calendar" "o C" #'mm/open-calendar
       :desc "Find Org note" "o f" #'mm/find-org-note
-      :desc "Open Ghostty in project" "o g" #'mm/open-ghostty-project
       :desc "Org agenda" "o a" #'mm/org-super-agenda
       :desc "Org capture" "o c" #'org-capture
       (:prefix-map ("r" . "Rust Commands")
@@ -1435,12 +1434,6 @@ If POPUP is non-nil, run in the bottom popup terminal (oT)."
 (when (eq system-type 'darwin)
   (setq ns-use-proxy-icon nil
         frame-title-format nil))
-
-(defun mm/open-ghostty-project ()
-  "Open Ghostty in the current project root."
-  (interactive)
-  (let ((dir (expand-file-name (or (doom-project-root) default-directory))))
-    (start-process "ghostty" nil "open" "-n" "-a" "Ghostty" "--args" (concat "--working-directory=" dir))))
 #+end_src
 
 * Keybindings & Navigation
