@@ -36,7 +36,11 @@
 ** Visuals
 *** Fonts
 #+begin_src emacs-lisp
-(setq doom-font (font-spec :family "JetBrains Mono" :size 13))
+(setq doom-font (font-spec :family "JetBrains Mono NL" :size 13))
+
+(after! org-modern
+  (setq org-modern-fold-stars
+        '(("▶" . "▼") ("▷" . "▽") ("▶" . "▼") ("▷" . "▽") ("▸" . "▾"))))
 
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
@@ -219,6 +223,18 @@
 
 * Editor Behavior
 ** Editor Polish
+*** Undo Jump-to-Top Fix
+#+begin_src emacs-lisp
+;; Without fine undo, evil amalgamates each insert session into one undo step by
+;; stripping undo boundaries up to `evil-undo-list-pointer'
+;; (`evil-refresh-undo-step'). When that pointer goes stale -- e.g. after
+;; `buffer-undo-list' is truncated by `undo-limit' or GC'd -- the strip runs all
+;; the way back to buffer creation, merging the whole history into a single step.
+;; A lone `u' then reverts everything and dumps point at the top of the file.
+;; Fine undo disables that amalgamation, so each change is its own step.
+(setq evil-want-fine-undo t)
+#+end_src
+
 *** Indent Bars
 #+begin_src emacs-lisp
 (use-package! indent-bars
@@ -377,10 +393,12 @@
       :desc "Daily note" "o d" #'mm/open-daily-org
       :desc "Calendar" "o C" #'mm/open-calendar
       :desc "Find Org note" "o f" #'mm/find-org-note
+      :desc "Vterm in new frame" "o T" #'mm/open-vterm-frame
       :desc "Org agenda" "o a" #'mm/org-super-agenda
       :desc "Org capture" "o c" #'org-capture
       (:prefix-map ("r" . "Rust Commands")
-       :desc "Cargo run" "r" (cmd! (mm/cargo "run" (mm/cargo-root)))
+       ;; remove t to make any of these open in a new vterm window
+       :desc "Cargo run" "r" (cmd! (mm/cargo "run" (mm/cargo-root) t t))
        :desc "Cargo build" "b" (cmd! (mm/cargo "build" (mm/cargo-root) t))
        :desc "Cargo test" "t" (cmd! (mm/cargo "test" (mm/cargo-root) t))
        :desc "Cargo clippy" "c" (cmd! (mm/cargo "clippy" (mm/cargo-root) t))))
@@ -394,6 +412,15 @@
 
 *** Eshell Configuration
 #+begin_src emacs-lisp
+(defun mm/open-vterm-frame ()
+  "Open Vterm in a new frame."
+  (interactive)
+  (let ((frame (make-frame))
+        (display-buffer-alist nil))
+    (select-frame-set-input-focus frame)
+    (vterm)))
+
+
 (after! eshell
   (setq eshell-aliases-file (expand-file-name "eshell/aliases" doom-user-dir))
   
@@ -599,16 +626,17 @@ Use vterm when its native module is available; fall back to `shell'."
   (setq flyover-checkers '(flycheck flymake)
         flyover-levels '(error warning info)
         flyover-use-theme-colors t
-        flyover-background-lightness 35
+        flyover-background-lightness 20
         flyover-text-tint 'lighter
-        flyover-text-tint-percent 35
+        flyover-text-tint-percent 15
         flyover-icon-tint 'lighter
-        flyover-icon-tint-percent 35
+        flyover-icon-tint-percent 15
         flyover-icon-background-tint 'darker
-        flyover-icon-background-tint-percent 45
-        flyover-error-icon "■"
-        flyover-warning-icon "■"
-        flyover-info-icon "■"
+        flyover-icon-background-tint-percent 30
+        flyover-show-icon nil
+        flyover-error-icon ""
+        flyover-warning-icon ""
+        flyover-info-icon ""
         flyover-border-style 'none
         flyover-virtual-line-type nil
         flyover-hide-checker-name t
@@ -731,12 +759,18 @@ Use vterm when its native module is available; fall back to `shell'."
       default-directory))
 
 
-(defun mm/cargo (action directory &optional popup)
+(defun mm/cargo (action directory &optional popup close-on-exit)
   "Run cargo ACTION in DIRECTORY.
-If POPUP is non-nil, run in the bottom popup terminal (oT)."
-  (if popup
-      (mm/run-command-in-popup-terminal (concat "cargo " action) directory)
-    (mm/run-shell-command-in-bottom-window (concat "cargo " action) directory)))
+If POPUP is non-nil, run in the bottom popup terminal (oT).
+If CLOSE-ON-EXIT is non-nil, run the program with `exec' so the popup
+terminal closes automatically when the program quits (e.g. `cargo run')."
+  (cond
+   ((and popup close-on-exit)
+    (mm/run-program-in-popup-terminal (concat "cargo " action) directory))
+   (popup
+    (mm/run-command-in-popup-terminal (concat "cargo " action) directory))
+   (t
+    (mm/run-shell-command-in-bottom-window (concat "cargo " action) directory))))
 #+end_src
 
 *** Debugger (dape)
@@ -1549,6 +1583,50 @@ If POPUP is non-nil, run in the bottom popup terminal (oT)."
     (with-current-buffer buffer
       (let* ((cd-cmd (format "cd %s" (shell-quote-argument (expand-file-name directory))))
              (full-cmd (concat cd-cmd " && " command)))
+        (unless (mm/send-command-to-current-terminal full-cmd)
+          (compile full-cmd))))))
+
+
+(defun mm/close-popup-terminal-on-exit (buffer _event)
+  "Close the bottom popup terminal window when its program exits.
+Intended for `vterm-exit-functions': only acts on the `*mm-terminal*'
+popup so other vterm buffers are left untouched. Runs before vterm's own
+`vterm-kill-buffer-on-exit', so it deletes the window then kills the buffer."
+  (when (and (bufferp buffer)
+             (buffer-live-p buffer)
+             (string= (buffer-name buffer) "*mm-terminal*"))
+    (let ((window (get-buffer-window buffer)))
+      (when (window-live-p window)
+        (delete-window window)))
+    (kill-buffer buffer)))
+
+
+(after! vterm
+  ;; Registering this globally ensures vterm attaches its process sentinel when
+  ;; the popup is created (it only does so when `vterm-exit-functions' is set).
+  (add-hook 'vterm-exit-functions #'mm/close-popup-terminal-on-exit))
+
+
+(defun mm/run-program-in-popup-terminal (command directory)
+  "Run COMMAND in DIRECTORY in the bottom popup terminal, closing the popup
+when the program quits (normal exit, panic, or C-c).
+The program is started with `exec' so the terminal's process *becomes* the
+program; when it dies, `mm/close-popup-terminal-on-exit' removes the window."
+  (let* ((buffer-name "*mm-terminal*")
+         (buffer (get-buffer buffer-name))
+         (window (and buffer (get-buffer-window buffer)))
+         (default-directory directory))
+    (unless window
+      (mm/toggle-bottom-terminal)
+      (setq buffer (get-buffer buffer-name))
+      (setq window (get-buffer-window buffer)))
+    (select-window window)
+    (with-current-buffer buffer
+      (let* ((cd-cmd (format "cd %s" (shell-quote-argument (expand-file-name directory))))
+             ;; `exec' replaces the shell with the program, so quitting the
+             ;; program (including C-c, which kills the now-foreground process)
+             ;; ends the terminal's process and triggers the exit hook.
+             (full-cmd (concat cd-cmd " && exec " command)))
         (unless (mm/send-command-to-current-terminal full-cmd)
           (compile full-cmd))))))
 #+end_src
