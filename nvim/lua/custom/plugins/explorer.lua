@@ -6,6 +6,20 @@ require('snacks').setup {
   explorer = {
     replace_netrw = false,
   },
+  -- Image preview (Kitty graphics protocol, supported by Ghostty).
+  -- doc.enabled = false disables auto inline rendering; instead pressing <CR>
+  -- on an image link in an org file pops up a floating preview via
+  -- Snacks.image.hover() (see orgmode.lua). Move the cursor to close it.
+  image = {
+    enabled = true,
+    doc = {
+      enabled = false, -- no auto rendering; preview on demand with <CR>
+      inline = false,
+      float = true,
+      max_width = 80,
+      max_height = 40,
+    },
+  },
   picker = {
     sources = {
       explorer = {

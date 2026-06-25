@@ -5,11 +5,33 @@ local daily_dir = org_dir .. '/daily'
 
 local tuxedo_sync_started = false
 
+local image_exts = { png = true, jpg = true, jpeg = true, gif = true, bmp = true, webp = true, svg = true, tiff = true, heic = true, avif = true }
+
+-- True when the current line contains an org image link, e.g.
+-- [[file:~/a.png]] or [[./b.jpg][caption]].
+local function line_has_image_link(line)
+  local target = line:match '%[%[(.-)%]'
+  if not target then return false end
+  local ext = target:lower():match '%.(%a+)$'
+  return ext ~= nil and image_exts[ext] == true
+end
+
 local function complete_todo_or_enter()
   local line = vim.api.nvim_get_current_line()
 
   if line:match '^%s*%*+%s+%u+%s+' then
     require('orgmode').action 'org_mappings.todo_next_state'
+    return
+  end
+
+  if line:match '^%s*[-+*]%s+%[.%]' then
+    require('orgmode').action 'org_mappings.toggle_checkbox'
+    return
+  end
+
+  if line_has_image_link(line) then
+    -- Pop a floating preview of the image at the cursor; move to close.
+    Snacks.image.hover()
     return
   end
 
@@ -223,21 +245,80 @@ local function setup_daily_todos_in_agenda()
   agenda_type.mm_daily_todos_enabled = true
 end
 
-local function apply_org_headline_colors()
-  local colors = {
-    '#61AFEF',
-    '#E5C07B',
-    '#98C379',
-    '#C678DD',
-    '#56B6C2',
-    '#D19A66',
-    '#ABB2BF',
-    '#7F848E',
-  }
+-- doom-one palette (matches Doom Emacs' default theme).
+local doom = {
+  bg = '#282c34',
+  base3 = '#23272e', -- org-block background
+  base4 = '#3f444a',
+  grey = '#5B6268', -- base5: comments, tags, inactive timestamps
+  fg = '#bbc2cf',
+  red = '#ff6c6b',
+  orange = '#da8548',
+  green = '#98be65',
+  teal = '#4db5bd',
+  yellow = '#ECBE7B',
+  blue = '#51afef',
+  magenta = '#c678dd',
+  violet = '#a9a1e1',
+  cyan = '#46D9FF',
+}
 
-  for level, color in ipairs(colors) do
-    vim.api.nvim_set_hl(0, '@org.headline.level' .. level, { fg = color, bold = true })
+local function apply_org_headline_colors()
+  local hl = function(group, val) vim.api.nvim_set_hl(0, group, val) end
+
+  -- Headline levels (rotating colors, bold), like Doom's org-level faces.
+  local levels = {
+    doom.blue,
+    doom.magenta,
+    doom.green,
+    doom.orange,
+    doom.cyan,
+    doom.violet,
+    doom.yellow,
+    doom.grey,
+  }
+  for level, color in ipairs(levels) do
+    hl('@org.headline.level' .. level, { fg = color, bold = true })
   end
+
+  -- Source/example blocks: subtle tinted background like doom-themes-org-config.
+  hl('@org.block', { bg = doom.base3 })
+  hl('OrgBlock', { bg = doom.base3 })
+  hl('@org.block.background', { bg = doom.base3 })
+  hl('OrgBlockTangleInfo', { fg = doom.grey, bg = doom.base3 })
+
+  -- Inline markup.
+  hl('@org.code', { fg = doom.orange }) -- ~code~
+  hl('@org.verbatim', { fg = doom.green }) -- =verbatim=
+  hl('OrgEmphasisBold', { bold = true })
+  hl('OrgEmphasisItalic', { italic = true })
+  hl('OrgEmphasisUnderline', { underline = true })
+  hl('OrgEmphasisStrikethrough', { strikethrough = true })
+
+  -- Tables.
+  hl('@org.table', { fg = doom.blue })
+  hl('@org.table.heading', { fg = doom.blue, bold = true })
+  hl('@org.table.delimiter', { fg = doom.base4 })
+
+  -- Checkboxes.
+  hl('@org.checkbox', { fg = doom.grey })
+  hl('@org.checkbox.checked', { fg = doom.green })
+  hl('@org.checkbox.halfchecked', { fg = doom.yellow })
+  hl('@org.checkbox.done', { fg = doom.grey }) -- muted text for completed [X] items
+
+  -- Tags, links, timestamps.
+  hl('@org.tag', { fg = doom.grey, italic = true })
+  hl('@org.hyperlink', { fg = doom.blue, underline = true })
+  hl('OrgLink', { fg = doom.blue, underline = true })
+  hl('@org.timestamp.active', { fg = doom.blue })
+  hl('@org.timestamp.inactive', { fg = doom.grey })
+
+  -- Priorities ([#A] / [#B] / [#C]).
+  hl('@org.priority.highest', { fg = doom.red, bold = true })
+  hl('@org.priority.high', { fg = doom.orange, bold = true })
+  hl('@org.priority.default', { fg = doom.yellow })
+  hl('@org.priority.low', { fg = doom.green })
+  hl('@org.priority.lowest', { fg = doom.grey })
 end
 
 local function run_command(command, opts)
@@ -354,6 +435,17 @@ local opts = {
   org_deadline_warning_days = 0,
   org_startup_folded = 'showeverything',
   org_todo_keywords = { 'TODO(t)', 'PROGRESS(p)', 'WAIT(w)', '|', 'DONE(d)' },
+
+  -- Doom Emacs look-and-feel.
+  org_startup_indented = true, -- org-indent-mode: virtually indent subtrees under their heading
+  org_hide_emphasis_markers = true, -- show *bold* / /italic/ rendered, hide the markers
+  org_ellipsis = ' ▾', -- Doom's `org-ellipsis " ▾"` fold indicator
+  org_todo_keyword_faces = {
+    TODO = ':foreground #ff6c6b :weight bold', -- doom-one red
+    PROGRESS = ':foreground #da8548 :weight bold', -- doom-one orange
+    WAIT = ':foreground #ECBE7B :weight bold', -- doom-one yellow
+    DONE = ':foreground #98be65 :weight bold', -- doom-one green
+  },
   mappings = {
     global = {
       org_agenda = false,
@@ -516,6 +608,21 @@ elseif version.version_mismatch or version.outdated then
 end
 
 require('orgmode').setup(opts)
+
+-- org-superstar equivalent: replace the leading stars with fancy bullets and
+-- prettify checkboxes, matching Doom's default org appearance.
+vim.pack.add { gh 'nvim-orgmode/org-bullets.nvim' }
+require('org-bullets').setup {
+  concealcursor = false,
+  symbols = {
+    headlines = { '◉', '○', '✸', '✿' },
+    -- Checkboxes are handled by a treesitter conceal in queries/org/highlights.scm
+    -- instead, so the whole `[ ]` is replaced by a single glyph (org-bullets only
+    -- swaps the inner character and keeps the brackets).
+    checkboxes = false,
+  },
+}
+
 apply_org_headline_colors()
 
 vim.api.nvim_create_autocmd('ColorScheme', {

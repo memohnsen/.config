@@ -895,6 +895,14 @@ do
 
           if cmp.snippet_active { direction = 1 } then return cmp.snippet_forward() end
 
+          -- Expand org-tempo style triggers (<s, <q, ...) and other LuaSnip
+          -- snippets whose trigger text precedes the cursor.
+          local ls = require 'luasnip'
+          if ls.expandable() then
+            ls.expand()
+            return true
+          end
+
           return false
         end,
         'fallback',
