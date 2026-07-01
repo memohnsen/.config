@@ -171,36 +171,6 @@ local function sort_todo_file_by_date(bufnr)
 
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, sorted_lines)
 end
-
-local function is_open_clock_line(line) return line:match '^%s*CLOCK:%s*%[[^%]]+%]%s*%-%-%s*$' or line:match '^%s*CLOCK:%s*%[[^%]]+%]%s*$' end
-
-local function open_clock_location()
-  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-    local name = vim.api.nvim_buf_get_name(bufnr)
-    if vim.api.nvim_buf_is_loaded(bufnr) and name:match '%.org$' then
-      for lnum, line in ipairs(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)) do
-        if is_open_clock_line(line) then return ('%s:%d'):format(name, lnum) end
-      end
-    end
-  end
-
-  for _, file in ipairs(vim.fn.globpath(org_dir, '**/*.org', false, true)) do
-    for lnum, line in ipairs(vim.fn.readfile(file)) do
-      if is_open_clock_line(line) then return ('%s:%d'):format(file, lnum) end
-    end
-  end
-end
-
-function _G.kickstart_org_active_clock_message()
-  local location = open_clock_location()
-  if location then return ('Active org clock at %s. Clock out before quitting.'):format(location) end
-end
-
-function _G.kickstart_org_block_quit_if_clocked()
-  local message = _G.kickstart_org_active_clock_message()
-  if message then error(message, 0) end
-end
-
 -- doom-one palette (matches Doom Emacs' default theme).
 local doom = {
   bg = '#282c34',

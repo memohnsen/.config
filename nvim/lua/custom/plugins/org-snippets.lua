@@ -1,9 +1,3 @@
--- Org "Easy Templates" (org-tempo style): type <s, <q, etc. and press <Tab>
--- to expand into the matching block. Mirrors Emacs org-structure-template-alist.
---
--- The <Tab> expansion is wired in init.lua's blink.cmp keymap, which calls
--- luasnip.expand() when luasnip.expandable() is true.
-
 local ok, ls = pcall(require, 'luasnip')
 if not ok then return end
 
@@ -11,7 +5,6 @@ local s = ls.snippet
 local i = ls.insert_node
 local fmt = require('luasnip.extras.fmt').fmt
 
--- wordTrig = false so the leading `<` (a non-word char) is part of the trigger.
 local function tmpl(trig, body, nodes) return s({ trig = trig, wordTrig = false }, fmt(body, nodes)) end
 
 ls.add_snippets('org', {

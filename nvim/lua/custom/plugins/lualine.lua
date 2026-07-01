@@ -2,7 +2,6 @@ vim.pack.add {
   { src = 'https://github.com/nvim-lualine/lualine.nvim', branch = 'master' },
 }
 
-local org_dir = vim.fn.expand '~/dev/org'
 local workspace_order_file = vim.fn.stdpath 'data' .. '/auto-session-workspace-order'
 
 local function read_workspace_order()
@@ -33,9 +32,7 @@ local function workspace_display_name(session)
   return vim.fn.fnamemodify(name, ':t')
 end
 
-local function is_branch_workspace(session)
-  return session.session_name and session.session_name:find('|', 1, true) ~= nil
-end
+local function is_branch_workspace(session) return session.session_name and session.session_name:find('|', 1, true) ~= nil end
 
 local function current_workspace_name()
   if vim.v.this_session == '' then return nil end
@@ -83,7 +80,7 @@ local function auto_session_workspaces()
   local current = current_workspace_name()
   local parts = {}
 
-  local reset_hl = vim.g.colors_name and ('%#lualine_y_normal#') or '%*'
+  local reset_hl = vim.g.colors_name and '%#lualine_y_normal#' or '%*'
 
   local pruned_open_names = {}
   for index, session_name in ipairs(open_names) do
@@ -105,75 +102,7 @@ local function auto_session_workspaces()
   return table.concat(parts, '')
 end
 
-local function parse_org_clock_start(line)
-  local year, month, day, hour, min = line:match 'CLOCK:%s*%[(%d%d%d%d)%-(%d%d)%-(%d%d)%s+%a+%s+(%d%d):(%d%d)%]%s*%-%-%s*$'
-  if not year then year, month, day, hour, min = line:match 'CLOCK:%s*%[(%d%d%d%d)%-(%d%d)%-(%d%d)%s+%a+%s+(%d%d):(%d%d)%]%s*$' end
-  if not year then return end
-
-  return os.time {
-    year = assert(tonumber(year)),
-    month = assert(tonumber(month)),
-    day = assert(tonumber(day)),
-    hour = assert(tonumber(hour)),
-    min = assert(tonumber(min)),
-  }
-end
-
-local function find_clock_headline(lines, clock_lnum)
-  for lnum = clock_lnum - 1, 1, -1 do
-    local headline = lines[lnum] and lines[lnum]:match '^%*+%s+(.+)$'
-    if headline then
-      return headline:gsub('^%u+%s+', ''):gsub('%s+', ' ')
-    end
-  end
-end
-
-local function find_open_org_clock()
-  local function scan_lines(lines)
-    for lnum, line in ipairs(lines) do
-      local started_at = parse_org_clock_start(line)
-      if started_at then
-        return {
-          started_at = started_at,
-          headline = find_clock_headline(lines, lnum),
-        }
-      end
-    end
-  end
-
-  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-    local name = vim.api.nvim_buf_get_name(bufnr)
-    if vim.api.nvim_buf_is_loaded(bufnr) and name:match '%.org$' then
-      local clock = scan_lines(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false))
-      if clock then return clock end
-    end
-  end
-
-  for _, file in ipairs(vim.fn.globpath(org_dir, '**/*.org', false, true)) do
-    local clock = scan_lines(vim.fn.readfile(file))
-    if clock then return clock end
-  end
-end
-
-local function org_clock_status()
-  if _G.orgmode and type(_G.orgmode.statusline) == 'function' then
-    local ok, status = pcall(_G.orgmode.statusline)
-    if ok and status and status ~= '' then return status end
-  end
-
-  local clock = find_open_org_clock()
-  if not clock then return '' end
-
-  local elapsed = math.max(0, os.time() - clock.started_at)
-  local hours = math.floor(elapsed / 3600)
-  local mins = math.floor((elapsed % 3600) / 60)
-  local headline = clock.headline and clock.headline ~= '' and (' ' .. clock.headline) or ''
-  return ('CLOCK %02d:%02d%s'):format(hours, mins, headline)
-end
-
-local function apply_workspace_highlights()
-  vim.api.nvim_set_hl(0, 'LualineWorkspaceActive', { fg = '#282c34', bg = '#61afef', bold = true })
-end
+local function apply_workspace_highlights() vim.api.nvim_set_hl(0, 'LualineWorkspaceActive', { fg = '#282c34', bg = '#61afef', bold = true }) end
 
 apply_workspace_highlights()
 
@@ -213,7 +142,7 @@ require('lualine').setup {
         shorting_target = 40,
       },
     },
-    lualine_x = { org_clock_status },
+    lualine_x = {},
     lualine_y = { { auto_session_workspaces, padding = { left = 1, right = 0 } } },
     lualine_z = { 'location' },
   },
