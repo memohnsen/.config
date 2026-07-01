@@ -341,6 +341,7 @@ end
 local function pick_initial_workspace_file(cwd, name)
   save_workspace_after_first_file(name)
 
+  ---@type boolean, any
   local ok, snacks = pcall(require, 'snacks')
   if ok and snacks.picker and snacks.picker.files then
     snacks.picker.files {

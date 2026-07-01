@@ -111,11 +111,11 @@ local function parse_org_clock_start(line)
   if not year then return end
 
   return os.time {
-    year = tonumber(year),
-    month = tonumber(month),
-    day = tonumber(day),
-    hour = tonumber(hour),
-    min = tonumber(min),
+    year = assert(tonumber(year)),
+    month = assert(tonumber(month)),
+    day = assert(tonumber(day)),
+    hour = assert(tonumber(hour)),
+    min = assert(tonumber(min)),
   }
 end
 

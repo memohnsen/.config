@@ -2,7 +2,10 @@ vim.pack.add {
   { src = 'https://github.com/folke/snacks.nvim', branch = 'main' },
 }
 
-require('snacks').setup {
+---@type any
+local snacks = require 'snacks'
+
+snacks.setup {
   explorer = {
     replace_netrw = false,
   },
@@ -52,12 +55,12 @@ local function project_root()
 end
 
 local function open_explorer(cwd)
-  if Snacks and Snacks.explorer then
-    Snacks.explorer { cwd = cwd }
+  if snacks.explorer then
+    snacks.explorer { cwd = cwd }
     return
   end
 
-  require('snacks').picker.explorer { cwd = cwd }
+  snacks.picker.explorer { cwd = cwd }
 end
 
 vim.keymap.set('n', '<leader>e', function() open_explorer(project_root()) end, { desc = 'Explorer Root' })

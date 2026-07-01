@@ -2,8 +2,7 @@ local gh = function(repo) return 'https://github.com/' .. repo end
 
 local org_dir = vim.fn.expand '~/dev/org'
 local daily_dir = org_dir .. '/daily'
-
-local tuxedo_sync_started = false
+local doom_dir = vim.fn.expand '~/.config/doom'
 
 local image_exts = { png = true, jpg = true, jpeg = true, gif = true, bmp = true, webp = true, svg = true, tiff = true, heic = true, avif = true }
 
@@ -202,49 +201,6 @@ function _G.kickstart_org_block_quit_if_clocked()
   if message then error(message, 0) end
 end
 
-local function setup_daily_todos_in_agenda()
-  local agenda_type = require 'orgmode.agenda.types.agenda'
-  if agenda_type.mm_daily_todos_enabled then return end
-
-  local original_get_agenda_days = agenda_type._get_agenda_days
-  agenda_type._get_agenda_days = function(self)
-    local agenda_days = original_get_agenda_days(self)
-
-    for _, agenda_day in ipairs(agenda_days) do
-      local file = vim.fn.resolve(vim.fn.fnamemodify(daily_dir .. '/' .. agenda_day.day:format '%Y-%m-%d' .. '.org', ':p'))
-      if vim.fn.filereadable(file) == 1 then
-        local orgfile = self.files:load_file_sync(file)
-        if orgfile then
-          for _, headline in ipairs(orgfile:get_unfinished_todo_entries()) do
-            local already_visible = vim.iter(agenda_day.agenda_items):any(function(item) return item.headline and headline:is_same(item.headline) end)
-
-            if not already_visible and self:_matches_filters(headline) then
-              table.insert(agenda_day.agenda_items, {
-                index = #agenda_day.agenda_items + 1,
-                headline = headline,
-                real_date = agenda_day.day,
-                is_day_match = true,
-                label = 'Todo:',
-                get_hlgroup = function() return nil end,
-                get_todo_hlgroup = function() return nil end,
-                get_priority_hlgroup = function() return nil end,
-              })
-              agenda_day.category_length = math.max(agenda_day.category_length, vim.api.nvim_strwidth(headline:get_category()) + 1)
-              agenda_day.label_length = math.max(agenda_day.label_length, 5)
-            end
-          end
-
-          agenda_day.agenda_items = self:_sort(agenda_day.agenda_items)
-        end
-      end
-    end
-
-    return agenda_days
-  end
-
-  agenda_type.mm_daily_todos_enabled = true
-end
-
 -- doom-one palette (matches Doom Emacs' default theme).
 local doom = {
   bg = '#282c34',
@@ -343,26 +299,6 @@ local function run_command(command, opts)
   return ok, output
 end
 
-local function sync_org_tasks_to_tuxedo()
-  local ok, added = pcall(require('custom.org_tuxedo_sync').sync, {
-    org_file = org_dir .. '/todo.org',
-    todo_file = org_dir .. '/tuxedo/todo.txt',
-  })
-
-  if not ok then
-    vim.notify('Tuxedo todo sync failed: ' .. added, vim.log.levels.ERROR)
-    return
-  end
-
-  if added > 0 then vim.notify(('Synced %d org task%s to Tuxedo'):format(added, added == 1 and '' or 's'), vim.log.levels.INFO) end
-end
-
-local function sync_org_tasks_to_tuxedo_once()
-  if tuxedo_sync_started then return end
-  tuxedo_sync_started = true
-  sync_org_tasks_to_tuxedo()
-end
-
 local function archive_done_org_tasks(bufnr)
   local file = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ':p')
   if file ~= vim.fn.fnamemodify(org_dir .. '/todo.org', ':p') then return end
@@ -377,56 +313,6 @@ local function archive_done_org_tasks(bufnr)
   else
     vim.notify('Done task archive failed' .. (output ~= '' and (': ' .. vim.trim(output)) or ''), vim.log.levels.ERROR)
   end
-end
-
-local function org_git_root()
-  if vim.fn.isdirectory(org_dir) ~= 1 then return end
-
-  local ok, output = run_command({ 'git', 'rev-parse', '--show-toplevel' }, { cwd = org_dir })
-  if ok then return vim.trim(output) end
-end
-
-local function save_org_buffers()
-  local org_root = vim.fn.fnamemodify(org_dir, ':p')
-  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-    local file = vim.api.nvim_buf_get_name(bufnr)
-    if file ~= '' and vim.bo[bufnr].modified and vim.startswith(vim.fn.fnamemodify(file, ':p'), org_root) then
-      vim.api.nvim_buf_call(bufnr, function() vim.cmd.write() end)
-    end
-  end
-end
-
-local function git_commit_and_push_org_dir()
-  local root = org_git_root()
-  if not root then
-    vim.notify('Org directory is not inside a Git repo: ' .. org_dir, vim.log.levels.WARN)
-    return
-  end
-
-  save_org_buffers()
-
-  local status_ok, status = run_command({ 'git', 'status', '--porcelain' }, { cwd = root })
-  if not status_ok then
-    vim.notify('Org directory Git status failed', vim.log.levels.ERROR)
-    return
-  end
-
-  if vim.trim(status) ~= '' then
-    local add_ok = run_command({ 'git', 'add', '-A' }, { cwd = root })
-    if not add_ok then
-      vim.notify('Org directory Git add failed', vim.log.levels.ERROR)
-      return
-    end
-
-    local commit_ok = run_command({ 'git', 'commit', '-m', os.date 'Update org files %Y-%m-%d %H:%M' }, { cwd = root })
-    if not commit_ok then
-      vim.notify('Org directory Git commit failed', vim.log.levels.ERROR)
-      return
-    end
-  end
-
-  local push_ok = run_command({ 'git', 'push' }, { cwd = root })
-  if not push_ok then vim.notify('Org directory Git push failed', vim.log.levels.ERROR) end
 end
 
 local opts = {
@@ -527,8 +413,6 @@ local opts = {
 
 vim.keymap.set('n', '<leader>oc', '<cmd>Org capture<cr>', { desc = 'Org Capture' })
 
-vim.api.nvim_create_user_command('OrgTuxedoSync', sync_org_tasks_to_tuxedo, { desc = 'Sync org tasks to Tuxedo todo.txt' })
-
 vim.api.nvim_create_autocmd('FileType', {
   group = vim.api.nvim_create_augroup('kickstart_org_keymaps', { clear = true }),
   pattern = 'org',
@@ -568,30 +452,6 @@ vim.api.nvim_create_autocmd('BufWritePost', {
   group = vim.api.nvim_create_augroup('kickstart_org_archive_done', { clear = true }),
   pattern = org_dir .. '/todo.org',
   callback = function(event) archive_done_org_tasks(event.buf) end,
-})
-
-vim.api.nvim_create_autocmd('VimEnter', {
-  group = vim.api.nvim_create_augroup('kickstart_org_tuxedo_sync', { clear = true }),
-  callback = function()
-    if vim.tbl_isempty(vim.api.nvim_list_uis()) then return end
-    vim.defer_fn(sync_org_tasks_to_tuxedo_once, 1000)
-  end,
-})
-
-vim.api.nvim_create_autocmd('VimLeavePre', {
-  group = vim.api.nvim_create_augroup('kickstart_org_git_commit_push', { clear = true }),
-  callback = function()
-    if vim.tbl_isempty(vim.api.nvim_list_uis()) then return end
-    git_commit_and_push_org_dir()
-  end,
-})
-
-vim.api.nvim_create_autocmd('QuitPre', {
-  group = vim.api.nvim_create_augroup('kickstart_org_clock_quit_guard', { clear = true }),
-  callback = function()
-    if vim.tbl_isempty(vim.api.nvim_list_uis()) then return end
-    _G.kickstart_org_block_quit_if_clocked()
-  end,
 })
 
 vim.pack.add { gh 'nvim-orgmode/orgmode' }

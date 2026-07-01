@@ -255,8 +255,6 @@ do
     group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
     callback = function() vim.hl.on_yank() end,
   })
-
-
 end
 
 -- ============================================================
@@ -395,9 +393,7 @@ do
     },
     -- Document existing key chains
     spec = {
-      { '<leader>s', group = '[S]earch', mode = { 'n', 'v' } },
-      { '<leader>t', group = '[T]oggle' },
-      { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } }, -- Enable gitsigns recommended keymaps first
+      { '<leader>s', group = 'Search', mode = { 'n', 'v' } },
       { 'gr', group = 'LSP Actions', mode = { 'n' } },
     },
   }
@@ -485,7 +481,9 @@ do
   vim.pack.add(telescope_plugins)
 
   -- See `:help telescope` and `:help telescope.setup()`
-  require('telescope').setup {
+  ---@type any
+  local telescope = require 'telescope'
+  telescope.setup {
     -- You can put your default mappings / updates / etc. in here
     --  All the info you're looking for is in `:help telescope.setup()`
     --
@@ -501,22 +499,20 @@ do
   }
 
   -- Enable Telescope extensions if they are installed
-  pcall(require('telescope').load_extension, 'fzf')
-  pcall(require('telescope').load_extension, 'ui-select')
+  pcall(telescope.load_extension, 'fzf')
+  pcall(telescope.load_extension, 'ui-select')
 
   -- See `:help telescope.builtin`
   local builtin = require 'telescope.builtin'
-  vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
-  vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
-  vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
-  vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
-  vim.keymap.set({ 'n', 'v' }, '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
-  vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
-  vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
-  vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
-  vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
-  vim.keymap.set('n', '<leader>sc', builtin.commands, { desc = '[S]earch [C]ommands' })
-  vim.keymap.set('n', '<leader>sb', builtin.current_buffer_fuzzy_find, { desc = '[S]earch [B]uffer' })
+  vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = 'Keymaps' })
+  vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = 'Files' })
+  vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = 'Telescope' })
+  vim.keymap.set({ 'n', 'v' }, '<leader>sw', builtin.grep_string, { desc = 'Current Word' })
+  vim.keymap.set('n', '<leader>sp', builtin.live_grep, { desc = 'Project' })
+  vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = 'Diagnostics' })
+  vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = 'Resume' })
+  vim.keymap.set('n', '<leader>sc', builtin.commands, { desc = 'Commands' })
+  vim.keymap.set('n', '<leader>sb', builtin.current_buffer_fuzzy_find, { desc = 'Buffer' })
   vim.keymap.set('n', '<leader><leader>', builtin.find_files, { desc = '[ ] Find files' })
 
   -- Add Telescope-based LSP pickers when an LSP attaches to a buffer.
@@ -552,23 +548,6 @@ do
       vim.keymap.set('n', 'grt', builtin.lsp_type_definitions, { buffer = buf, desc = '[G]oto [T]ype Definition' })
     end,
   })
-
-  -- It's also possible to pass additional configuration options.
-  --  See `:help telescope.builtin.live_grep()` for information about particular keys
-  vim.keymap.set(
-    'n',
-    '<leader>s/',
-    function()
-      builtin.live_grep {
-        grep_open_files = true,
-        prompt_title = 'Live Grep in Open Files',
-      }
-    end,
-    { desc = '[S]earch [/] in Open Files' }
-  )
-
-  -- Shortcut for searching your Neovim configuration files
-  vim.keymap.set('n', '<leader>sn', function() builtin.find_files { cwd = vim.fn.stdpath 'config' } end, { desc = '[S]earch [N]eovim files' })
 end
 
 -- ============================================================
@@ -627,19 +606,17 @@ do
         local params = vim.lsp.util.make_position_params(0, 'utf-16')
 
         vim.lsp.buf_request_all(event.buf, 'textDocument/definition', params, function(responses)
-          for client_id, response in pairs(responses) do
+          for _, response in pairs(responses) do
             local result = response.result
             if result and not vim.tbl_isempty(result) then
               local location = result[1] or result
-              local client = vim.lsp.get_client_by_id(client_id)
-              local encoding = client and client.offset_encoding or 'utf-16'
 
               vim.lsp.util.preview_location(location, {
                 border = 'rounded',
                 focusable = true,
                 max_height = 24,
                 max_width = 100,
-              }, encoding)
+              })
               return
             end
           end
@@ -662,13 +639,13 @@ do
 
       -- Jump directly to the definition of the symbol under your cursor.
       map('gd', function()
-        local params = vim.lsp.util.make_position_params(0)
+        local params = vim.lsp.util.make_position_params(0, 'utf-16')
         vim.lsp.buf_request_all(event.buf, 'textDocument/definition', params, function(responses)
-          for _, resp in pairs(responses) do
+          for client_id, resp in pairs(responses) do
             local result = resp.result
             if result and not vim.tbl_isempty(result) then
               local location = vim.islist(result) and result[1] or result
-              local client = vim.lsp.get_client_by_id(resp.client_id or 0)
+              local client = vim.lsp.get_client_by_id(client_id)
               local encoding = client and client.offset_encoding or 'utf-16'
 
               local uri = location.uri or location.targetUri
@@ -676,10 +653,8 @@ do
               local same_file = uri == current_uri
 
               vim.schedule(function()
-                if same_file then
-                  vim.cmd 'vsplit'
-                end
-                vim.lsp.util.jump_to_location(location, encoding, false)
+                if same_file then vim.cmd 'vsplit' end
+                vim.lsp.util.show_document(location, encoding, { focus = true })
               end)
               return
             end
@@ -721,25 +696,21 @@ do
         })
       end
 
-      if client and client:supports_method('textDocument/inlayHint', event.buf) then
-        map(
-          '<leader>th',
-          function()
-            local enabled = not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }
-            vim.b[event.buf].kickstart_inlay_hints_enabled = enabled
-            vim.lsp.inlay_hint.enable(enabled, { bufnr = event.buf })
-          end,
-          '[T]oggle Inlay [H]ints'
-        )
-
-        if client.name == 'rust-analyzer' then
-          -- Neovim 0.12.1 can render stale Rust inlay-hint columns after edits,
-          -- which raises "Invalid 'col': out of range" from the decoration provider.
-          -- Keep Rust hints opt-in until the upstream renderer is fixed.
-          vim.b[event.buf].kickstart_inlay_hints_enabled = false
-          vim.lsp.inlay_hint.enable(false, { bufnr = event.buf })
-        end
-      end
+      -- if client and client:supports_method('textDocument/inlayHint', event.buf) then
+      --   map('<leader>th', function()
+      --     local enabled = not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }
+      --     vim.b[event.buf].kickstart_inlay_hints_enabled = enabled
+      --     vim.lsp.inlay_hint.enable(enabled, { bufnr = event.buf })
+      --   end, '[T]oggle Inlay [H]ints')
+      --
+      --   if client.name == 'rust-analyzer' then
+      --     -- Neovim 0.12.1 can render stale Rust inlay-hint columns after edits,
+      --     -- which raises "Invalid 'col': out of range" from the decoration provider.
+      --     -- Keep Rust hints opt-in until the upstream renderer is fixed.
+      --     vim.b[event.buf].kickstart_inlay_hints_enabled = false
+      --     vim.lsp.inlay_hint.enable(false, { bufnr = event.buf })
+      --   end
+      -- end
     end,
   })
 
@@ -991,7 +962,7 @@ do
     if pairs[before] == after then
       local row = vim.api.nvim_win_get_cursor(0)[1]
       local base_indent = line:match '^%s*' or ''
-      local shiftwidth = vim.bo.shiftwidth > 0 and vim.bo.shiftwidth or vim.bo.tabstop
+      local shiftwidth = tonumber(vim.bo.shiftwidth > 0 and vim.bo.shiftwidth or vim.bo.tabstop) or 2
       local inner_indent = base_indent .. string.rep(' ', shiftwidth)
       local open_line = line:sub(1, col)
       local close_line = base_indent .. line:sub(col + 1)

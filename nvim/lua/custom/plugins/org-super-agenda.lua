@@ -1,3 +1,5 @@
+---@diagnostic disable: duplicate-set-field
+
 local gh = function(repo) return 'https://github.com/' .. repo end
 
 local org_dir = vim.fn.expand '~/dev/org'
@@ -174,7 +176,7 @@ local function setup_doom_compact_layout()
   local layout = require 'org-super-agenda.core.layout.compact'
   if layout.kickstart_doom_compact_layout then return end
 
-  layout.build = function(groups, win_width, cfg, marked)
+  layout.build = function(groups, _, cfg, marked)
     local rows, hls, line_map = {}, {}, {}
     local filename_w = cfg.compact and cfg.compact.filename_min_width or 10
     local label_w = cfg.compact and cfg.compact.label_min_width or 12

@@ -62,11 +62,14 @@ vim.keymap.set('n', '<leader>bd', function()
   vim.api.nvim_buf_delete(bufnr, {})
 end, { desc = 'Delete Buffer' })
 
-vim.keymap.set('n', '<leader>tt', function()
+vim.keymap.set('n', '<leader>T', function()
   vim.cmd 'enew'
   vim.cmd 'terminal'
   vim.cmd 'startinsert'
 end, { desc = 'New Terminal Buffer' })
+
+-- Toggle a snacks terminal popup
+vim.keymap.set('n', '<leader>t', function() Snacks.terminal.toggle() end, { desc = 'Toggle Terminal Popup' })
 
 vim.keymap.set('n', '<leader>wd', function()
   if #vim.api.nvim_list_wins() == 1 then
@@ -84,15 +87,6 @@ vim.keymap.set('n', '<leader>wk', '<C-w>k', { desc = 'Focus Upper Window' })
 vim.keymap.set('n', '<leader>wl', '<C-w>l', { desc = 'Focus Right Window' })
 vim.keymap.set('n', '<leader>wv', '<cmd>vsplit<CR>', { desc = 'Vertical Split' })
 vim.keymap.set('n', '<leader>ws', '<cmd>split<CR>', { desc = 'Horizontal Split' })
-
-vim.keymap.set('n', '<leader>tw', function()
-  vim.g.which_key_leader_popup = vim.g.which_key_leader_popup == false
-
-  if vim.g.which_key_leader_popup == false then pcall(function() require('which-key.view').hide() end) end
-
-  local state = vim.g.which_key_leader_popup == false and 'hidden' or 'shown'
-  vim.notify('Which-key leader popup ' .. state, vim.log.levels.INFO)
-end, { desc = 'Toggle Which-Key' })
 
 local function current_buffer_dir()
   local name = vim.api.nvim_buf_get_name(0)
@@ -123,82 +117,10 @@ end
 
 local function cargo_terminal(action) run_shell('cargo ' .. action, cargo_root()) end
 
-local function cargo_zellij_float(action)
-  if vim.env.ZELLIJ == nil or vim.fn.executable 'zellij' ~= 1 then
-    cargo_terminal(action)
-    return
-  end
-
-  local job_id = vim.fn.jobstart {
-    'zellij',
-    'run',
-    '--floating',
-    '--cwd',
-    cargo_root(),
-    '--name',
-    'cargo ' .. action,
-    '--',
-    'cargo',
-    action,
-  }
-
-  if job_id <= 0 then cargo_terminal(action) end
-end
-
-local function strip_leading_comment_marker(line)
-  local command = vim.trim(line)
-
-  local markers = {
-    '///',
-    '//!',
-    '--',
-    '//',
-    '#',
-    '"',
-    ';',
-    '*',
-  }
-
-  local commentstring = vim.bo.commentstring
-  if commentstring and commentstring ~= '' then
-    local prefix = vim.split(commentstring, '%%s', { plain = false, trimempty = true })[1]
-    prefix = prefix and vim.trim(prefix)
-    if prefix and prefix ~= '' then table.insert(markers, prefix) end
-  end
-
-  local changed = true
-  while changed do
-    changed = false
-    command = vim.trim(command)
-
-    for _, marker in ipairs(markers) do
-      local stripped, count = command:gsub('^' .. vim.pesc(marker) .. '%s*', '', 1)
-      if count > 0 then
-        command = stripped
-        changed = true
-        break
-      end
-    end
-  end
-
-  return command
-end
-
-local function run_current_line()
-  local command = strip_leading_comment_marker(vim.api.nvim_get_current_line())
-
-  if command == '' then
-    vim.notify('No command on current line', vim.log.levels.WARN)
-    return
-  end
-
-  run_shell(command, current_buffer_dir())
-end
-
 vim.keymap.set('n', '<leader>rr', function() cargo_terminal 'run' end, { desc = 'Cargo Run' })
-vim.keymap.set('n', '<leader>rb', function() cargo_zellij_float 'build' end, { desc = 'Cargo Build' })
-vim.keymap.set('n', '<leader>rt', function() cargo_zellij_float 'test' end, { desc = 'Cargo Test' })
-vim.keymap.set('n', '<leader>rc', function() cargo_zellij_float 'clippy' end, { desc = 'Cargo Clippy' })
+vim.keymap.set('n', '<leader>rb', function() Snacks.terminal.toggle() end, { desc = 'Cargo Build' })
+vim.keymap.set('n', '<leader>rt', function() Snacks.terminal.toggle() end, { desc = 'Cargo Test' })
+vim.keymap.set('n', '<leader>rc', function() Snacks.terminal.toggle() end, { desc = 'Cargo Clippy' })
 
 local function pick_org_notes()
   builtin.find_files {
@@ -289,9 +211,9 @@ pcall(
       { '<leader>x', group = 'Diagnostics' },
       { '<leader>b', group = 'Buffer' },
       { '<leader>bd', desc = 'Delete Buffer' },
-      { '<leader>tt', desc = 'New Terminal Buffer' },
+      { '<leader>T', desc = 'New Terminal Buffer' },
+      { '<leader>t', desc = 'Toggle Terminal Popup' },
       { '<leader>w', group = 'Window' },
-      { '<leader>t', group = 'Toggle' },
       { '<leader>wd', desc = 'Delete Window' },
       { '<leader>ww', desc = 'Switch Window' },
       { '<leader>wh', desc = 'Focus Left Window' },
@@ -300,17 +222,11 @@ pcall(
       { '<leader>wl', desc = 'Focus Right Window' },
       { '<leader>wv', desc = 'Vertical Split' },
       { '<leader>ws', desc = 'Horizontal Split' },
-      { '<leader>tw', desc = 'Toggle Which-Key' },
       { '<leader>r', group = 'Rust Tools' },
       { '<leader>rr', desc = 'Cargo Run' },
       { '<leader>rb', desc = 'Cargo Build' },
       { '<leader>rt', desc = 'Cargo Test' },
       { '<leader>rc', desc = 'Cargo Clippy' },
-      { '<leader>rd', group = 'Rust Debug' },
-      { '<leader>rdd', desc = 'Rust Debuggables' },
-      { '<leader>rdb', desc = 'Rust Debug: Toggle Breakpoint' },
-      { '<leader>rdc', desc = 'Rust Debug: Continue' },
-      { '<leader>rdu', desc = 'Rust Debug: Toggle UI' },
       { '<leader>o', group = 'Org' },
       { '<leader>od', desc = 'Daily Note' },
       { '<leader>of', desc = 'Find Org Note' },
