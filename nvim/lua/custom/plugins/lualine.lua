@@ -33,6 +33,10 @@ local function workspace_display_name(session)
   return vim.fn.fnamemodify(name, ':t')
 end
 
+local function is_branch_workspace(session)
+  return session.session_name and session.session_name:find('|', 1, true) ~= nil
+end
+
 local function current_workspace_name()
   if vim.v.this_session == '' then return nil end
 
@@ -42,22 +46,48 @@ local function current_workspace_name()
   return lib.escaped_session_path_to_session_name(vim.v.this_session)
 end
 
+local function open_workspace_names()
+  local names = {}
+  local seen = {}
+
+  for _, name in ipairs(_G.kickstart_open_workspaces or {}) do
+    if name and name ~= '' and not seen[name] then
+      table.insert(names, name)
+      seen[name] = true
+    end
+  end
+
+  local current = current_workspace_name()
+  if current and not seen[current] then table.insert(names, current) end
+
+  return names
+end
+
 local function auto_session_workspaces()
   local ok_auto, auto_session = pcall(require, 'auto-session')
   local ok_lib, lib = pcall(require, 'auto-session.lib')
   if not ok_auto or not ok_lib then return '' end
 
   local sessions = lib.get_session_list(auto_session.get_root_dir())
-  if vim.tbl_isempty(sessions) then return '' end
-
+  sessions = vim.tbl_filter(function(session) return not is_branch_workspace(session) end, sessions)
   sort_workspaces_by_saved_order(sessions)
+
+  local session_by_name = {}
+  for _, session in ipairs(sessions) do
+    session_by_name[session.session_name] = session
+  end
+
+  local open_names = open_workspace_names()
+  if vim.tbl_isempty(open_names) then return '' end
 
   local current = current_workspace_name()
   local parts = {}
 
   local reset_hl = vim.g.colors_name and ('%#lualine_c_normal#') or '%*'
 
-  for index, session in ipairs(sessions) do
+  local pruned_open_names = {}
+  for index, session_name in ipairs(open_names) do
+    local session = session_by_name[session_name] or { session_name = session_name, display_name = session_name }
     local name = index .. ':' .. workspace_display_name(session)
     if name ~= '' then
       if session.session_name == current then
@@ -65,8 +95,12 @@ local function auto_session_workspaces()
       else
         table.insert(parts, ' ' .. name .. ' ')
       end
+
+      if session_by_name[session_name] or session_name == current then table.insert(pruned_open_names, session_name) end
     end
   end
+
+  _G.kickstart_open_workspaces = pruned_open_names
 
   return table.concat(parts, '')
 end

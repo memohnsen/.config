@@ -390,6 +390,8 @@
       :desc "Search .emacs.d" "s e" #'mm/search-emacsd
       :desc "Search project" "s p" #'mm/search-project
       :desc "Search other project" "s P" #'mm/search-other-project
+      "s S" nil
+      :desc "Search project for word" "s w" #'+default/search-project-for-symbol-at-point
       :desc "Daily note" "o d" #'mm/open-daily-org
       :desc "Calendar" "o C" #'mm/open-calendar
       :desc "Find Org note" "o f" #'mm/find-org-note
@@ -1270,10 +1272,12 @@ terminal closes automatically when the program quits (e.g. `cargo run')."
   (interactive)
   (let* ((projects projectile-known-projects)
          (project-dir (completing-read "Project to open in new workspace: " projects nil t))
-         (workspace-name (file-name-nondirectory (directory-file-name project-dir))))
+         (workspace-name (file-name-nondirectory (directory-file-name project-dir)))
+         (kill-empty-main-p (mm/workspace-only-empty-main-p)))
     (when (and project-dir workspace-name)
       (+workspace-switch workspace-name t)
-      (projectile-switch-project-by-name project-dir))))
+      (projectile-switch-project-by-name project-dir)
+      (mm/workspace-kill-empty-main-maybe kill-empty-main-p))))
 
 (defun mm/workspace-switch-to ()
   "Switch workspace with Evil minibuffer navigation."
@@ -1303,6 +1307,21 @@ terminal closes automatically when the program quits (e.g. `cargo run')."
   "Return non-nil when BUFFER is a live file buffer."
   (and (buffer-live-p buffer)
        (buffer-file-name buffer)))
+
+(defun mm/workspace-only-empty-main-p ()
+  "Return non-nil when the only workspace is empty `main'."
+  (and (bound-and-true-p persp-mode)
+       (equal (+workspace-list-names) '("main"))
+       (equal (+workspace-current-name) "main")
+       (not (cl-some #'mm/workspace-file-buffer-p
+                     (+workspace-buffer-list (+workspace-current))))))
+
+(defun mm/workspace-kill-empty-main-maybe (should-kill)
+  "Kill the empty `main' workspace when SHOULD-KILL is non-nil."
+  (when (and should-kill
+             (+workspace-exists-p "main")
+             (not (equal (+workspace-current-name) "main")))
+    (+workspace/kill "main")))
 
 
 (defun mm/workspace-revive-saved-buffers (name)
@@ -1334,10 +1353,12 @@ terminal closes automatically when the program quits (e.g. `cargo run')."
        (persp-list-persp-names-in-file
         (expand-file-name +workspaces-data-file persp-save-dir))
        nil t))))
-  (when (+workspace-load name)
-    (+workspace/switch-to name)
-    (mm/workspace-revive-saved-buffers name)
-    (+workspace/display)))
+  (let ((kill-empty-main-p (mm/workspace-only-empty-main-p)))
+    (when (+workspace-load name)
+      (+workspace/switch-to name)
+      (mm/workspace-revive-saved-buffers name)
+      (mm/workspace-kill-empty-main-maybe kill-empty-main-p)
+      (+workspace/display))))
 
 (defun mm/workspace-save-if-saved (name)
   "Resave workspace NAME when it already exists in the saved workspace file."
