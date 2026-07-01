@@ -137,24 +137,6 @@ vim.keymap.set('n', '<leader>od', open_daily_note, { desc = 'Daily Note' })
 vim.keymap.set('n', '<leader>of', pick_org_notes, { desc = 'Find Org Note' })
 vim.keymap.set('n', '<leader>og', grep_org_notes, { desc = 'Grep Org Notes' })
 
-vim.keymap.set('c', '<CR>', function()
-  if vim.fn.getcmdtype() == ':' then
-    local command = vim.trim(vim.fn.getcmdline())
-    if command == '' then return '<cmd>write<CR>' end
-    if command:match '^q!?$' or command:match '^quit!?$' or command:match '^qa!?$' or command:match '^qall!?$' then
-      if _G.kickstart_org_active_clock_message then
-        local message = _G.kickstart_org_active_clock_message()
-        if message then
-          vim.notify(message, vim.log.levels.ERROR)
-          return '<C-c>'
-        end
-      end
-    end
-  end
-
-  return '<CR>'
-end, { expr = true, desc = 'Write from Empty Cmdline' })
-
 pcall(function()
   require('which-key').add {
     -- { '<leader>z', desc = 'Change Directory' },
