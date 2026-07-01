@@ -82,12 +82,12 @@ local function remember_workspace(session_name)
   if not session_name or session_name == '' then return end
 
   local order = read_workspace_order()
+  local updated = { session_name }
   for _, existing in ipairs(order) do
-    if existing == session_name then return end
+    if existing ~= session_name then table.insert(updated, existing) end
   end
 
-  table.insert(order, session_name)
-  write_workspace_order(order)
+  write_workspace_order(updated)
 end
 
 local function rename_workspace_in_order(old_name, new_name)
@@ -185,6 +185,7 @@ local function restore_workspace(session_name)
 
     if ok and restored ~= false then
       mark_workspace_open(session_name)
+      remember_workspace(session_name)
     elseif not ok then
       vim.notify('Workspace restore failed: ' .. tostring(restored), vim.log.levels.ERROR)
     end
@@ -443,6 +444,7 @@ local function save_workspace()
   end
 
   if require('auto-session').save_session(name, { show_message = true }) then
+    remember_workspace(name)
     mark_workspace_open(name)
     reset_workspace_cycle()
   end
