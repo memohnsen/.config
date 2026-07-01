@@ -83,7 +83,7 @@ local function auto_session_workspaces()
   local current = current_workspace_name()
   local parts = {}
 
-  local reset_hl = vim.g.colors_name and ('%#lualine_c_normal#') or '%*'
+  local reset_hl = vim.g.colors_name and ('%#lualine_y_normal#') or '%*'
 
   local pruned_open_names = {}
   for index, session_name in ipairs(open_names) do
@@ -214,7 +214,7 @@ require('lualine').setup {
       },
     },
     lualine_x = { org_clock_status },
-    lualine_y = { auto_session_workspaces },
+    lualine_y = { { auto_session_workspaces, padding = { left = 1, right = 0 } } },
     lualine_z = { 'location' },
   },
   inactive_sections = {

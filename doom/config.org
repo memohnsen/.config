@@ -282,7 +282,10 @@
   (defun mm/rust-save-setup-h ()
     (company-mode 1)
     (setq-local company-minimum-prefix-length 1
-                company-idle-delay 0.08
+                ;; Was 0.08, which fired a completion request to rust-analyzer
+                ;; after nearly every keystroke. `.'/`::' still complete
+                ;; instantly via `mm/rust-company-complete-after-trigger'.
+                company-idle-delay 0.2
                 company-backends '(company-capf))
     (add-hook 'before-save-hook #'mm/rust-organize-imports nil t)
     (add-hook 'before-save-hook #'eglot-format-buffer nil t)
@@ -701,7 +704,7 @@ Use vterm when its native module is available; fall back to `shell'."
 #+begin_src emacs-lisp
 (setq rustic-lsp-client 'eglot
       rustic-lsp-server 'rust-analyzer
-      rustic-lsp-check-command "clippy")
+      rustic-lsp-check-command "check")
 
 
 (defun mm/rust-organize-imports ()
@@ -721,14 +724,13 @@ Use vterm when its native module is available; fall back to `shell'."
          (with-current-buffer buffer
            (when (derived-mode-p 'rustic-mode 'rust-mode 'rust-ts-mode)
              (require 'eglot)
-             (require 'rustic-lsp)
              (condition-case err
+                 ;; `eglot-ensure' is idempotent: it no-ops if a server is
+                 ;; already managing this buffer, so it can't race with Doom's
+                 ;; own `rustic-setup-lsp'. (The old raw `(eglot ...)' call could
+                 ;; open a second, conflicting connection.)
                  (unless (bound-and-true-p eglot--managed-mode)
-                   (eglot '(rustic-mode rust-mode rust-ts-mode)
-                          (project-current t)
-                          'eglot-rust-analyzer
-                          '("rust-analyzer")
-                          '("rust")))
+                   (eglot-ensure))
                (error
                 (message "Rust Eglot failed: %s" (error-message-string err))))))))
      (current-buffer))))
@@ -743,8 +745,24 @@ Use vterm when its native module is available; fall back to `shell'."
   (setq eglot-autoshutdown t)
   (setq-default eglot-workspace-configuration
                 '(:gopls (:completeUnimported t)
-                  :rust-analyzer (:cargo (:allFeatures t)
-                                  :check (:command "clippy")))))
+                  :rust-analyzer
+                  ( ;; Default features only. `:allFeatures t' forces
+                    ;; rust-analyzer to analyze every feature of every crate,
+                    ;; which balloons memory/CPU and is a top cause of stalls in
+                    ;; large workspaces.
+                   :cargo (:buildScripts (:enable t))
+                   ;; `cargo check' (not clippy) on save, and only the current
+                   ;; crate rather than the whole workspace. Full-workspace
+                   ;; clippy-on-save is the main reason rust-analyzer appears to
+                   ;; "freeze": it can't answer highlight/completion requests
+                   ;; while the check runs. Use SPC r for clippy on demand.
+                   :check (:command "check" :workspace :json-false)
+                   :checkOnSave t
+                   ;; Skip the up-front symbol-indexing pass that stalls the
+                   ;; first several seconds after opening a big project.
+                   :cachePriming (:enable :json-false)
+                   ;; Don't scan/watch build artifacts.
+                   :files (:excludeDirs ["target" ".git"])))))
 
 
 (defun mm/eglot-start-h ()
