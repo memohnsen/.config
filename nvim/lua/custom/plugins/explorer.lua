@@ -26,7 +26,7 @@ snacks.setup {
   picker = {
     sources = {
       explorer = {
-        hidden = false,
+        hidden = true,
         ignored = true,
         jump = { close = true },
       },

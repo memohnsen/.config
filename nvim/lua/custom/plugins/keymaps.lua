@@ -71,23 +71,6 @@ end, { desc = 'New Terminal Buffer' })
 -- Toggle a snacks terminal popup
 vim.keymap.set('n', '<leader>t', function() Snacks.terminal.toggle() end, { desc = 'Toggle Terminal Popup' })
 
-vim.keymap.set('n', '<leader>wd', function()
-  if #vim.api.nvim_list_wins() == 1 then
-    vim.notify('Cannot delete the last window', vim.log.levels.WARN)
-    return
-  end
-
-  vim.cmd.close()
-end, { desc = 'Delete Window' })
-
-vim.keymap.set('n', '<leader>ww', '<C-w>w', { desc = 'Switch Window' })
-vim.keymap.set('n', '<leader>wh', '<C-w>h', { desc = 'Focus Left Window' })
-vim.keymap.set('n', '<leader>wj', '<C-w>j', { desc = 'Focus Lower Window' })
-vim.keymap.set('n', '<leader>wk', '<C-w>k', { desc = 'Focus Upper Window' })
-vim.keymap.set('n', '<leader>wl', '<C-w>l', { desc = 'Focus Right Window' })
-vim.keymap.set('n', '<leader>wv', '<cmd>vsplit<CR>', { desc = 'Vertical Split' })
-vim.keymap.set('n', '<leader>ws', '<cmd>split<CR>', { desc = 'Horizontal Split' })
-
 local function current_buffer_dir()
   local name = vim.api.nvim_buf_get_name(0)
   if name == '' then return vim.fn.getcwd() end
@@ -184,25 +167,6 @@ vim.keymap.set('c', '<CR>', function()
   return '<CR>'
 end, { expr = true, desc = 'Write from Empty Cmdline' })
 
-vim.keymap.set('n', 'gte', function()
-  vim.diagnostic.jump {
-    count = 1,
-    severity = vim.diagnostic.severity.ERROR,
-  }
-end, { desc = 'Next Error' })
-
-vim.keymap.set(
-  'n',
-  'gtE',
-  function()
-    vim.diagnostic.jump {
-      count = -1,
-      severity = vim.diagnostic.severity.ERROR,
-    }
-  end,
-  { desc = 'Previous Error' }
-)
-
 pcall(
   function()
     require('which-key').add {
@@ -213,15 +177,6 @@ pcall(
       { '<leader>bd', desc = 'Delete Buffer' },
       { '<leader>T', desc = 'New Terminal Buffer' },
       { '<leader>t', desc = 'Toggle Terminal Popup' },
-      { '<leader>w', group = 'Window' },
-      { '<leader>wd', desc = 'Delete Window' },
-      { '<leader>ww', desc = 'Switch Window' },
-      { '<leader>wh', desc = 'Focus Left Window' },
-      { '<leader>wj', desc = 'Focus Lower Window' },
-      { '<leader>wk', desc = 'Focus Upper Window' },
-      { '<leader>wl', desc = 'Focus Right Window' },
-      { '<leader>wv', desc = 'Vertical Split' },
-      { '<leader>ws', desc = 'Horizontal Split' },
       { '<leader>r', group = 'Rust Tools' },
       { '<leader>rr', desc = 'Cargo Run' },
       { '<leader>rb', desc = 'Cargo Build' },
@@ -254,15 +209,9 @@ pcall(
       { '<leader><Tab>D', desc = 'Delete Saved Workspace' },
       { 'gh', desc = 'Go to Line Start' },
       { 'gl', desc = 'Go to Line End' },
-      { 'ge', desc = 'Go to File Bottom' },
       { 'U', desc = 'Redo' },
       { 'H', desc = 'Previous Buffer' },
       { 'L', desc = 'Next Buffer' },
-      { '{', desc = 'Scroll Up' },
-      { '}', desc = 'Scroll Down' },
-      { '<D-s>', desc = 'Save File' },
-      { 'gte', desc = 'Next Error' },
-      { 'gtE', desc = 'Previous Error' },
       { '<leader><leader>', desc = 'Find files' },
     }
   end
