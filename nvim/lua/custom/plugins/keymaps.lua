@@ -140,7 +140,6 @@ vim.keymap.set('n', '<leader>og', grep_org_notes, { desc = 'Grep Org Notes' })
 pcall(function()
   require('which-key').add {
     -- { '<leader>z', desc = 'Change Directory' },
-    { '<leader>g', group = 'Git' },
     { '<leader>x', group = 'Diagnostics' },
     { '<leader>b', group = 'Buffer' },
     { '<leader>bd', desc = 'Delete Buffer' },

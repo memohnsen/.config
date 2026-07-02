@@ -77,8 +77,7 @@
     },
     "neogit": {
       "rev": "99326a1310fb2d616b455d2fd16d01bf00682f06",
-      "src": "https://github.com/NeogitOrg/neogit",
-      "version": "'master'"
+      "src": "https://github.com/NeogitOrg/neogit"
     },
     "nvim-autopairs": {
       "rev": "7b9923abad60b903ece7c52940e1321d39eccc79",
@@ -111,8 +110,7 @@
     },
     "octo.nvim": {
       "rev": "7fed87415c401954f73401bbed0fd736b9611e7c",
-      "src": "https://github.com/pwntester/octo.nvim",
-      "version": "'master'"
+      "src": "https://github.com/pwntester/octo.nvim"
     },
     "oil.nvim": {
       "rev": "17c0a8faaf48298a0c0cfb0d757c0eaee4ff7a32",

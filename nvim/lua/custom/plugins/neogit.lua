@@ -1,8 +1,11 @@
 vim.pack.add {
   { src = 'https://github.com/nvim-lua/plenary.nvim', version = 'master' },
   { src = 'https://github.com/sindrets/diffview.nvim', version = 'main' },
-  { src = 'https://github.com/NeogitOrg/neogit', version = 'master' },
 }
+
+-- Use the local development copy of neogit instead of the upstream repo
+vim.opt.runtimepath:prepend(vim.fn.expand '~/dev/neogit')
+vim.cmd 'runtime plugin/neogit.lua'
 
 local neogit = require 'neogit'
 
@@ -12,12 +15,10 @@ neogit.setup {
   },
 }
 
-vim.keymap.set('n', '<leader>gg', function()
-  neogit.open()
-end, { desc = 'Neogit' })
+vim.keymap.set('n', '<leader>g', function() neogit.open() end, { desc = 'Git' })
 
 pcall(function()
   require('which-key').add {
-    { '<leader>gg', desc = 'Neogit' },
+    { '<leader>g', desc = 'Git' },
   }
 end)

@@ -226,15 +226,13 @@ do
   pcall(telescope.load_extension, 'ui-select')
 
   local builtin = require 'telescope.builtin'
-  vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = 'Keymaps' })
-  vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = 'Files' })
   vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = 'Telescope' })
-  vim.keymap.set({ 'n', 'v' }, '<leader>sw', builtin.grep_string, { desc = 'Current Word' })
+  vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = 'Current Word' })
   vim.keymap.set('n', '<leader>sp', builtin.live_grep, { desc = 'Project' })
   vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = 'Diagnostics' })
-  vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = 'Resume' })
-  vim.keymap.set('n', '<leader>sc', builtin.commands, { desc = 'Commands' })
+  vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = 'Repeat Last Search' })
   vim.keymap.set('n', '<leader>sb', builtin.current_buffer_fuzzy_find, { desc = 'Buffer' })
+  vim.keymap.set('n', '<leader>st', '<cmd>TodoTelescope<CR>', { desc = 'Todo' })
   vim.keymap.set('n', '<leader><leader>', builtin.find_files, { desc = '[ ] Find files' })
 
   vim.api.nvim_create_autocmd('LspAttach', {
