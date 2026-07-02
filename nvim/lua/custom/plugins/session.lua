@@ -56,7 +56,7 @@ require('auto-session').setup {
   git_use_branch_name = false,
   git_auto_restore_on_branch_change = false,
   suppressed_dirs = { '~/Downloads', '/' },
-  close_filetypes_on_save = { 'NeogitStatus', 'checkhealth', 'help', 'lazy', 'neo-tree', 'qf', 'trouble' },
+  close_filetypes_on_save = { 'AnvilStatus', 'checkhealth', 'help', 'lazy', 'neo-tree', 'qf', 'trouble' },
   preserve_buffer_on_restore = function() return false end,
   session_lens = {
     picker = 'telescope',
