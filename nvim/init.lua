@@ -443,6 +443,9 @@ do
 
   require('mason-lspconfig').setup {
     ensure_installed = lsp_servers,
+    automatic_enable = {
+      exclude = { 'rust_analyzer' },
+    },
   }
 
   local mason_tools = {
