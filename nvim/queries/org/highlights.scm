@@ -7,3 +7,18 @@
 (listitem
   (checkbox status: (expr) @_status (#any-of? @_status "x" "X"))
   (paragraph) @org.checkbox.done)
+
+; Give the text inside #+begin_... / #+end_... blocks the same subtle
+; background as the block delimiters.
+(block
+  contents: (contents) @org.block.background)
+
+(block
+  name: (expr) @_name
+  contents: (contents) @org.quote
+  (#any-of? @_name "quote" "QUOTE"))
+
+(block
+  name: (expr) @_name
+  contents: (contents) @org.block.code
+  (#any-of? @_name "src" "SRC" "example" "EXAMPLE" "export" "EXPORT" "comment" "COMMENT"))

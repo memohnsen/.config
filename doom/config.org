@@ -51,6 +51,38 @@
 #+begin_src emacs-lisp
 (setq doom-theme 'doom-one)
 
+(defface mm-modeline-mode-normal
+  '((t (:foreground "#282c34" :background "#98c379" :weight bold)))
+  "Face for normal state in the lualine-style modeline.")
+
+(defface mm-modeline-mode-insert
+  '((t (:foreground "#282c34" :background "#61afef" :weight bold)))
+  "Face for insert state in the lualine-style modeline.")
+
+(defface mm-modeline-mode-visual
+  '((t (:foreground "#282c34" :background "#c678dd" :weight bold)))
+  "Face for visual state in the lualine-style modeline.")
+
+(defface mm-modeline-mode-command
+  '((t (:foreground "#282c34" :background "#e5c07b" :weight bold)))
+  "Face for command state in the lualine-style modeline.")
+
+(defface mm-modeline-mode-terminal
+  '((t (:foreground "#282c34" :background "#56b6c2" :weight bold)))
+  "Face for terminal state in the lualine-style modeline.")
+
+(defface mm-modeline-mode-replace
+  '((t (:foreground "#282c34" :background "#e06c75" :weight bold)))
+  "Face for replace state in the lualine-style modeline.")
+
+(defface mm-modeline-branch
+  '((t (:foreground "#abb2bf" :background "#3e4452")))
+  "Face for the branch section in the lualine-style modeline.")
+
+(defface mm-modeline-workspace-current
+  '((t (:foreground "#282c34" :background "#61afef" :weight bold)))
+  "Face for the current workspace in the modeline.")
+
 
 (defun mm/apply-onedark-faces ()
   "Tune Doom's theme to match the Neovim onedark palette."
@@ -81,7 +113,14 @@
     '(doom-modeline-bar-inactive :background "#282c34")
     '(doom-modeline-emphasis :foreground "#abb2bf" :background "#31353f")
     '(doom-modeline-highlight :foreground "#61afef" :background "#31353f")
-    '(mm-modeline-workspace-current :foreground "#282c34" :background "#61afef" :weight normal)
+    '(mm-modeline-mode-normal :foreground "#282c34" :background "#98c379" :weight bold)
+    '(mm-modeline-mode-insert :foreground "#282c34" :background "#61afef" :weight bold)
+    '(mm-modeline-mode-visual :foreground "#282c34" :background "#c678dd" :weight bold)
+    '(mm-modeline-mode-command :foreground "#282c34" :background "#e5c07b" :weight bold)
+    '(mm-modeline-mode-terminal :foreground "#282c34" :background "#56b6c2" :weight bold)
+    '(mm-modeline-mode-replace :foreground "#282c34" :background "#e06c75" :weight bold)
+    '(mm-modeline-branch :foreground "#abb2bf" :background "#3e4452")
+    '(mm-modeline-workspace-current :foreground "#282c34" :background "#61afef" :weight bold)
     '(doom-modeline-buffer-file :foreground "#61afef" :weight bold)
     '(doom-modeline-buffer-path :foreground "#61afef" :weight bold)
     '(doom-modeline-buffer-modified :foreground "#56b6c2" :background "#31353f" :weight bold)
@@ -139,8 +178,134 @@
 *** Modeline
 #+begin_src emacs-lisp
 (after! doom-modeline
+  (setq doom-modeline-bar-width 0
+        doom-modeline-buffer-file-name-style 'relative-to-project
+        doom-modeline-check 'full
+        doom-modeline-icon t
+        doom-modeline-major-mode-icon nil
+        doom-modeline-modal nil)
+
+  (defun mm/modeline-evil-state ()
+    "Return the current Evil state like lualine's mode component."
+    (upcase
+     (if (bound-and-true-p evil-local-mode)
+         (symbol-name evil-state)
+       (format-mode-line mode-name))))
+
+  (defun mm/modeline-mode-face ()
+    "Return the lualine onedark face for the current mode/state."
+    (pcase (and (bound-and-true-p evil-local-mode) evil-state)
+      ('normal 'mm-modeline-mode-normal)
+      ('insert 'mm-modeline-mode-insert)
+      ('visual 'mm-modeline-mode-visual)
+      ('vterm 'mm-modeline-mode-terminal)
+      ('replace 'mm-modeline-mode-replace)
+      ('operator 'mm-modeline-mode-command)
+      ('motion 'mm-modeline-mode-normal)
+      (_ 'mm-modeline-mode-normal)))
+
+  (defun mm/modeline-file-name ()
+    "Return the current file name relative to the project when possible."
+    (let ((name (or buffer-file-name (buffer-name))))
+      (if buffer-file-name
+          (let* ((root (or (ignore-errors (doom-project-root))
+                           (locate-dominating-file buffer-file-name ".git")
+                           default-directory))
+                 (relative (file-relative-name buffer-file-name root)))
+            (concat relative
+                    (cond (buffer-read-only " RO")
+                          ((buffer-modified-p) " [+]")
+                          (t ""))))
+        name)))
+
+  (defun mm/modeline-git-root ()
+    "Return the Git root for the current buffer."
+    (when-let ((file buffer-file-name))
+      (locate-dominating-file file ".git")))
+
+  (defun mm/modeline-git-branch ()
+    "Return the current Git branch."
+    (when-let ((root (mm/modeline-git-root)))
+      (let ((default-directory root))
+        (string-trim
+         (or (ignore-errors
+               (car (process-lines "git" "branch" "--show-current")))
+             "")))))
+
+  (defun mm/modeline-git-diff ()
+    "Return lualine-style file diff counts."
+    (when (and buffer-file-name (mm/modeline-git-root))
+      (let* ((default-directory (mm/modeline-git-root))
+             (file (file-relative-name buffer-file-name default-directory))
+             (stat (ignore-errors
+                     (car (process-lines "git" "diff" "--numstat" "--" file)))))
+        (when (and stat (not (string-empty-p stat)))
+          (pcase-let ((`(,added ,deleted . ,_) (split-string stat "\t")))
+            (let ((parts nil))
+              (unless (string= added "0")
+                (push (propertize (concat "+" added) 'face 'doom-modeline-info) parts))
+              (unless (string= deleted "0")
+                (push (propertize (concat "-" deleted) 'face 'doom-modeline-urgent) parts))
+              (when parts
+                (concat " " (string-join (nreverse parts) " ")))))))))
+
+  (defun mm/modeline-diagnostic-counts ()
+    "Return diagnostics as E:/W:/I:/H: counts like lualine."
+    (let ((error 0)
+          (warning 0)
+          (info 0)
+          (hint 0))
+      (cond
+       ((bound-and-true-p flymake-mode)
+        (dolist (diag (flymake-diagnostics (point-min) (point-max)))
+          (pcase (flymake-diagnostic-type diag)
+            (:error (cl-incf error))
+            (:warning (cl-incf warning))
+            (_ (cl-incf info)))))
+       ((bound-and-true-p flycheck-mode)
+        (dolist (item (flycheck-count-errors flycheck-current-errors))
+          (pcase (flycheck-error-level-compilation-level (car item))
+            (2 (cl-incf error (cdr item)))
+            (1 (cl-incf warning (cdr item)))
+            (0 (cl-incf info (cdr item)))))))
+      (let ((parts nil))
+        (when (> error 0)
+          (push (propertize (format "E:%d" error) 'face 'doom-modeline-urgent) parts))
+        (when (> warning 0)
+          (push (propertize (format "W:%d" warning) 'face 'doom-modeline-warning) parts))
+        (when (> info 0)
+          (push (propertize (format "I:%d" info) 'face 'doom-modeline-info) parts))
+        (when (> hint 0)
+          (push (propertize (format "H:%d" hint) 'face 'doom-modeline-info) parts))
+        (when parts
+          (concat " " (string-join (nreverse parts) " "))))))
+
+  (doom-modeline-def-segment mm-mode
+    "Show Evil mode like lualine_a."
+    (propertize (format " %s " (mm/modeline-evil-state))
+                'face (mm/modeline-mode-face)))
+
+  (doom-modeline-def-segment mm-branch
+    "Show Git branch like lualine_b."
+    (when-let ((branch (mm/modeline-git-branch)))
+      (unless (string-empty-p branch)
+        (propertize (format " %s " branch) 'face 'mm-modeline-branch))))
+
+  (doom-modeline-def-segment mm-diff
+    "Show diff counts like lualine_b."
+    (mm/modeline-git-diff))
+
+  (doom-modeline-def-segment mm-diagnostics
+    "Show diagnostics like lualine_b."
+    (mm/modeline-diagnostic-counts))
+
+  (doom-modeline-def-segment mm-file
+    "Show file path like lualine_c filename path=1."
+    (concat " " (propertize (mm/modeline-file-name)
+                            'face 'doom-modeline-buffer-file)))
+
   (doom-modeline-def-segment mm-workspaces
-    "Show all open Doom workspaces."
+    "Show all open Doom workspaces like the Neovim lualine workspace component."
     (when (and (bound-and-true-p persp-mode)
                (fboundp '+workspace-list-names)
                (fboundp '+workspace-current-name)
@@ -150,8 +315,8 @@
               (current-name (+workspace-current-name)))
           (when names
             (let ((index 0))
-              (format
-               " %s "
+              (concat
+               " "
                (mapconcat
                 #'identity
                 (mapcar
@@ -165,15 +330,17 @@
                  names)
                 ""))))))))
 
+  (doom-modeline-def-segment mm-location
+    "Show line and column like lualine_z location."
+    (format " %d:%d " (line-number-at-pos) (current-column)))
 
-(doom-modeline-def-modeline 'main
-    '(eldoc bar window-state workspace-name window-number modals matches follow buffer-info remote-host buffer-position word-count parrot selection-info)
-    '(compilation objed-state misc-info project-name mm-workspaces battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time))
+  (doom-modeline-def-modeline 'main
+    '(mm-mode mm-branch mm-diff mm-diagnostics mm-file)
+    '(mm-workspaces mm-location))
 
-
-(doom-modeline-def-modeline 'dashboard
-    '(bar window-number modals buffer-default-directory-simple remote-host)
-    '(compilation misc-info mm-workspaces battery irc mu4e gnus github debug minor-modes input-method major-mode process time)))
+  (doom-modeline-def-modeline 'dashboard
+    '(mm-mode mm-file)
+    '(mm-workspaces mm-location)))
 #+end_src
 
 *** Centaur Tabs
@@ -1295,6 +1462,7 @@ terminal closes automatically when the program quits (e.g. `cargo run')."
     (when (and project-dir workspace-name)
       (+workspace-switch workspace-name t)
       (projectile-switch-project-by-name project-dir)
+      (+workspace-save workspace-name)
       (mm/workspace-kill-empty-main-maybe kill-empty-main-p))))
 
 (defun mm/workspace-switch-to ()
@@ -1534,10 +1702,6 @@ terminal closes automatically when the program quits (e.g. `cargo run')."
 (map! :n "L" #'mm/tab-right)
 
 (require 'cl-lib)
-
-(defface mm-modeline-workspace-current
-  '((t (:foreground "#282c34" :background "#61afef" :weight normal)))
-  "Face for the current workspace in the modeline.")
 
 (defface mm/comment-todo-keyword
   '((t (:foreground "#000000"

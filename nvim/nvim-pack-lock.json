@@ -10,7 +10,7 @@
       "version": "2.0.0 - 3.0.0"
     },
     "anvil.nvim": {
-      "rev": "53b9fb4ac863b6ca67c00ac6ed9150abdc41d811",
+      "rev": "b647989675d5dc5ef383c0278aa2a5b501a67bfa",
       "src": "https://github.com/memohnsen/anvil.nvim"
     },
     "auto-session": {

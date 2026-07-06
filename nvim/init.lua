@@ -3,6 +3,9 @@
 -- Core Neovim settings, leaders, options, basic keymaps, basic autocmds
 -- ============================================================
 do
+  -- Fall back to $HOME if Neovim starts from a directory that was deleted.
+  if not vim.uv.cwd() then vim.cmd.cd() end
+
   -- Enable faster startup by caching compiled Lua modules
   vim.loader.enable()
   vim.g.mapleader = ' '

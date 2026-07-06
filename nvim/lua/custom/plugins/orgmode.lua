@@ -37,6 +37,15 @@ local function complete_todo_or_enter()
   vim.cmd.normal { 'j', bang = true }
 end
 
+-- Doom's C-RET: continue the current structure (heading, list item, or
+-- checkbox) on a new line below and leave the cursor in insert mode.
+local function org_insert_item_below()
+  require('orgmode').action 'org_mappings.meta_return'
+  vim.schedule(function()
+    if vim.api.nvim_get_mode().mode == 'n' then vim.cmd.startinsert { bang = true } end
+  end)
+end
+
 local function find_current_headline()
   local row = vim.api.nvim_win_get_cursor(0)[1]
   for lnum = row, 1, -1 do
@@ -189,6 +198,8 @@ local doom = {
   cyan = '#46D9FF',
 }
 
+local org_block_background_ns = vim.api.nvim_create_namespace 'kickstart_org_block_background'
+
 local function apply_org_headline_colors()
   local hl = function(group, val) vim.api.nvim_set_hl(0, group, val) end
 
@@ -207,10 +218,14 @@ local function apply_org_headline_colors()
     hl('@org.headline.level' .. level, { fg = color, bold = true })
   end
 
-  -- Source/example blocks: subtle tinted background like doom-themes-org-config.
-  hl('@org.block', { bg = doom.base3 })
+  -- Org blocks: subtle tinted background like doom-themes-org-config.
+  hl('@org.block', { fg = doom.grey, bg = doom.base3 })
   hl('OrgBlock', { bg = doom.base3 })
-  hl('@org.block.background', { bg = doom.base3 })
+  hl('OrgBlockBackground', { bg = doom.base3 })
+  hl('OrgBlockWrapPrefix', { fg = doom.base3, bg = doom.base3 })
+  hl('@org.block.background', { fg = doom.fg, bg = doom.base3 })
+  hl('@org.block.code', { fg = doom.fg, bg = doom.base3, italic = false })
+  hl('@org.quote', { fg = doom.fg, bg = doom.base3, italic = true })
   hl('OrgBlockTangleInfo', { fg = doom.grey, bg = doom.base3 })
 
   -- Inline markup.
@@ -245,6 +260,40 @@ local function apply_org_headline_colors()
   hl('@org.priority.default', { fg = doom.yellow })
   hl('@org.priority.low', { fg = doom.green })
   hl('@org.priority.lowest', { fg = doom.grey })
+end
+
+local function refresh_org_block_backgrounds(bufnr)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+  if not vim.api.nvim_buf_is_valid(bufnr) or vim.bo[bufnr].filetype ~= 'org' then return end
+
+  vim.api.nvim_buf_clear_namespace(bufnr, org_block_background_ns, 0, -1)
+
+  local in_block = false
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  for lnum, line in ipairs(lines) do
+    local lower_line = line:lower()
+    if lower_line:match '^%s*#%+begin_' then in_block = true end
+
+    if in_block then
+      vim.api.nvim_buf_set_extmark(bufnr, org_block_background_ns, lnum - 1, 0, {
+        line_hl_group = 'OrgBlockBackground',
+        priority = 80,
+      })
+    end
+
+    if lower_line:match '^%s*#%+end_' then in_block = false end
+  end
+end
+
+local function set_org_window_highlight(from, to)
+  local mappings = {}
+  for mapping in vim.gsplit(vim.wo.winhighlight, ',', { plain = true, trimempty = true }) do
+    local existing_from, existing_to = mapping:match '^([^:]+):(.+)$'
+    if existing_from and existing_from ~= from then mappings[#mappings + 1] = existing_from .. ':' .. existing_to end
+  end
+
+  mappings[#mappings + 1] = from .. ':' .. to
+  vim.wo.winhighlight = table.concat(mappings, ',')
 end
 
 local function run_command(command, opts)
@@ -392,8 +441,27 @@ vim.api.nvim_create_autocmd('FileType', {
     local bufname = vim.api.nvim_buf_get_name(event.buf)
     if vim.bo[event.buf].buftype ~= '' or not bufname:match '%.org$' then return end
 
+    -- Conceal org links to just their underlined description in normal mode,
+    -- but reveal the raw [[url][desc]] on the cursor line when editing (insert).
+    vim.wo.conceallevel = 2
+    vim.wo.concealcursor = 'nc'
+    vim.wo.breakindent = false
+    vim.wo.breakindentopt = ''
+    vim.wo.linebreak = true
+    vim.wo.showbreak = '  '
+    set_org_window_highlight('NonText', 'OrgBlockWrapPrefix')
+
+    refresh_org_block_backgrounds(event.buf)
+
     vim.keymap.set('n', '<CR>', complete_todo_or_enter, { buffer = event.buf, desc = 'Complete TODO or Enter' })
     vim.keymap.set('n', '<leader>or', prompt_recurring_todo, { buffer = event.buf, desc = 'Make TODO Recurring' })
+
+    -- Doom's C-RET: continue the current heading/list/checkbox on a new line
+    -- below and drop into insert mode, from both normal and insert mode.
+    vim.keymap.set({ 'n', 'i' }, '<C-CR>', function()
+      if vim.api.nvim_get_mode().mode == 'i' then vim.cmd.stopinsert() end
+      org_insert_item_below()
+    end, { buffer = event.buf, desc = 'Insert Org Item Below' })
     pcall(
       function()
         require('which-key').add({
@@ -410,6 +478,12 @@ vim.api.nvim_create_autocmd('FileType', {
       end
     )
   end,
+})
+
+vim.api.nvim_create_autocmd({ 'BufEnter', 'TextChanged', 'TextChangedI', 'InsertLeave' }, {
+  group = vim.api.nvim_create_augroup('kickstart_org_block_backgrounds', { clear = true }),
+  pattern = '*.org',
+  callback = function(event) refresh_org_block_backgrounds(event.buf) end,
 })
 
 vim.api.nvim_create_autocmd('BufWritePre', {
@@ -443,7 +517,7 @@ require('orgmode').setup(opts)
 -- prettify checkboxes, matching Doom's default org appearance.
 vim.pack.add { gh 'nvim-orgmode/org-bullets.nvim' }
 require('org-bullets').setup {
-  concealcursor = false,
+  concealcursor = 'nc', -- keep concealment on the cursor line in normal/command mode; reveal in insert
   symbols = {
     headlines = { '◉', '○', '✸', '✿' },
     -- Checkboxes are handled by a treesitter conceal in queries/org/highlights.scm

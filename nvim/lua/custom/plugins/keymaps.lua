@@ -86,12 +86,21 @@ local function cargo_root()
   return vim.fn.getcwd()
 end
 
-local function cargo_terminal(action) Snacks.terminal.toggle('cargo ' .. action, { cwd = cargo_root() }) end
+local function cargo_terminal(action, opts)
+  opts = vim.tbl_deep_extend('force', { auto_close = false, cwd = cargo_root() }, opts or {})
+  Snacks.terminal.toggle('cargo ' .. action, opts)
+end
+
+local cargo_popup_opts = {
+  win = {
+    position = 'bottom',
+  },
+}
 
 vim.keymap.set('n', '<leader>rr', function() cargo_terminal 'run' end, { desc = 'Cargo Run' })
-vim.keymap.set('n', '<leader>rb', function() cargo_terminal 'build' end, { desc = 'Cargo Build' })
-vim.keymap.set('n', '<leader>rt', function() cargo_terminal 'test' end, { desc = 'Cargo Test' })
-vim.keymap.set('n', '<leader>rc', function() cargo_terminal 'clippy' end, { desc = 'Cargo Clippy' })
+vim.keymap.set('n', '<leader>rb', function() cargo_terminal('build', cargo_popup_opts) end, { desc = 'Cargo Build' })
+vim.keymap.set('n', '<leader>rt', function() cargo_terminal('test', cargo_popup_opts) end, { desc = 'Cargo Test' })
+vim.keymap.set('n', '<leader>rc', function() cargo_terminal('clippy', cargo_popup_opts) end, { desc = 'Cargo Clippy' })
 
 local function pick_org_notes()
   builtin.find_files {
@@ -142,7 +151,6 @@ pcall(function()
     -- { '<leader>z', desc = 'Change Directory' },
     { '<leader>x', group = 'Diagnostics' },
     { '<leader>b', group = 'Buffer' },
-    { '<leader>bd', desc = 'Delete Buffer' },
     { '<leader>T', desc = 'New Terminal Buffer' },
     { '<leader>t', desc = 'Toggle Terminal Popup' },
     { '<leader>r', group = 'Rust Tools' },
