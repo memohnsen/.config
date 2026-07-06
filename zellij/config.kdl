@@ -228,30 +228,55 @@ keybinds clear-defaults=true {
     }
     renamepane {
         bind "esc" { UndoRenamePane; SwitchToMode "pane"; }
-    }
-    shared_among "session" "tmux" {
-        bind "d" { Detach; }
-    }
-    tmux {
-        bind "left" { MoveFocus "left"; SwitchToMode "normal"; }
-        bind "down" { MoveFocus "down"; SwitchToMode "normal"; }
-        bind "up" { MoveFocus "up"; SwitchToMode "normal"; }
-        bind "right" { MoveFocus "right"; SwitchToMode "normal"; }
-        bind "space" { NextSwapLayout; }
-        bind "\"" { NewPane "down"; SwitchToMode "normal"; }
-        bind "%" { NewPane "right"; SwitchToMode "normal"; }
-        bind "," { SwitchToMode "renametab"; }
-        bind "[" { SwitchToMode "scroll"; }
-        bind "Ctrl b" { Write 2; SwitchToMode "normal"; }
-        bind "c" { NewTab; SwitchToMode "normal"; }
-        bind "h" { MoveFocus "left"; SwitchToMode "normal"; }
-        bind "j" { MoveFocus "down"; SwitchToMode "normal"; }
-        bind "k" { MoveFocus "up"; SwitchToMode "normal"; }
-        bind "l" { MoveFocus "right"; SwitchToMode "normal"; }
-        bind "n" { GoToNextTab; SwitchToMode "normal"; }
-        bind "o" { FocusNextPane; }
-        bind "p" { GoToPreviousTab; SwitchToMode "normal"; }
-        bind "z" { ToggleFocusFullscreen; SwitchToMode "normal"; }
+    }	
+    shared_except "locked" {
+        bind "Ctrl y" {
+            LaunchOrFocusPlugin "file:~/.config/zellij/plugins/zellij_forgot.wasm" {
+                "LOAD_ZELLIJ_BINDINGS" "false"
+                "lock"                  "ctrl + g"
+                "unlock"                "ctrl + g"
+                "new pane"              "ctrl + p + n"
+                "change focus of pane"  "ctrl + p + arrow key"
+                "close pane"            "ctrl + p + x"
+                "rename pane"           "ctrl + p + c"
+                "toggle fullscreen"     "ctrl + p + f"
+                "toggle floating pane"  "ctrl + p + w"
+                "toggle embed pane"     "ctrl + p + e"
+                "choose right pane"     "ctrl + p + l"
+                "choose left pane"      "ctrl + p + r"
+                "choose upper pane"     "ctrl + p + k"
+                "choose lower pane"     "ctrl + p + j"
+                "new tab"               "ctrl + t + n"
+                "close tab"             "ctrl + t + x"
+                "change focus of tab"   "ctrl + t + arrow key"
+                "rename tab"            "ctrl + t + r"
+                "sync tab"              "ctrl + t + s"
+                "brake pane to new tab" "ctrl + t + b"
+                "brake pane left"       "ctrl + t + ["
+                "brake pane right"      "ctrl + t + ]"
+                "toggle tab"            "ctrl + t + tab"
+                "increase pane size"    "ctrl + n + +"
+                "decrease pane size"    "ctrl + n + -"
+                "increase pane top"     "ctrl + n + k"
+                "increase pane right"   "ctrl + n + l"
+                "increase pane bottom"  "ctrl + n + j"
+                "increase pane left"    "ctrl + n + h"
+                "decrease pane top"     "ctrl + n + K"
+                "decrease pane right"   "ctrl + n + L"
+                "decrease pane bottom"  "ctrl + n + J"
+                "decrease pane left"    "ctrl + n + H"
+                "move pane to top"      "ctrl + h + k"
+                "move pane to right"    "ctrl + h + l"
+                "move pane to bottom"   "ctrl + h + j"
+                "move pane to left"     "ctrl + h + h"
+                "search"                "ctrl + s + s"
+                "go into edit mode"     "ctrl + s + e"
+                "detach session"        "ctrl + o + w"
+                "open session manager"  "ctrl + o + w"
+                "quit zellij"           "ctrl + q"
+                floating true
+            }
+        }
     }
 }
 
@@ -298,10 +323,127 @@ web_client {
 // 
 // osc8_hyperlinks true
  
+themes {
+    onedark-nvim {
+        text_unselected {
+            base 171 178 191
+            background 30 34 42
+            emphasis_0 92 99 112
+            emphasis_1 97 175 239
+            emphasis_2 229 192 123
+            emphasis_3 198 120 221
+        }
+        text_selected {
+            base 40 44 52
+            background 97 175 239
+            emphasis_0 30 34 42
+            emphasis_1 171 178 191
+            emphasis_2 229 192 123
+            emphasis_3 198 120 221
+        }
+        ribbon_unselected {
+            base 92 99 112
+            background 30 34 42
+            emphasis_0 171 178 191
+            emphasis_1 97 175 239
+            emphasis_2 229 192 123
+            emphasis_3 198 120 221
+        }
+        ribbon_selected {
+            base 40 44 52
+            background 97 175 239
+            emphasis_0 30 34 42
+            emphasis_1 171 178 191
+            emphasis_2 229 192 123
+            emphasis_3 198 120 221
+        }
+        table_title {
+            base 97 175 239
+            background 30 34 42
+            emphasis_0 171 178 191
+            emphasis_1 229 192 123
+            emphasis_2 198 120 221
+            emphasis_3 86 182 194
+        }
+        table_cell_unselected {
+            base 171 178 191
+            background 30 34 42
+            emphasis_0 92 99 112
+            emphasis_1 97 175 239
+            emphasis_2 229 192 123
+            emphasis_3 198 120 221
+        }
+        table_cell_selected {
+            base 40 44 52
+            background 97 175 239
+            emphasis_0 30 34 42
+            emphasis_1 171 178 191
+            emphasis_2 229 192 123
+            emphasis_3 198 120 221
+        }
+        list_unselected {
+            base 171 178 191
+            background 30 34 42
+            emphasis_0 92 99 112
+            emphasis_1 97 175 239
+            emphasis_2 229 192 123
+            emphasis_3 198 120 221
+        }
+        list_selected {
+            base 40 44 52
+            background 97 175 239
+            emphasis_0 30 34 42
+            emphasis_1 171 178 191
+            emphasis_2 229 192 123
+            emphasis_3 198 120 221
+        }
+        frame_unselected {
+            base 30 34 42
+            background 30 34 42
+            emphasis_0 92 99 112
+            emphasis_1 97 175 239
+            emphasis_2 229 192 123
+            emphasis_3 198 120 221
+        }
+        frame_selected {
+            base 97 175 239
+            background 30 34 42
+            emphasis_0 171 178 191
+            emphasis_1 97 175 239
+            emphasis_2 229 192 123
+            emphasis_3 198 120 221
+        }
+        frame_highlight {
+            base 229 192 123
+            background 30 34 42
+            emphasis_0 171 178 191
+            emphasis_1 97 175 239
+            emphasis_2 229 192 123
+            emphasis_3 198 120 221
+        }
+        exit_code_success {
+            base 152 195 121
+            background 30 34 42
+            emphasis_0 171 178 191
+            emphasis_1 97 175 239
+            emphasis_2 229 192 123
+            emphasis_3 198 120 221
+        }
+        exit_code_error {
+            base 224 108 117
+            background 30 34 42
+            emphasis_0 171 178 191
+            emphasis_1 97 175 239
+            emphasis_2 229 192 123
+            emphasis_3 198 120 221
+        }
+    }
+}
+
 // Choose the theme that is specified in the themes section.
 // Default: default
 // 
-theme "onedark"
+theme "onedark-nvim"
  
 // Theme to use when the host terminal reports a dark color palette.
 // Requires `theme_light` to also be set; otherwise `theme` is used.
@@ -330,7 +472,7 @@ theme "onedark"
 // The name of the default layout to load on startup
 // Default: "default"
 // 
-// default_layout "compact"
+default_layout "zjstatus"
  
 // The folder in which Zellij will look for layouts
 // (Requires restart)
@@ -356,7 +498,7 @@ theme "onedark"
 //   - true (default, enabled)
 //   - false
 // 
-// pane_frames false
+pane_frames false
  
 // When attaching to an existing session with other users,
 // should the session be mirrored (true)

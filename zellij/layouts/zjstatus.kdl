@@ -1,0 +1,39 @@
+layout {
+    default_tab_template {
+        children
+        pane size=1 borderless=true {
+            plugin location="file:/Users/maddisenmohnsen/.config/zellij/plugins/zjstatus.wasm" {
+                format_left   "#[fg=#282C34,bg=#61AFEF,bold] {session} #[bg=#1E222A]{tabs}"
+                format_center ""
+                format_right  "{datetime}"
+                format_space  "#[bg=#1E222A]"
+
+                border_enabled  "false"
+                border_char     "─"
+                border_format   "#[fg=#1E222A,bg=#1E222A]{char}"
+                border_position "top"
+
+                mode_normal  "#[fg=#282C34,bg=#61AFEF,bold] {name} "
+                mode_tmux    "#[fg=#282C34,bg=#E5C07B,bold] {name} "
+
+                tab_normal   "#[fg=#5C6370,bg=#1E222A] {index} {name} "
+                tab_active   "#[fg=#ABB2BF,bg=#1E222A,bold,italic] {index} {name} "
+                tab_separator ""
+
+                datetime        "#[fg=#5C6370,bg=#1E222A,bold] {format} "
+                datetime_format "%A, %d %b %Y %H:%M"
+                datetime_timezone "America/New_York"
+            }
+        }
+    }
+
+    tab name="nvim" focus=true {
+        pane command="zsh" {
+            args "-lc" "nvim; exec zsh -l"
+        }
+    }
+
+    tab name="terminal" {
+        pane
+    }
+}

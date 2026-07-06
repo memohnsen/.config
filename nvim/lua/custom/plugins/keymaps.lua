@@ -6,9 +6,6 @@ vim.keymap.set('n', 'U', '<C-r>', { desc = 'Redo' })
 vim.keymap.set('n', 'H', '<cmd>bprevious<CR>', { desc = 'Previous Buffer' })
 vim.keymap.set('n', 'L', '<cmd>bnext<CR>', { desc = 'Next Buffer' })
 
-local org_dir = vim.fn.expand '~/dev/org'
-local daily_dir = org_dir .. '/daily'
-
 -- vim.keymap.set('n', '<leader>z', function()
 --   if vim.fn.executable 'zoxide' ~= 1 then
 --     builtin.find_files { prompt_title = 'Change Directory' }
@@ -101,50 +98,6 @@ vim.keymap.set('n', '<leader>rr', function() cargo_terminal 'run' end, { desc = 
 vim.keymap.set('n', '<leader>rb', function() cargo_terminal('build', cargo_popup_opts) end, { desc = 'Cargo Build' })
 vim.keymap.set('n', '<leader>rt', function() cargo_terminal('test', cargo_popup_opts) end, { desc = 'Cargo Test' })
 vim.keymap.set('n', '<leader>rc', function() cargo_terminal('clippy', cargo_popup_opts) end, { desc = 'Cargo Clippy' })
-
-local function pick_org_notes()
-  builtin.find_files {
-    cwd = org_dir,
-    find_command = { 'rg', '--files', '--glob', '*.org' },
-    prompt_title = 'Org Notes',
-  }
-end
-
-local function grep_org_notes()
-  builtin.live_grep {
-    cwd = org_dir,
-    glob_pattern = '*.org',
-    prompt_title = 'Grep Org Notes',
-  }
-end
-
-local function open_daily_note()
-  vim.fn.mkdir(daily_dir, 'p')
-
-  local file = daily_dir .. '/' .. os.date '%Y-%m-%d' .. '.org'
-  local is_new = vim.fn.filereadable(file) == 0
-
-  vim.cmd.edit(vim.fn.fnameescape(file))
-
-  if is_new then
-    local title = os.date '%A, %B %e, %Y'
-    vim.api.nvim_buf_set_lines(0, 0, -1, false, {
-      '#+title: ' .. title,
-      '',
-      '* What I did',
-      '* TODO ',
-      '',
-      '* Notes',
-      '',
-    })
-  end
-end
-
-vim.api.nvim_create_user_command('OrgFiles', pick_org_notes, { desc = 'Pick an org-mode note under ~/dev/org' })
-
-vim.keymap.set('n', '<leader>od', open_daily_note, { desc = 'Daily Note' })
-vim.keymap.set('n', '<leader>of', pick_org_notes, { desc = 'Find Org Note' })
-vim.keymap.set('n', '<leader>og', grep_org_notes, { desc = 'Grep Org Notes' })
 
 pcall(function()
   require('which-key').add {
