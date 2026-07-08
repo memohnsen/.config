@@ -4,4 +4,11 @@ bookokrat/
 emacs/
 doom/config.el
 doom/debug-adapters/
-raycast/extensions/
+gh/
+homebrew/
+op/
+swiftpm/
+tuxedo/
+raycast/
+opencode/
+rustcast/
