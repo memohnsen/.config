@@ -181,7 +181,22 @@ do
   vim.cmd.colorscheme 'onedark'
 
   vim.pack.add { gh 'folke/todo-comments.nvim' }
-  require('todo-comments').setup { signs = false }
+  require('todo-comments').setup {
+    signs = false,
+    -- merge_keywords defaults to true, so all default keywords (FIX, HACK,
+    -- WARN, PERF, NOTE, TEST, TODO) are kept; we only add lowercase Rust
+    -- macros as alts of TODO so they share its icon/color.
+    keywords = {
+      TODO = { alt = { 'todo', 'unimplemented' } },
+    },
+    highlight = {
+      -- Match either `KEYWORD:` (comments) or `keyword!` (Rust macros).
+      pattern = { [[.*<(KEYWORDS)\s*:]], [[.*<(KEYWORDS)\s*!]] },
+    },
+    search = {
+      pattern = [[\b(KEYWORDS)(:|!)]], -- ripgrep regex: colon comments or `!` macros
+    },
+  }
 
   -- [[ mini.nvim ]]
   vim.pack.add { gh 'nvim-mini/mini.nvim' }
