@@ -38,6 +38,9 @@
 #+begin_src emacs-lisp
 (setq doom-font (font-spec :family "JetBrains Mono NL" :size 13))
 
+;; Match Ghostty/nvim line height (Ghostty renders JetBrains Mono at ~1.3x)
+(setq-default line-spacing 2)
+
 (after! org-modern
   (setq org-modern-fold-stars
         '(("▶" . "▼") ("▷" . "▽") ("▶" . "▼") ("▷" . "▽") ("▸" . "▾"))))

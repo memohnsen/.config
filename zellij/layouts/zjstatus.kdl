@@ -20,7 +20,7 @@ layout {
                 tab_active   "#[fg=#ABB2BF,bg=#1E222A,bold,italic] {index} {name} "
                 tab_separator ""
 
-                datetime        "#[fg=#5C6370,bg=#1E222A,bold] {format} "
+                datetime        "#[fg=#282C34,bg=#61AFEF,bold] {format} "
                 datetime_format "%A, %d %b %Y %H:%M"
                 datetime_timezone "America/New_York"
             }
