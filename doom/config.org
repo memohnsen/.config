@@ -227,30 +227,18 @@
       (locate-dominating-file file ".git")))
 
   (defun mm/modeline-git-branch ()
-    "Return the current Git branch."
-    (when-let ((root (mm/modeline-git-root)))
-      (let ((default-directory root))
-        (string-trim
-         (or (ignore-errors
-               (car (process-lines "git" "branch" "--show-current")))
-             "")))))
+    "Return Git branch information maintained by VC without starting Git."
+    (when (and (boundp 'vc-mode) vc-mode)
+      (string-remove-prefix
+       "Git:"
+       (string-trim (substring-no-properties vc-mode)))))
 
   (defun mm/modeline-git-diff ()
-    "Return lualine-style file diff counts."
-    (when (and buffer-file-name (mm/modeline-git-root))
-      (let* ((default-directory (mm/modeline-git-root))
-             (file (file-relative-name buffer-file-name default-directory))
-             (stat (ignore-errors
-                     (car (process-lines "git" "diff" "--numstat" "--" file)))))
-        (when (and stat (not (string-empty-p stat)))
-          (pcase-let ((`(,added ,deleted . ,_) (split-string stat "\t")))
-            (let ((parts nil))
-              (unless (string= added "0")
-                (push (propertize (concat "+" added) 'face 'doom-modeline-info) parts))
-              (unless (string= deleted "0")
-                (push (propertize (concat "-" deleted) 'face 'doom-modeline-urgent) parts))
-              (when parts
-                (concat " " (string-join (nreverse parts) " ")))))))))
+    "Return nil.
+
+Per-file diff counts required a synchronous Git subprocess during every
+modeline redisplay. VC's gutter remains the lightweight live diff display."
+    nil)
 
   (defun mm/modeline-diagnostic-counts ()
     "Return diagnostics as E:/W:/I:/H: counts like lualine."
@@ -349,8 +337,8 @@
 *** Centaur Tabs
 #+begin_src emacs-lisp
 (after! centaur-tabs
-  (setq centaur-tabs-height 18
-        centaur-tabs-bar-height 20
+  (setq centaur-tabs-height 14
+        centaur-tabs-bar-height 16
         centaur-tabs-set-close-button nil
         centaur-tabs-show-new-tab-button nil
         centaur-tabs-show-navigation-buttons nil
@@ -458,7 +446,6 @@
                 company-idle-delay 0.2
                 company-backends '(company-capf))
     (add-hook 'before-save-hook #'mm/rust-organize-imports nil t)
-    (add-hook 'before-save-hook #'eglot-format-buffer nil t)
     (add-hook 'post-self-insert-hook #'mm/rust-company-complete-after-trigger nil t)))
 
 
@@ -932,7 +919,7 @@ Use vterm when its native module is available; fall back to `shell'."
                    ;; first several seconds after opening a big project.
                    :cachePriming (:enable :json-false)
                    ;; Don't scan/watch build artifacts.
-                   :files (:excludeDirs ["target" ".git"])))))
+                   :files (:exclude ["target" ".git"])))))
 
 
 (defun mm/eglot-start-h ()
