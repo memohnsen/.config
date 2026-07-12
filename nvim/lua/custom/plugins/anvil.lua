@@ -4,11 +4,6 @@ vim.pack.add {
   { src = 'https://github.com/memohnsen/anvil.nvim' },
 }
 
--- To develop against the local checkout instead of the GitHub repo, comment out
--- the anvil entry above and uncomment these two lines:
--- vim.opt.runtimepath:prepend(vim.fn.expand '~/dev/anvil.nvim')
--- vim.cmd 'runtime plugin/anvil.lua'
-
 local anvil = require 'anvil'
 
 anvil.setup {

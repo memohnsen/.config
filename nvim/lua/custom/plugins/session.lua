@@ -116,9 +116,7 @@ local function rename_workspace_in_order(old_name, new_name)
   write_workspace_order(updated)
 end
 
-local function is_branch_workspace(session)
-  return session.session_name and session.session_name:find('|', 1, true) ~= nil
-end
+local function is_branch_workspace(session) return session.session_name and session.session_name:find('|', 1, true) ~= nil end
 
 local function sort_workspaces_by_saved_order(sessions)
   local order = read_workspace_order()
@@ -550,40 +548,32 @@ local function delete_workspace(session)
 end
 
 local function delete_workspace_from_list()
-  select_workspace('Delete saved workspace:', function(session)
-    delete_workspace(session)
-  end)
+  select_workspace('Delete saved workspace:', function(session) delete_workspace(session) end)
 end
 
-vim.keymap.set('n', '<leader><Tab>.', '<cmd>AutoSession search<CR>', { desc = 'Search Sessions' })
 vim.keymap.set('n', '<leader><Tab><Tab>', cycle_workspace, { desc = 'Next Workspace' })
 vim.keymap.set('n', '<leader><Tab>l', load_workspace, { desc = 'Load Workspace' })
 vim.keymap.set('n', '<leader><Tab>n', new_workspace, { desc = 'New Workspace' })
-vim.keymap.set('n', '<leader><Tab>r', rename_current_workspace, { desc = 'Rename Workspace' })
 vim.keymap.set('n', '<leader><Tab>s', save_workspace, { desc = 'Save Workspace' })
-vim.keymap.set('n', '<leader><Tab>S', save_workspace_as, { desc = 'Save Workspace As' })
 vim.keymap.set('n', '<leader><Tab>d', close_workspace, { desc = 'Close Workspace' })
 vim.keymap.set('n', '<leader><Tab>D', delete_workspace_from_list, { desc = 'Delete Saved Workspace' })
 
-for index = 1, 9 do
+for index = 1, 4 do
   vim.keymap.set('n', '<leader><Tab>' .. index, switch_to_workspace_number(index), { desc = 'Workspace ' .. index })
 end
 
 pcall(function()
   local mappings = {
     { '<leader><Tab>', group = 'Workspace' },
-    { '<leader><Tab>.', desc = 'Search Sessions' },
     { '<leader><Tab><Tab>', desc = 'Next Workspace' },
     { '<leader><Tab>l', desc = 'Load Workspace' },
     { '<leader><Tab>n', desc = 'New Workspace' },
-    { '<leader><Tab>r', desc = 'Rename Workspace' },
     { '<leader><Tab>s', desc = 'Save Workspace' },
-    { '<leader><Tab>S', desc = 'Save Workspace As' },
     { '<leader><Tab>d', desc = 'Close Workspace' },
     { '<leader><Tab>D', desc = 'Delete Saved Workspace' },
   }
 
-  for index = 1, 9 do
+  for index = 1, 4 do
     table.insert(mappings, { '<leader><Tab>' .. index, desc = 'Workspace ' .. index })
   end
 

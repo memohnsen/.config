@@ -56,61 +56,31 @@ vim.keymap.set('n', '<leader>bd', function()
   vim.api.nvim_buf_delete(bufnr, {})
 end, { desc = 'Delete Buffer' })
 
-vim.keymap.set('n', '<leader>T', function()
-  vim.cmd 'enew'
-  vim.cmd 'terminal'
-  vim.cmd 'startinsert'
-end, { desc = 'New Terminal Buffer' })
-
 -- Toggle a snacks terminal popup
-vim.keymap.set('n', '<leader>t', function() Snacks.terminal.toggle() end, { desc = 'Toggle Terminal Popup' })
+vim.keymap.set('n', '<leader>t', function() Snacks.terminal.toggle() end, { desc = 'Toggle Terminal' })
 
-local function current_buffer_dir()
-  local name = vim.api.nvim_buf_get_name(0)
-  if name == '' then return vim.fn.getcwd() end
-
-  return vim.fs.dirname(name)
-end
-
-local function cargo_root()
-  local manifest = vim.fs.find('Cargo.toml', {
-    path = current_buffer_dir(),
-    upward = true,
-  })[1]
-
-  if manifest then return vim.fs.dirname(manifest) end
-
-  return vim.fn.getcwd()
-end
-
-local function cargo_terminal(action, opts)
-  opts = vim.tbl_deep_extend('force', { auto_close = false, cwd = cargo_root() }, opts or {})
-  Snacks.terminal.toggle('cargo ' .. action, opts)
-end
-
-local cargo_popup_opts = {
+local snacks_popup_opts = {
   win = {
     position = 'bottom',
   },
 }
 
-vim.keymap.set('n', '<leader>rr', function() cargo_terminal 'run' end, { desc = 'Cargo Run' })
-vim.keymap.set('n', '<leader>rb', function() cargo_terminal('build', cargo_popup_opts) end, { desc = 'Cargo Build' })
-vim.keymap.set('n', '<leader>rt', function() cargo_terminal('test', cargo_popup_opts) end, { desc = 'Cargo Test' })
-vim.keymap.set('n', '<leader>rc', function() cargo_terminal('clippy', cargo_popup_opts) end, { desc = 'Cargo Clippy' })
+vim.keymap.set('n', '<leader>rr', function() Snacks.terminal.toggle('just run', snacks_popup_opts) end, { desc = 'Just Run' })
+vim.keymap.set('n', '<leader>rb', function() Snacks.terminal.toggle('just build', snacks_popup_opts) end, { desc = 'Just Build' })
+vim.keymap.set('n', '<leader>rt', function() Snacks.terminal.toggle('just test', snacks_popup_opts) end, { desc = 'Just Test' })
+vim.keymap.set('n', '<leader>rl', function() Snacks.terminal.toggle('just lint', snacks_popup_opts) end, { desc = 'Just Lint' })
 
 pcall(function()
   require('which-key').add {
     -- { '<leader>z', desc = 'Change Directory' },
     { '<leader>x', group = 'Diagnostics' },
     { '<leader>b', group = 'Buffer' },
-    { '<leader>T', desc = 'New Terminal Buffer' },
     { '<leader>t', desc = 'Toggle Terminal Popup' },
-    { '<leader>r', group = 'Rust Tools' },
-    { '<leader>rr', desc = 'Cargo Run' },
-    { '<leader>rb', desc = 'Cargo Build' },
-    { '<leader>rt', desc = 'Cargo Test' },
-    { '<leader>rc', desc = 'Cargo Clippy' },
+    { '<leader>r', group = 'Just Commands' },
+    { '<leader>rr', desc = 'Just Run' },
+    { '<leader>rb', desc = 'Just Build' },
+    { '<leader>rt', desc = 'Just Test' },
+    { '<leader>rl', desc = 'Just Lint' },
     { '<leader>o', group = 'Org' },
     { '<leader>od', desc = 'Daily Note' },
     { '<leader>of', desc = 'Find Org Note' },
@@ -118,22 +88,14 @@ pcall(function()
     { '<leader>oa', desc = 'Org Super Agenda' },
     { '<leader>oc', desc = 'Org Capture' },
     { '<leader><Tab>', group = 'Workspace' },
-    { '<leader><Tab>.', desc = 'Search Sessions' },
     { '<leader><Tab><Tab>', desc = 'Next Workspace' },
     { '<leader><Tab>l', desc = 'Load Workspace' },
     { '<leader><Tab>1', desc = 'Workspace 1' },
     { '<leader><Tab>2', desc = 'Workspace 2' },
     { '<leader><Tab>3', desc = 'Workspace 3' },
     { '<leader><Tab>4', desc = 'Workspace 4' },
-    { '<leader><Tab>5', desc = 'Workspace 5' },
-    { '<leader><Tab>6', desc = 'Workspace 6' },
-    { '<leader><Tab>7', desc = 'Workspace 7' },
-    { '<leader><Tab>8', desc = 'Workspace 8' },
-    { '<leader><Tab>9', desc = 'Workspace 9' },
     { '<leader><Tab>n', desc = 'New Workspace' },
-    { '<leader><Tab>r', desc = 'Rename Workspace' },
     { '<leader><Tab>s', desc = 'Save Workspace' },
-    { '<leader><Tab>S', desc = 'Save Workspace As' },
     { '<leader><Tab>d', desc = 'Close Workspace' },
     { '<leader><Tab>D', desc = 'Delete Saved Workspace' },
     { 'gh', desc = 'Go to Line Start' },
