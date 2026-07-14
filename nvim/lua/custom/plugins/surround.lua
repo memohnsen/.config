@@ -1,3 +1,1 @@
-vim.pack.add {
-  { src = 'https://github.com/tpope/vim-surround', branch = 'master' },
-}
+return { { 'tpope/vim-surround' } }

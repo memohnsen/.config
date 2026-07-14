@@ -1,3 +1,4 @@
+return function()
 local builtin = require 'telescope.builtin'
 
 vim.keymap.set('n', 'gh', '0', { desc = 'Go to Line Start' })
@@ -106,3 +107,4 @@ pcall(function()
     { '<leader><leader>', desc = 'Find files' },
   }
 end)
+end

@@ -1,21 +1,12 @@
-vim.pack.add {
-  { src = 'https://github.com/nvim-lua/plenary.nvim', version = 'master' },
-  { src = 'https://github.com/sindrets/diffview.nvim', version = 'main' },
-  { src = 'https://github.com/memohnsen/anvil.nvim' },
-}
-
-local anvil = require 'anvil'
-
-anvil.setup {
-  integrations = {
-    diffview = true,
+return {
+  {
+    'memohnsen/anvil.nvim',
+    dependencies = { 'nvim-lua/plenary.nvim', 'sindrets/diffview.nvim' },
+    config = function()
+      local anvil = require 'anvil'
+      anvil.setup { integrations = { diffview = true } }
+      vim.keymap.set('n', '<leader>g', anvil.open, { desc = 'Git' })
+      pcall(function() require('which-key').add { { '<leader>g', desc = 'Git' } } end)
+    end,
   },
 }
-
-vim.keymap.set('n', '<leader>g', function() anvil.open() end, { desc = 'Git' })
-
-pcall(function()
-  require('which-key').add {
-    { '<leader>g', desc = 'Git' },
-  }
-end)

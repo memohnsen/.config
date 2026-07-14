@@ -1,6 +1,7 @@
-vim.pack.add {
-  { src = 'https://github.com/nvim-lualine/lualine.nvim', branch = 'master' },
-}
+return {
+  {
+    'nvim-lualine/lualine.nvim',
+    config = function()
 
 local workspace_order_file = vim.fn.stdpath 'data' .. '/auto-session-workspace-order'
 
@@ -158,5 +159,8 @@ require('lualine').setup {
     lualine_x = { 'location' },
     lualine_y = { 'progress' },
     lualine_z = {},
+  },
+}
+    end,
   },
 }

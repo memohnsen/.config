@@ -5,7 +5,10 @@ local function hl_color(group, attr)
   end
 end
 
-vim.pack.add { { src = 'https://github.com/akinsho/bufferline.nvim', branch = 'main' } }
+return {
+  {
+    'akinsho/bufferline.nvim',
+    config = function()
 
 vim.opt.showtabline = 2
 
@@ -75,5 +78,8 @@ require('bufferline').setup {
     tab_separator = { bg = bg, fg = bg },
     tab_separator_selected = { bg = bg, fg = selected_bg },
     trunc_marker = { bg = bg, fg = muted },
+  },
+}
+    end,
   },
 }

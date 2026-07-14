@@ -3,6 +3,7 @@
 bookokrat/
 emacs/
 doom/config.el
+doom/ghostel/
 doom/debug-adapters/
 gh/
 homebrew/

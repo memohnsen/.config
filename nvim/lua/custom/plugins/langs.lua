@@ -1,6 +1,7 @@
-local gh = function(repo)
-  return 'https://github.com/' .. repo
-end
+return {
+  {
+    'mrcjkb/rustaceanvim',
+    config = function()
 
 local function organize_rust_imports(bufnr)
   if #vim.lsp.get_clients({ bufnr = bufnr, name = 'rust-analyzer' }) == 0 then
@@ -42,4 +43,6 @@ vim.g.rustaceanvim = {
   },
 }
 
-vim.pack.add { gh 'mrcjkb/rustaceanvim' }
+    end,
+  },
+}

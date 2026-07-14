@@ -1,8 +1,9 @@
-local gh = function(repo) return 'https://github.com/' .. repo end
+return {
+  {
+    'rmagatti/auto-session',
+    config = function()
 
 vim.o.sessionoptions = 'blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions'
-
-vim.pack.add { gh 'rmagatti/auto-session' }
 
 local function open_workspaces()
   _G.kickstart_open_workspaces = _G.kickstart_open_workspaces or {}
@@ -26,22 +27,6 @@ local function remove_open_workspace(session_name)
   local updated = {}
   for _, existing in ipairs(open_workspaces()) do
     if existing ~= session_name then table.insert(updated, existing) end
-  end
-
-  _G.kickstart_open_workspaces = updated
-end
-
-local function rename_open_workspace(old_name, new_name)
-  if not old_name or old_name == '' or not new_name or new_name == '' then return end
-
-  local updated = {}
-  local seen = {}
-  for _, existing in ipairs(open_workspaces()) do
-    local next_name = existing == old_name and new_name or existing
-    if not seen[next_name] then
-      table.insert(updated, next_name)
-      seen[next_name] = true
-    end
   end
 
   _G.kickstart_open_workspaces = updated
@@ -86,32 +71,6 @@ local function remember_workspace(session_name)
   for _, existing in ipairs(order) do
     if existing ~= session_name then table.insert(updated, existing) end
   end
-
-  write_workspace_order(updated)
-end
-
-local function rename_workspace_in_order(old_name, new_name)
-  if not old_name or old_name == '' or not new_name or new_name == '' then return end
-
-  local order = read_workspace_order()
-  local renamed = false
-  local seen = {}
-  local updated = {}
-
-  for _, session_name in ipairs(order) do
-    local next_name = session_name
-    if session_name == old_name then
-      next_name = new_name
-      renamed = true
-    end
-
-    if not seen[next_name] then
-      table.insert(updated, next_name)
-      seen[next_name] = true
-    end
-  end
-
-  if not renamed and not seen[new_name] then table.insert(updated, new_name) end
 
   write_workspace_order(updated)
 end
@@ -448,48 +407,6 @@ local function save_workspace()
   end
 end
 
-local function save_workspace_as()
-  vim.ui.input({
-    prompt = 'Workspace name: ',
-    default = current_workspace_name() or vim.fn.fnamemodify(vim.fn.getcwd(), ':t'),
-  }, function(name)
-    name = vim.trim(name or '')
-    if name == '' then return end
-
-    if require('auto-session').save_session(name, { show_message = true }) then
-      remember_workspace(name)
-      mark_workspace_open(name)
-      reset_workspace_cycle()
-    end
-  end)
-end
-
-local function rename_current_workspace()
-  local old_name = current_workspace_name()
-  if not old_name then
-    vim.notify('No current workspace to rename', vim.log.levels.WARN)
-    return
-  end
-
-  vim.ui.input({
-    prompt = 'Rename workspace: ',
-    default = old_name,
-  }, function(new_name)
-    new_name = vim.trim(new_name or '')
-    if new_name == '' or new_name == old_name then return end
-
-    local auto_session = require 'auto-session'
-    if not auto_session.save_session(new_name, { show_message = true }) then return end
-
-    rename_workspace_in_order(old_name, new_name)
-    rename_open_workspace(old_name, new_name)
-    reset_workspace_cycle()
-
-    pcall(auto_session.delete_session, old_name)
-    vim.notify('Renamed workspace: ' .. old_name .. ' -> ' .. new_name, vim.log.levels.INFO)
-  end)
-end
-
 local function switch_to_workspace_number(index)
   return function()
     local sessions = open_workspace_sessions()
@@ -579,3 +496,6 @@ pcall(function()
 
   require('which-key').add(mappings)
 end)
+    end,
+  },
+}

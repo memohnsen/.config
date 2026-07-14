@@ -1,10 +1,1 @@
-vim.pack.add {
-  { src = 'https://github.com/numToStr/Comment.nvim', branch = 'master' },
-}
-
-require('Comment').setup {
-  mappings = {
-    basic = true,
-    extra = true,
-  },
-}
+return { { 'numToStr/Comment.nvim', config = function() require('Comment').setup { mappings = { basic = true, extra = true } } end } }
