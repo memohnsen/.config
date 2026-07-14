@@ -56,3 +56,5 @@
 (package! indent-bars)
 (package! org-super-agenda)
 (package! flyover)
+(package! ghostel)
+(package! evil-ghostel)

@@ -3,33 +3,8 @@
 
 * Core Setup & Identity
 #+begin_src emacs-lisp
-;; Place your private configuration here! Remember, you do not need to run 'doom
-;; sync' after modifying this file!
-
-;; Some functionality uses this to identify you, e.g. GPG configuration, email
-;; clients, file templates and snippets. It is optional.
 (setq user-full-name "Maddisen Mohnsen"
       user-mail-address "memohnsen@gmail.com")
-
-;; Doom exposes five (optional) variables for controlling fonts in Doom:
-;;
-;; - `doom-font' -- the primary font to use
-;; - `doom-variable-pitch-font' -- a non-monospace font (where applicable)
-;; - `doom-big-font' -- used for `doom-big-font-mode'; use this for
-;;   presentations or streaming.
-;; - `doom-symbol-font' -- for symbols
-;; - `doom-serif-font' -- for the `fixed-pitch-serif' face
-;;
-;; See 'C-h v doom-font' for documentation and more examples of what they
-;; accept. For example:
-;;
-;;(setq doom-font (font-spec :family "Fira Code" :size 12 :weight 'semi-light)
-;;      doom-variable-pitch-font (font-spec :family "Fira Sans" :size 13))
-;;
-;; If you or Emacs can't find your font, use 'M-x describe-font' to look them
-;; up, `M-x eval-region' to execute elisp code, and 'M-x doom/reload-font' to
-;; refresh your font settings. If Emacs still can't find your font, it likely
-;; wasn't installed correctly. Font issues are rarely Doom issues!
 #+end_src
 
 * Appearance & UI
@@ -44,10 +19,6 @@
 (after! org-modern
   (setq org-modern-fold-stars
         '(("▶" . "▼") ("▷" . "▽") ("▶" . "▼") ("▷" . "▽") ("▸" . "▾"))))
-
-;; There are two ways to load a theme. Both assume the theme is installed and
-;; available. You can either set `doom-theme' or manually load a theme with the
-;; `load-theme' function. This is the default:
 #+end_src
 
 *** Theme & Colors
@@ -163,7 +134,7 @@
 
 
 (dolist (hook '(term-mode-hook
-                vterm-mode-hook
+                ghostel-mode-hook
                 shell-mode-hook
                 eshell-mode-hook
                 treemacs-mode-hook))
@@ -171,7 +142,7 @@
 
 
 (dolist (hook '(term-mode-hook
-                vterm-mode-hook
+                ghostel-mode-hook
                 shell-mode-hook
                 eshell-mode-hook))
   (add-hook hook #'mm/disable-terminal-process-query))
@@ -201,7 +172,7 @@
       ('normal 'mm-modeline-mode-normal)
       ('insert 'mm-modeline-mode-insert)
       ('visual 'mm-modeline-mode-visual)
-      ('vterm 'mm-modeline-mode-terminal)
+      ('ghostel 'mm-modeline-mode-terminal)
       ('replace 'mm-modeline-mode-replace)
       ('operator 'mm-modeline-mode-command)
       ('motion 'mm-modeline-mode-normal)
@@ -463,107 +434,118 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
 *** Which-Key
 #+begin_src emacs-lisp
 (after! which-key
+  ;; `override-state' is an Evil/General implementation marker, not a key.
+  (unless (string-match-p "override-state" which-key--ignore-non-evil-keys-regexp)
+    (setq which-key--ignore-non-evil-keys-regexp
+          (concat "\\(?:" which-key--ignore-non-evil-keys-regexp
+                  "\\|override-state\\)")))
+  ;; Remove the old leader-group labels from earlier config loads as well as
+  ;; from future startups.  Individual active bindings provide their own
+  ;; descriptions via `map!'.
+  (setq which-key-replacement-alist
+        (cl-remove-if
+         (lambda (entry)
+           (member (cdr (cdr entry))
+                   '("buffer" "code" "debugger" "evaluate" "file" "git"
+                     "help" "insert" "multiple cursors" "notes" "open"
+                     "project" "quit/session" "toggle"
+                     "universal argument" "workspace/windows")))
+         which-key-replacement-alist))
   (which-key-add-key-based-replacements
     doom-leader-key "leader"
     (concat doom-leader-key " TAB") "workspace"
-    (concat doom-leader-key " b") "buffer"
-    (concat doom-leader-key " c") "code"
-    (concat doom-leader-key " d") "debugger"
-    (concat doom-leader-key " e") "evaluate"
-    (concat doom-leader-key " f") "file"
-    (concat doom-leader-key " g") "git"
-    (concat doom-leader-key " h") "help"
-    (concat doom-leader-key " i") "insert"
-    (concat doom-leader-key " m") "multiple cursors"
-    (concat doom-leader-key " n") "notes"
-    (concat doom-leader-key " o") "open"
-    (concat doom-leader-key " p") "project"
-    (concat doom-leader-key " q") "quit/session"
-    (concat doom-leader-key " r") "Rust Commands"
-    (concat doom-leader-key " s") "search"
-    (concat doom-leader-key " t") "toggle"
-    (concat doom-leader-key " u") "universal argument"
-    (concat doom-leader-key " w") "workspace/windows")
+    (concat doom-leader-key " b") "bookmark"
+    (concat doom-leader-key " o") "Org"
+    (concat doom-leader-key " r") "Just Commands"
+    (concat doom-leader-key " s") "search")
   (when doom-leader-alt-key
     (which-key-add-key-based-replacements
       doom-leader-alt-key "leader"
       (concat doom-leader-alt-key " TAB") "workspace"
-      (concat doom-leader-alt-key " b") "buffer"
-      (concat doom-leader-alt-key " c") "code"
-      (concat doom-leader-alt-key " d") "debugger"
-      (concat doom-leader-alt-key " e") "evaluate"
-      (concat doom-leader-alt-key " f") "file"
-      (concat doom-leader-alt-key " g") "git"
-      (concat doom-leader-alt-key " h") "help"
-      (concat doom-leader-alt-key " i") "insert"
-      (concat doom-leader-alt-key " m") "multiple cursors"
-      (concat doom-leader-alt-key " n") "notes"
-      (concat doom-leader-alt-key " o") "open"
-      (concat doom-leader-alt-key " p") "project"
-      (concat doom-leader-alt-key " q") "quit/session"
-      (concat doom-leader-alt-key " r") "Rust Commands"
-      (concat doom-leader-alt-key " s") "search"
-      (concat doom-leader-alt-key " t") "toggle"
-      (concat doom-leader-alt-key " u") "universal argument"
-      (concat doom-leader-alt-key " w") "workspace/windows")))
+      (concat doom-leader-alt-key " b") "bookmark"
+      (concat doom-leader-alt-key " o") "Org"
+      (concat doom-leader-alt-key " r") "Just Commands"
+      (concat doom-leader-alt-key " s") "search"))
+  ;; Hide Doom's mode-local SPC m prefix from the root leader popup.
+  (defun mm/which-key-filter-removed-leader-bindings
+      (orig &optional prefix keymap filter recursive)
+    (let ((bindings (funcall orig prefix keymap filter recursive)))
+      (if (and (null keymap)
+               (member (key-description prefix)
+                       (delq nil (list doom-leader-key doom-leader-alt-key))))
+          (seq-remove
+           (lambda (binding)
+             (string= (substring-no-properties (car binding)) "m"))
+           bindings)
+        bindings)))
+  (advice-remove #'which-key--get-bindings
+                 #'mm/which-key-filter-removed-leader-bindings)
+  (advice-add #'which-key--get-bindings :around
+              #'mm/which-key-filter-removed-leader-bindings))
 #+end_src
 
 * Terminal Integration
 ** Built-in Terminals
 *** Keybindings
 #+begin_src emacs-lisp
+(defun mm/toggle-which-key ()
+  "Toggle Which-Key globally, hiding its popup when disabling it."
+  (interactive)
+  (which-key-mode 'toggle)
+  (message "Which-Key %s" (if (default-value 'which-key-mode) "enabled" "disabled")))
+
 (map! :leader
-      :desc "Project explorer" "e" #'+treemacs/toggle
-      (:prefix ("TAB" . "workspace")
-       :desc "Search workspace" "." #'mm/workspace-switch-to
-       :desc "Close workspace" "d" #'mm/workspace-kill
+      ;; Clear Doom's default leader surface, then restore only the requested
+      ;; Neovim-compatible allowlist below.
+      "'" nil "*" nil "," nil "." nil "/" nil ":" nil ";" nil "<" nil
+      "RET" nil "X" nil "`" nil "a" nil "b" nil "c" nil "d" nil "e" nil
+      "f" nil "g" nil "h" nil "i" nil "m" nil "n" nil "o" nil "p" nil "q" nil
+      "r" nil "s" nil "t" nil "u" nil "w" nil "x" nil "~" nil "TAB" nil
+      :desc "Repeat Action" "'" #'vertico-repeat
+      :desc "Jump to bookmark" "RET" #'bookmark-jump
+      :desc "Find files" "SPC" #'mm/project-find-file
+      :desc "File explorer" "e" #'+treemacs/toggle
+      :desc "Git" "g" #'magit-status
+      :desc "Toggle LSP hints" "h" #'mm/toggle-lsp-inlay-hints
+      ;; Block Doom's mode-specific localleader at SPC m.
+      "m" #'ignore
+      :desc "Diagnostics" "d" #'flycheck-list-errors
+      :desc "Toggle Which-Key" "w" #'mm/toggle-which-key
+      :desc "Terminal Popup" "t" #'mm/toggle-bottom-terminal
+      :desc "Terminal Window" "T" #'mm/open-ghostel-frame
+      (:prefix ("b" . "Bookmark")
+       :desc "Set bookmark" "m" #'bookmark-set
+       :desc "Delete bookmark" "M" #'bookmark-delete)
+      (:prefix ("r" . "Just")
+       :desc "Just Run" "r" (cmd! (mm/just "run" (mm/just-root) t))
+       :desc "Just Build" "b" (cmd! (mm/just "build" (mm/just-root) t))
+       :desc "Just Test" "t" (cmd! (mm/just "test" (mm/just-root) t))
+       :desc "Just Lint" "l" (cmd! (mm/just "lint" (mm/just-root) t)))
+      (:prefix ("o" . "Org")
+       :desc "Daily note" "d" #'mm/open-daily-org
+       :desc "Find Org note" "f" #'mm/find-org-note
+       :desc "Grep Org notes" "g" #'mm/grep-org-notes
+       :desc "Org Agenda" "a" #'org-agenda-list
+       :desc "Org Capture" "c" #'org-capture)
+      (:prefix ("s" . "Search")
+       :desc "Commands" "s" #'execute-extended-command
+       :desc "Current word" "w" #'mm/search-project-symbol-at-point
+       :desc "Project" "p" #'mm/search-project
+       :desc "Diagnostics" "d" #'mm/search-diagnostics
+       :desc "Repeat last search" "r" #'mm/repeat-last-search
+       :desc "Buffer" "b" #'mm/search-buffer
+       :desc "TODO" "t" #'mm/search-project-todos)
+      (:prefix ("TAB" . "Workspace")
+       :desc "Next workspace" "TAB" #'+workspace/switch-right
        :desc "Load workspace" "l" #'mm/workspace-load
-       :desc "Delete workspace" "D" #'mm/workspace-delete
-       :desc "New workspace from project" "n" #'mm/workspace-new-from-project
-       :desc "Unused" "N" nil
-       :desc "Next workspace" "TAB" #'+workspace/switch-right))
-
-
-(map! :leader
-      :desc "Toggle bottom terminal" "o t" #'mm/toggle-bottom-terminal)
-
-
-(map! :leader
-      :desc "Find file in project" "SPC" #'mm/project-find-file
-      "," nil
-      "." nil
-      "<" nil
-      "`" nil
-      "/" nil
-      "o p" nil
-      "o P" nil
-      "o -" nil
-      "b -" nil
-      "b [" nil
-      "b ]" nil
-      "b B" nil
-      "b b" nil
-      :desc "Search buffer" "s b" #'mm/search-buffer
-      :desc "Search all open buffers" "s B" #'mm/search-all-open-buffers
-      :desc "Search current directory" "s d" #'mm/search-cwd
-      :desc "Search other directory" "s D" #'mm/search-other-cwd
-      :desc "Search .emacs.d" "s e" #'mm/search-emacsd
-      :desc "Search project" "s p" #'mm/search-project
-      :desc "Search other project" "s P" #'mm/search-other-project
-      "s S" nil
-      :desc "Search project for word" "s w" #'+default/search-project-for-symbol-at-point
-      :desc "Daily note" "o d" #'mm/open-daily-org
-      :desc "Calendar" "o C" #'mm/open-calendar
-      :desc "Find Org note" "o f" #'mm/find-org-note
-      :desc "Vterm in new frame" "o T" #'mm/open-vterm-frame
-      :desc "Org agenda" "o a" #'mm/org-super-agenda
-      :desc "Org capture" "o c" #'org-capture
-      (:prefix-map ("r" . "Rust Commands")
-       ;; remove t to make any of these open in a new vterm window
-       :desc "Cargo run" "r" (cmd! (mm/cargo "run" (mm/cargo-root) t t))
-       :desc "Cargo build" "b" (cmd! (mm/cargo "build" (mm/cargo-root) t))
-       :desc "Cargo test" "t" (cmd! (mm/cargo "test" (mm/cargo-root) t))
-       :desc "Cargo clippy" "c" (cmd! (mm/cargo "clippy" (mm/cargo-root) t))))
+       :desc "New workspace" "n" #'mm/workspace-new-from-project
+       :desc "Save workspace" "s" #'mm/workspace-save-current
+       :desc "Close workspace" "d" #'mm/workspace-kill
+       :desc "Delete saved workspace" "D" #'mm/workspace-delete
+       :desc "Workspace 1" "1" (cmd! (+workspace/switch-to 0))
+       :desc "Workspace 2" "2" (cmd! (+workspace/switch-to 1))
+       :desc "Workspace 3" "3" (cmd! (+workspace/switch-to 2))
+       :desc "Workspace 4" "4" (cmd! (+workspace/switch-to 3))))
 
 ;; Let Doom/Projectile discover projects kept in ~/dev subfolders.
 ;; Use `SPC p p` to switch projects, or `SPC p a` to add one manually.
@@ -572,15 +554,19 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
 
 #+end_src
 
+#+RESULTS:
+| lambda | (&rest _) | (interactive) | (+workspace/switch-to 3) |
+
 *** Eshell Configuration
 #+begin_src emacs-lisp
-(defun mm/open-vterm-frame ()
-  "Open Vterm in a new frame."
+(defun mm/open-ghostel-frame ()
+  "Open Ghostel in a new frame."
   (interactive)
   (let ((frame (make-frame))
-        (display-buffer-alist nil))
+        (display-buffer-alist nil)
+        (ghostel-buffer-name (generate-new-buffer-name "*ghostel-frame*")))
     (select-frame-set-input-focus frame)
-    (vterm)))
+    (ghostel)))
 
 
 (after! eshell
@@ -603,46 +589,45 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
   (add-hook 'eshell-directory-change-hook #'mm/zoxide-add-dir))
 #+end_src
 
-*** Vterm Configuration
+*** Ghostel Configuration
 #+begin_src emacs-lisp
-(after! vterm
-  (setq vterm-term-environment-variable "xterm-256color"
-        vterm-environment '("COLORTERM=truecolor"
-                            "NO_COLOR"
-                            "CLICOLOR=1"))
+(use-package! ghostel
+  :defer t
+  :init
+  ;; Keep the downloaded native module outside straight's package checkout so
+  ;; package rebuilds cannot replace a module that Emacs currently has loaded.
+  (setq ghostel-module-directory (expand-file-name "ghostel/" doom-user-dir)
+        ghostel-module-auto-install 'download)
+  :config
+  (setq ghostel-buffer-name-function nil
+        ghostel-query-before-killing nil)
   (custom-set-faces!
-    '(term-color-black :foreground "#282c34" :background "#282c34")
-    '(term-color-red :foreground "#e86671" :background "#e86671")
-    '(term-color-green :foreground "#98c379" :background "#98c379")
-    '(term-color-yellow :foreground "#e5c07b" :background "#e5c07b")
-    '(term-color-blue :foreground "#61afef" :background "#61afef")
-    '(term-color-magenta :foreground "#c678dd" :background "#c678dd")
-    '(term-color-cyan :foreground "#56b6c2" :background "#56b6c2")
-    '(term-color-white :foreground "#abb2bf" :background "#abb2bf")
-    '(term-color-bright-black :foreground "#5c6370" :background "#5c6370")
-    '(term-color-bright-red :foreground "#e86671" :background "#e86671")
-    '(term-color-bright-green :foreground "#98c379" :background "#98c379")
-    '(term-color-bright-yellow :foreground "#e5c07b" :background "#e5c07b")
-    '(term-color-bright-blue :foreground "#61afef" :background "#61afef")
-    '(term-color-bright-magenta :foreground "#c678dd" :background "#c678dd")
-    '(term-color-bright-cyan :foreground "#56b6c2" :background "#56b6c2")
-    '(term-color-bright-white :foreground "#ffffff" :background "#ffffff")
-    '(vterm-color-black :foreground "#282c34" :background "#282c34")
-    '(vterm-color-red :foreground "#e86671" :background "#e86671")
-    '(vterm-color-green :foreground "#98c379" :background "#98c379")
-    '(vterm-color-yellow :foreground "#e5c07b" :background "#e5c07b")
-    '(vterm-color-blue :foreground "#61afef" :background "#61afef")
-    '(vterm-color-magenta :foreground "#c678dd" :background "#c678dd")
-    '(vterm-color-cyan :foreground "#56b6c2" :background "#56b6c2")
-    '(vterm-color-white :foreground "#abb2bf" :background "#abb2bf")
-    '(vterm-color-bright-black :foreground "#5c6370" :background "#5c6370")
-    '(vterm-color-bright-red :foreground "#e86671" :background "#e86671")
-    '(vterm-color-bright-green :foreground "#98c379" :background "#98c379")
-    '(vterm-color-bright-yellow :foreground "#e5c07b" :background "#e5c07b")
-    '(vterm-color-bright-blue :foreground "#61afef" :background "#61afef")
-    '(vterm-color-bright-magenta :foreground "#c678dd" :background "#c678dd")
-    '(vterm-color-bright-cyan :foreground "#56b6c2" :background "#56b6c2")
-    '(vterm-color-bright-white :foreground "#ffffff" :background "#ffffff")))
+    '(ghostel-default :foreground "#abb2bf" :background "#282c34")
+    '(ghostel-color-black :foreground "#282c34")
+    '(ghostel-color-red :foreground "#e86671")
+    '(ghostel-color-green :foreground "#98c379")
+    '(ghostel-color-yellow :foreground "#e5c07b")
+    '(ghostel-color-blue :foreground "#61afef")
+    '(ghostel-color-magenta :foreground "#c678dd")
+    '(ghostel-color-cyan :foreground "#56b6c2")
+    '(ghostel-color-white :foreground "#abb2bf")
+    '(ghostel-color-bright-black :foreground "#5c6370")
+    '(ghostel-color-bright-red :foreground "#e86671")
+    '(ghostel-color-bright-green :foreground "#98c379")
+    '(ghostel-color-bright-yellow :foreground "#e5c07b")
+    '(ghostel-color-bright-blue :foreground "#61afef")
+    '(ghostel-color-bright-magenta :foreground "#c678dd")
+    '(ghostel-color-bright-cyan :foreground "#56b6c2")
+    '(ghostel-color-bright-white :foreground "#ffffff")))
+
+(use-package! evil-ghostel
+  :after (ghostel evil)
+  :hook (ghostel-mode . evil-ghostel-mode))
+
+;; Use Doom's popup manager so this behaves like Doom's former vterm popup,
+;; rather than a regular side-window split.
+(set-popup-rule! "^\\*doom:ghostel-popup:"
+  :size 0.25 :vslot -4 :select t :quit nil :ttl nil)
 
 
 (defun mm/disable-terminal-process-query ()
@@ -656,87 +641,34 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
 (defun mm/terminal-buffer-p (&optional buffer)
   "Return non-nil when BUFFER is a terminal-like buffer."
   (with-current-buffer (or buffer (current-buffer))
-    (derived-mode-p 'vterm-mode 'term-mode 'shell-mode 'eshell-mode)))
+    (derived-mode-p 'ghostel-mode 'term-mode 'shell-mode 'eshell-mode)))
 
 
-(defun mm/last-terminal-buffer ()
-  "Return the most recently used live terminal buffer."
-  (seq-find #'mm/terminal-buffer-p (buffer-list)))
-
-
-(defun mm/last-regular-buffer ()
-  "Return the last useful non-terminal buffer."
-  (or (and (buffer-live-p mm/last-regular-buffer)
-           mm/last-regular-buffer)
-      (seq-find
-       (lambda (buffer)
-         (and (buffer-live-p buffer)
-              (not (mm/terminal-buffer-p buffer))
-              (not (string-prefix-p " " (buffer-name buffer)))))
-       (buffer-list))))
-
-
-(defun mm/toggle-terminal-buffer ()
-  "Jump between the latest terminal buffer and the last regular buffer.
-Create a fresh terminal when none exists."
-  (interactive)
-  (select-window (mm/editor-window))
-  (if (mm/terminal-buffer-p)
-      (when-let ((buffer (mm/last-regular-buffer)))
-        (switch-to-buffer buffer))
-    (setq mm/last-regular-buffer (current-buffer))
-    (if-let ((buffer (mm/last-terminal-buffer)))
-        (progn
-          (switch-to-buffer buffer)
-          (mm/disable-terminal-process-query))
-      (if (fboundp '+vterm/here)
-          (progn
-            (+vterm/here t)
-            (mm/disable-terminal-process-query))
-        (shell (generate-new-buffer-name "*shell*"))
-        (mm/disable-terminal-process-query)))))
+(defun mm/ghostel-popup-buffer-name ()
+  "Return the Ghostel popup buffer name for the current workspace."
+  (format "*doom:ghostel-popup:%s*"
+          (if (bound-and-true-p persp-mode)
+              (safe-persp-name (get-current-persp))
+            "main")))
 
 
 (defun mm/toggle-bottom-terminal ()
-  "Toggle a small terminal at the bottom of the frame.
-Use vterm when its native module is available; fall back to `shell'."
+  "Toggle the Doom-managed Ghostel popup for the current workspace."
   (interactive)
-  (let* ((buffer-name "*mm-terminal*")
+  (let* ((buffer-name (mm/ghostel-popup-buffer-name))
          (buffer (get-buffer buffer-name))
          (window (and buffer (get-buffer-window buffer))))
     (if window
         (delete-window window)
-      (when (and buffer
-                 (not (or (and (fboundp 'vterm-check-proc)
-                               (vterm-check-proc buffer-name))
-                          (comint-check-proc buffer-name))))
-        (kill-buffer buffer)
-        (setq buffer nil))
-      (let ((window
-             (display-buffer-in-side-window
-              (or buffer (get-buffer-create buffer-name))
-              '((side . bottom)
-                (slot . 0)
-                (window-height . 0.25)))))
-        (select-window window)
-        (mm/disable-terminal-process-query)
-        (if (and (locate-library "vterm-module")
-                 (require 'vterm nil t))
-            (unless (vterm-check-proc buffer-name)
-              (let ((vterm-buffer-name buffer-name))
-                (vterm))
-              (mm/disable-terminal-process-query))
-          (unless (comint-check-proc buffer-name)
-            (shell buffer-name)
-            (mm/disable-terminal-process-query)))))))
+      (let ((ghostel-buffer-name buffer-name))
+        (ghostel)))))
 
 
 (defun mm/send-command-to-current-terminal (command)
   "Send COMMAND to the current terminal buffer."
   (cond
-   ((derived-mode-p 'vterm-mode)
-    (vterm-send-string command)
-    (vterm-send-return)
+   ((derived-mode-p 'ghostel-mode)
+    (ghostel-send-string (concat command "\n"))
     t)
    ((derived-mode-p 'term-mode)
     (term-send-raw-string (concat command "\n"))
@@ -760,15 +692,11 @@ Use vterm when its native module is available; fall back to `shell'."
     (mm/send-command-to-current-terminal command))
    (t
     (let ((default-directory directory))
-      (if (fboundp '+vterm/here)
-        (progn
-          (+vterm/here nil)
-          (mm/disable-terminal-process-query)
-          (vterm-send-string command)
-          (vterm-send-return))
-        (compile command))))))
+      (let ((ghostel-buffer-name (generate-new-buffer-name "*ghostel*")))
+        (ghostel)
+        (ghostel-send-string (concat command "\n")))))))
 
-;; Jump to/from a regular terminal with `SPC o t`; open a bottom terminal with `SPC o T`.
+;; `SPC o t` toggles the Ghostel popup; `SPC o T` opens Ghostel in a new frame.
 #+end_src
 
 ** External Integrations
@@ -922,32 +850,33 @@ Use vterm when its native module is available; fall back to `shell'."
                    :files (:exclude ["target" ".git"])))))
 
 
-(defun mm/eglot-start-h ()
-  "Start Eglot for non-Rust LSP buffers."
-  (when (project-current nil)
-    (eglot-ensure)))
 #+end_src
 
-*** Cargo Utilities
+*** Just Utilities
 #+begin_src emacs-lisp
-(defun mm/cargo-root ()
-  "Return the nearest Cargo project root for the current buffer."
-  (or (locate-dominating-file (mm/current-buffer-directory) "Cargo.toml")
-      default-directory))
+(defun mm/just-root ()
+  "Return the nearest project root containing a Justfile."
+  (let ((directory (mm/current-buffer-directory)))
+    (or (locate-dominating-file directory "Justfile")
+        (locate-dominating-file directory "justfile")
+        (user-error "No Justfile or justfile found above %s" directory))))
 
 
-(defun mm/cargo (action directory &optional popup close-on-exit)
-  "Run cargo ACTION in DIRECTORY.
-If POPUP is non-nil, run in the bottom popup terminal (oT).
-If CLOSE-ON-EXIT is non-nil, run the program with `exec' so the popup
-terminal closes automatically when the program quits (e.g. `cargo run')."
-  (cond
-   ((and popup close-on-exit)
-    (mm/run-program-in-popup-terminal (concat "cargo " action) directory))
-   (popup
-    (mm/run-command-in-popup-terminal (concat "cargo " action) directory))
-   (t
-    (mm/run-shell-command-in-bottom-window (concat "cargo " action) directory))))
+(defun mm/just (recipe directory &optional popup close-on-exit)
+  "Run just RECIPE in DIRECTORY.
+
+When POPUP is non-nil, use the Ghostel popup.  When CLOSE-ON-EXIT is non-nil,
+close that popup after the recipe exits."
+  (unless (executable-find "just")
+    (user-error "The `just' executable is not available on Emacs's PATH"))
+  (let ((command (concat "just " (shell-quote-argument recipe))))
+    (cond
+     ((and popup close-on-exit)
+      (mm/run-program-in-popup-terminal command directory))
+     (popup
+      (mm/run-command-in-popup-terminal command directory))
+     (t
+      (mm/run-shell-command-in-bottom-window command directory)))))
 #+end_src
 
 *** Debugger (dape)
@@ -971,7 +900,12 @@ terminal closes automatically when the program quits (e.g. `cargo run')."
 #+begin_src emacs-lisp
 (after! hl-todo
   (setq hl-todo-keyword-faces
-        '(("TODO" mm/comment-todo-keyword bold))))
+        '(("TODO" mm/comment-todo-keyword bold)
+          ("NOTE" mm/comment-note-keyword bold))
+        hl-todo-exclude-modes (delq 'org-mode hl-todo-exclude-modes))
+  (when global-hl-todo-mode
+    (global-hl-todo-mode -1)
+    (global-hl-todo-mode 1)))
 #+end_src
 
 *** Settings & Directory
@@ -1003,59 +937,6 @@ terminal closes automatically when the program quits (e.g. `cargo run')."
 
 *** Git Auto-Commit
 #+begin_src emacs-lisp
-(defun mm/org-git-repo-root ()
-  "Return the Git repository root for `org-directory', or nil."
-  (let ((default-directory (expand-file-name org-directory)))
-    (when (file-directory-p default-directory)
-      (with-temp-buffer
-        (when (zerop (call-process "git" nil t nil "rev-parse" "--show-toplevel"))
-          (string-trim (buffer-string)))))))
-
-
-(defun mm/save-org-directory-buffers ()
-  "Save modified file buffers under `org-directory' without prompting."
-  (let ((org-root (file-name-as-directory
-                   (file-truename (expand-file-name org-directory)))))
-    (dolist (buffer (buffer-list))
-      (with-current-buffer buffer
-        (when (and buffer-file-name
-                   (buffer-modified-p)
-                   (string-prefix-p org-root (file-truename buffer-file-name)))
-          (save-buffer))))))
-
-
-(defun mm/org-git-push (buffer)
-  "Push the current Git repository, logging output to BUFFER."
-  (if (zerop (call-process "git" nil buffer t "push"))
-      (message "Pushed Org directory changes")
-    (message "Org directory Git push failed; see %s" buffer)))
-
-
-(defun mm/git-commit-org-directory ()
-  "Stage, commit, and push changes in `org-directory' when its Git repo is dirty."
-  (interactive)
-  (if-let ((repo-root (mm/org-git-repo-root)))
-      (let ((default-directory repo-root)
-            (buffer "*Org Git Commit*"))
-        (mm/save-org-directory-buffers)
-        (with-current-buffer (get-buffer-create buffer)
-          (erase-buffer))
-        (if (string-empty-p
-             (string-trim
-              (with-temp-buffer
-                (call-process "git" nil t nil "status" "--porcelain")
-                (buffer-string))))
-            (mm/org-git-push buffer)
-          (if (and (zerop (call-process "git" nil buffer t "add" "-A"))
-                   (zerop (call-process "git" nil buffer t
-                                        "commit" "-m"
-                                        (format-time-string "Update org files %Y-%m-%d %H:%M"))))
-              (mm/org-git-push buffer)
-            (message "Org directory Git commit failed; see %s" buffer))))
-    (message "Org directory is not inside a Git repo: %s" org-directory)))
-
-(add-hook 'kill-emacs-hook #'mm/git-commit-org-directory)
-
 (defun mm/open-daily-org ()
   "Open today's daily Org note."
   (interactive)
@@ -1124,16 +1005,14 @@ terminal closes automatically when the program quits (e.g. `cargo run')."
            "* %?\n  %U\n")))
   (map! :map org-mode-map
         :n "gx" #'org-open-at-point
-        :leader
-        :desc "Schedule heading" "o s" #'mm/org-schedule-from-calendar)
+        :n "gh" #'evil-beginning-of-line
+        :n "gl" #'evil-end-of-line)
   (org-clock-persistence-insinuate))
 
-(defun mm/org-schedule-from-calendar (arg)
-  "Schedule the current Org heading, starting date selection in Calendar."
-  (interactive "P")
-  (let ((org-read-date-display-type 'calendar)
-        (minibuffer-setup-hook (cons #'mm/select-calendar-window minibuffer-setup-hook)))
-    (org-schedule arg)))
+(after! evil-org
+  (map! :map evil-org-mode-map
+        :n "gh" #'evil-beginning-of-line
+        :n "gl" #'evil-end-of-line))
 
 (use-package! org-super-agenda
   :after org-agenda
@@ -1383,10 +1262,6 @@ terminal closes automatically when the program quits (e.g. `cargo run')."
 (after! org-super-agenda
   (mm/org-agenda-define-view-keys org-super-agenda-header-map))
 
-(defun mm/org-super-agenda ()
-  "Open a grouped Org task agenda."
-  (interactive)
-  (org-agenda nil "a"))
 #+end_src
 
 * Workspaces
@@ -1443,8 +1318,11 @@ terminal closes automatically when the program quits (e.g. `cargo run')."
         (error nil)))))
 
 (defun mm/workspace-new-from-project ()
-  "Prompt for a project, create a workspace named after its directory, and open it."
+  "Refresh projects, then create a workspace for the selected project."
   (interactive)
+  (when (fboundp 'projectile-discover-projects-in-search-path)
+    (projectile-discover-projects-in-search-path)
+    (projectile-save-known-projects))
   (let* ((projects projectile-known-projects)
          (project-dir (completing-read "Project to open in new workspace: " projects nil t))
          (workspace-name (file-name-nondirectory (directory-file-name project-dir)))
@@ -1541,6 +1419,11 @@ terminal closes automatically when the program quits (e.g. `cargo run')."
   (when (mm/saved-workspace-entry name)
     (+workspace-save name)))
 
+(defun mm/workspace-save-current ()
+  "Save the current workspace without prompting for a name."
+  (interactive)
+  (+workspace/save (+workspace-current-name)))
+
 (defun mm/workspace-kill (name)
   "Close workspace NAME, updating its saved session first when it exists."
   (interactive
@@ -1600,22 +1483,62 @@ terminal closes automatically when the program quits (e.g. `cargo run')."
   (minibuffer-with-setup-hook #'mm/minibuffer-evil-nav-setup-h
     (call-interactively command)))
 
-(defun mm/switch-buffer ()
-  "Switch buffers with Evil minibuffer navigation."
-  (interactive)
-  (mm/with-evil-minibuffer-nav #'switch-to-buffer))
+(defvar mm/last-search-command nil
+  "The most recently invoked command from the leader Search menu.")
 
-(defun mm/switch-workspace-buffer ()
-  "Switch workspace buffers with Evil minibuffer navigation."
+(defvar mm/last-search-input nil
+  "The final minibuffer input from the most recent leader Search command.")
+
+(defun mm/record-search-command (command)
+  "Record COMMAND so `mm/repeat-last-search' can invoke it again."
+  (setq mm/last-search-command command))
+
+(defun mm/save-search-input-h ()
+  "Save the final contents of the search minibuffer before it closes."
+  (setq mm/last-search-input (minibuffer-contents-no-properties)))
+
+(defun mm/capture-search-input-h ()
+  "Install a buffer-local hook to remember this search's input."
+  (add-hook 'minibuffer-exit-hook #'mm/save-search-input-h nil t))
+
+(defun mm/restore-search-input-h (input)
+  "Replace the new search minibuffer contents with INPUT."
+  (delete-minibuffer-contents)
+  (insert input))
+
+(defmacro mm/with-recorded-search (command &rest body)
+  "Run BODY as COMMAND and remember its final minibuffer input."
+  `(progn
+     (mm/record-search-command ,command)
+     (minibuffer-with-setup-hook #'mm/capture-search-input-h
+       ,@body)))
+
+(defun mm/repeat-last-search ()
+  "Resume the most recently used leader Search command and its query."
   (interactive)
-  (if (fboundp 'persp-switch-to-buffer)
-      (mm/with-evil-minibuffer-nav #'persp-switch-to-buffer)
-    (mm/switch-buffer)))
+  (if mm/last-search-command
+      (minibuffer-with-setup-hook
+          (apply-partially #'mm/restore-search-input-h mm/last-search-input)
+        (call-interactively mm/last-search-command))
+    (user-error "No leader search has been run yet")))
 
 (defun mm/search-buffer ()
   "Search current buffer with Evil minibuffer navigation."
   (interactive)
-  (mm/with-evil-minibuffer-nav #'+default/search-buffer))
+  (mm/with-recorded-search #'mm/search-buffer
+    (mm/with-evil-minibuffer-nav #'+default/search-buffer)))
+
+(defun mm/search-project-symbol-at-point ()
+  "Search the project for the symbol at point."
+  (interactive)
+  (mm/with-recorded-search #'mm/search-project-symbol-at-point
+    (mm/with-evil-minibuffer-nav #'+default/search-project-for-symbol-at-point)))
+
+(defun mm/search-diagnostics ()
+  "Search Flycheck diagnostics."
+  (interactive)
+  (mm/with-recorded-search #'mm/search-diagnostics
+    (call-interactively #'consult-flycheck)))
 
 (defun mm/search-all-open-buffers ()
   "Search all open buffers with Evil minibuffer navigation."
@@ -1643,8 +1566,20 @@ terminal closes automatically when the program quits (e.g. `cargo run')."
 (defun mm/search-project ()
   "Search project, including hidden files, with Evil minibuffer navigation."
   (interactive)
-  (minibuffer-with-setup-hook #'mm/minibuffer-evil-nav-setup-h
-    (+default/search-project t)))
+  (mm/with-recorded-search #'mm/search-project
+    (minibuffer-with-setup-hook #'mm/minibuffer-evil-nav-setup-h
+      (+default/search-project t))))
+
+(defun mm/search-project-todos ()
+  "Search the current project for TODO markers, ignoring case."
+  (interactive)
+  (mm/with-recorded-search #'mm/search-project-todos
+    (let ((project-root (or (doom-project-root)
+                            (user-error "Not in a project")))
+          (consult-ripgrep-args
+           (concat consult-ripgrep-args " --ignore-case")))
+      (minibuffer-with-setup-hook #'mm/minibuffer-evil-nav-setup-h
+        (consult-ripgrep project-root "todo")))))
 
 (defun mm/search-other-project ()
   "Search another project with Evil minibuffer navigation."
@@ -1700,6 +1635,28 @@ terminal closes automatically when the program quits (e.g. `cargo run')."
         :box (:line-width (1 . -1) :color "#61afef"))))
   "Face for TODO keywords in code comments.")
 
+(defface mm/comment-note-keyword
+  '((t (:foreground "#000000"
+        :background "#c678dd"
+        :weight bold
+        :box (:line-width (1 . -1) :color "#c678dd"))))
+  "Face for NOTE keywords in code comments, matching Neovim's hint purple.")
+
+(after! org
+  (font-lock-add-keywords
+   'org-mode
+   '(("\\_<NOTE\\_>[!:]?" 0 'mm/comment-note-keyword prepend)))
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (when (derived-mode-p 'org-mode)
+        (font-lock-flush)))))
+
+(when (fboundp 'font-lock-flush)
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (when (bound-and-true-p hl-todo-mode)
+        (font-lock-flush)))))
+
 (add-to-list 'completion-styles 'flex)
 
 (require 'subr-x)
@@ -1719,40 +1676,6 @@ terminal closes automatically when the program quits (e.g. `cargo run')."
   (when-let ((window (get-buffer-window "*Calendar*" t)))
     (select-window window)))
 
-(defun mm/editor-window ()
-  "Return a normal editor window in the selected frame."
-  (let ((selected (selected-window)))
-    (if (not (or (window-parameter selected 'window-side)
-                 (window-parameter selected 'popup)
-                 (window-dedicated-p selected)))
-        selected
-      (or (let (editor-window)
-            (dolist (window (window-list nil 'no-minibuf))
-              (unless (or (window-parameter window 'window-side)
-                          (window-parameter window 'popup)
-                          (window-dedicated-p window))
-                (setq editor-window window)))
-            editor-window)
-          selected))))
-
-(defvar mm/last-regular-buffer nil
-  "Last non-terminal buffer visited before jumping to a terminal.")
-
-(defun mm/confirm-kill-emacs-with-org-clock (_prompt)
-  "Block `kill-emacs' when an Org clock is active."
-  (if (and (fboundp 'org-clocking-p)
-           (org-clocking-p))
-      (progn
-        (message "Active Org clock for \"%s\". Stop it before quitting."
-                 (or (and (boundp 'org-clock-current-task) org-clock-current-task)
-                     "current task"))
-        nil)
-    t))
-
-;; Prevent quitting while an Org clock is running; otherwise do not ask for confirmation.
-(setq confirm-kill-emacs #'mm/confirm-kill-emacs-with-org-clock
-      confirm-kill-processes nil)
-
 (defun mm/current-buffer-directory ()
   "Return the current buffer's directory or `default-directory'."
   (or (when-let ((file-name (buffer-file-name)))
@@ -1760,8 +1683,8 @@ terminal closes automatically when the program quits (e.g. `cargo run')."
       default-directory))
 
 (defun mm/run-command-in-popup-terminal (command directory)
-  "Run COMMAND in DIRECTORY inside the bottom popup terminal (*mm-terminal*)."
-  (let* ((buffer-name "*mm-terminal*")
+  "Run COMMAND in DIRECTORY inside the current workspace's Ghostel popup."
+  (let* ((buffer-name (mm/ghostel-popup-buffer-name))
          (buffer (get-buffer buffer-name))
          (window (and buffer (get-buffer-window buffer)))
          (default-directory directory))
@@ -1782,22 +1705,19 @@ terminal closes automatically when the program quits (e.g. `cargo run')."
 
 (defun mm/close-popup-terminal-on-exit (buffer _event)
   "Close the bottom popup terminal window when its program exits.
-Intended for `vterm-exit-functions': only acts on the `*mm-terminal*'
-popup so other vterm buffers are left untouched. Runs before vterm's own
-`vterm-kill-buffer-on-exit', so it deletes the window then kills the buffer."
+Intended for `ghostel-exit-functions': only acts on Ghostel popup buffers;
+other Ghostel buffers are left untouched."
   (when (and (bufferp buffer)
              (buffer-live-p buffer)
-             (string= (buffer-name buffer) "*mm-terminal*"))
+             (string-prefix-p "*doom:ghostel-popup:" (buffer-name buffer)))
     (let ((window (get-buffer-window buffer)))
       (when (window-live-p window)
         (delete-window window)))
-    (kill-buffer buffer)))
+    ))
 
 
-(after! vterm
-  ;; Registering this globally ensures vterm attaches its process sentinel when
-  ;; the popup is created (it only does so when `vterm-exit-functions' is set).
-  (add-hook 'vterm-exit-functions #'mm/close-popup-terminal-on-exit))
+(after! ghostel
+  (add-hook 'ghostel-exit-functions #'mm/close-popup-terminal-on-exit))
 
 
 (defun mm/run-program-in-popup-terminal (command directory)
@@ -1805,7 +1725,7 @@ popup so other vterm buffers are left untouched. Runs before vterm's own
 when the program quits (normal exit, panic, or C-c).
 The program is started with `exec' so the terminal's process *becomes* the
 program; when it dies, `mm/close-popup-terminal-on-exit' removes the window."
-  (let* ((buffer-name "*mm-terminal*")
+  (let* ((buffer-name (mm/ghostel-popup-buffer-name))
          (buffer (get-buffer buffer-name))
          (window (and buffer (get-buffer-window buffer)))
          (default-directory directory))
@@ -1826,6 +1746,32 @@ program; when it dies, `mm/close-popup-terminal-on-exit' removes the window."
 
 ** Global Keybindings
 #+begin_src emacs-lisp
+(defun mm/toggle-lsp-inlay-hints ()
+  "Toggle Eglot inlay hints in the current LSP-managed buffer."
+  (interactive)
+  (unless (bound-and-true-p eglot--managed-mode)
+    (user-error "The current buffer is not managed by Eglot"))
+  (eglot-inlay-hints-mode (if eglot-inlay-hints-mode -1 1)))
+
+(defun mm/goto-definition-in-split ()
+  "Go to a definition, splitting right when it is in the current buffer."
+  (interactive)
+  (let ((origin-window (selected-window))
+        (origin-buffer (current-buffer))
+        (origin-point (point)))
+    (call-interactively #'+lookup/definition)
+    (when (and (window-live-p origin-window)
+               (eq (selected-window) origin-window)
+               (eq (current-buffer) origin-buffer)
+               (/= (point) origin-point))
+      (let ((definition-point (point))
+            (definition-window (split-window origin-window nil 'right)))
+        (with-selected-window origin-window
+          (goto-char origin-point))
+        (select-window definition-window)
+        (switch-to-buffer origin-buffer)
+        (goto-char definition-point)))))
+
 (map! "s-s" #'save-buffer)
 
 ;; Redo with Shift-u in normal mode.
@@ -1837,8 +1783,13 @@ program; when it dies, `mm/close-popup-terminal-on-exit' removes the window."
 (map! :n "ge" #'evil-goto-line)
 (map! :n "gh" #'evil-beginning-of-line)
 (map! :n "gl" #'evil-end-of-line)
+(map! :n "gd" #'mm/goto-definition-in-split)
 (map! :n "gte" #'mm/next-error-cyclic)
 (map! :n "gtE" #'mm/previous-error-cyclic)
+
+(after! eglot
+  (map! :map eglot-mode-map
+        :n "gd" #'mm/goto-definition-in-split))
 
 ;; Cycle buffers with Shift-h/l in normal mode.
 #+end_src
