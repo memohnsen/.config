@@ -528,7 +528,6 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
        :desc "Org Agenda" "a" #'org-agenda-list
        :desc "Org Capture" "c" #'org-capture)
       (:prefix ("s" . "Search")
-       :desc "Commands" "s" #'execute-extended-command
        :desc "Current word" "w" #'mm/search-project-symbol-at-point
        :desc "Project" "p" #'mm/search-project
        :desc "Diagnostics" "d" #'mm/search-diagnostics
@@ -854,6 +853,9 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
 
 *** Just Utilities
 #+begin_src emacs-lisp
+(use-package! just-mode
+  :mode ("/\\(?:[Jj]ustfile\\|\\.justfile\\)\\'" . just-mode))
+
 (defun mm/just-root ()
   "Return the nearest project root containing a Justfile."
   (let ((directory (mm/current-buffer-directory)))
@@ -966,7 +968,36 @@ close that popup after the recipe exits."
   (minibuffer-with-setup-hook #'mm/minibuffer-evil-nav-setup-h
     (consult-ripgrep org-directory nil)))
 
+(defvar-local mm/org--last-fontified-window-start nil
+  "Last Org window start handled by `mm/org-fontify-visible-after-jump-h'.")
+
+(defun mm/org-fontify-visible-after-jump-h ()
+  "Fontify the visible part of an Org buffer after a jump or scroll.
+
+Org's JIT fontifier can reach a distant location before it has seen the
+opening line of a source block.  That leaves the block unfontified until it is
+visited line by line.  Start at the enclosing block header when there is one,
+so Doom's `org-modern' display and native source highlighting appear as soon
+as the location is shown."
+  (when (and (derived-mode-p 'org-mode)
+             (eq (window-buffer (selected-window)) (current-buffer)))
+    (let ((window-start (window-start)))
+      (unless (equal window-start mm/org--last-fontified-window-start)
+        (setq mm/org--last-fontified-window-start window-start)
+        (save-excursion
+          (goto-char window-start)
+          (font-lock-ensure
+           (or (org-babel-where-is-src-block-head) window-start)
+           (window-end nil t)))))))
+
+(defun mm/org-enable-visible-jit-fontification-h ()
+  "Enable jump-aware fontification in the current Org buffer."
+  (add-hook 'post-command-hook #'mm/org-fontify-visible-after-jump-h nil t))
+
 (after! org
+  ;; Apply the targeted JIT-fontification repair only in Org buffers; it does
+  ;; not alter font-lock behavior in other Doom modes.
+  (add-hook 'org-mode-hook #'mm/org-enable-visible-jit-fontification-h)
   (setq org-agenda-files (directory-files-recursively (expand-file-name org-directory) "\\.org$")
         org-agenda-show-all-dates nil
         org-agenda-skip-scheduled-if-done t

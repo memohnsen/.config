@@ -58,3 +58,4 @@
 (package! flyover)
 (package! ghostel)
 (package! evil-ghostel)
+(package! just-mode)
