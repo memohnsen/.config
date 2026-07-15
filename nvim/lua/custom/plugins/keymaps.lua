@@ -28,6 +28,7 @@ return function()
   vim.keymap.set('n', '<leader>t', function() Snacks.terminal.toggle() end, { desc = 'Toggle Terminal' })
 
   local snacks_popup_opts = {
+    auto_close = false,
     win = {
       position = 'bottom',
     },
