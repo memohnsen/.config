@@ -36,9 +36,7 @@ do
     virtual_text = { current_line = false },
     virtual_lines = false,
     jump = {
-      on_jump = function(_, bufnr)
-        vim.diagnostic.open_float { bufnr = bufnr, scope = 'cursor', focus = false }
-      end,
+      on_jump = function(_, bufnr) vim.diagnostic.open_float { bufnr = bufnr, scope = 'cursor', focus = false } end,
     },
   }
 
@@ -76,5 +74,4 @@ require('lazy').setup(require 'custom.plugins', {
   checker = { enabled = false },
 })
 
-vim.keymap.set('n', '<leader>L', '<cmd>Lazy<CR>', { desc = 'Lazy' })
-require('custom.plugins.keymaps')()
+require 'custom.plugins.keymaps'()
