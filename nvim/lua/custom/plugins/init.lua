@@ -11,9 +11,7 @@ end
 table.sort(modules)
 local specs = {}
 for _, module in ipairs(modules) do
-  if module ~= 'keymaps' then
-    vim.list_extend(specs, require('custom.plugins.' .. module))
-  end
+  if module ~= 'keymaps' then vim.list_extend(specs, require('custom.plugins.' .. module)) end
 end
 
 return specs

@@ -26,7 +26,12 @@ return {
   {
     'folke/todo-comments.nvim',
     dependencies = { 'nvim-lua/plenary.nvim' },
-    opts = { signs = false, keywords = { TODO = { alt = { 'todo', 'unimplemented' } } }, highlight = { pattern = { [[.*<(KEYWORDS)\s*:]], [[.*<(KEYWORDS)\s*!]] } }, search = { pattern = [[\b(KEYWORDS)(:|!)]] } },
+    opts = {
+      signs = false,
+      keywords = { TODO = { alt = { 'todo', 'unimplemented' } } },
+      highlight = { pattern = { [[.*<(KEYWORDS)\s*:]], [[.*<(KEYWORDS)\s*!]] } },
+      search = { pattern = [[\b(KEYWORDS)(:|!)]] },
+    },
   },
   { 'nvim-mini/mini.nvim', config = function() require('mini.ai').setup { mappings = { around_next = 'aa', inside_next = 'ii' }, n_lines = 500 } end },
 }

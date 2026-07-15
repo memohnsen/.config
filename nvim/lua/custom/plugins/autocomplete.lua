@@ -3,125 +3,125 @@ return {
     'saghen/blink.cmp',
     version = '1.*',
     dependencies = {
-      { 'L3MON4D3/LuaSnip', version = '2.*', build = vim.fn.executable('make') == 1 and 'make install_jsregexp' or nil },
+      { 'L3MON4D3/LuaSnip', version = '2.*', build = vim.fn.executable 'make' == 1 and 'make install_jsregexp' or nil },
     },
     config = function()
-require('luasnip').setup {}
+      require('luasnip').setup {}
 
-require('blink.cmp').setup {
-  keymap = {
-    preset = 'enter',
-    ['<CR>'] = { 'select_and_accept', 'fallback' },
-    ['<C-y>'] = { 'select_and_accept' },
-    ['<Tab>'] = {
-      function(cmp)
-        if cmp.is_menu_visible() then return cmp.select_next() end
-        if cmp.snippet_active { direction = 1 } then return cmp.snippet_forward() end
-        local ls = require 'luasnip'
-        if ls.expandable() then
-          ls.expand()
-          return true
+      require('blink.cmp').setup {
+        keymap = {
+          preset = 'enter',
+          ['<CR>'] = { 'select_and_accept', 'fallback' },
+          ['<C-y>'] = { 'select_and_accept' },
+          ['<Tab>'] = {
+            function(cmp)
+              if cmp.is_menu_visible() then return cmp.select_next() end
+              if cmp.snippet_active { direction = 1 } then return cmp.snippet_forward() end
+              local ls = require 'luasnip'
+              if ls.expandable() then
+                ls.expand()
+                return true
+              end
+              return false
+            end,
+            'fallback',
+          },
+          ['<S-Tab>'] = {
+            function(cmp)
+              if cmp.is_menu_visible() then return cmp.select_prev() end
+              if cmp.snippet_active { direction = -1 } then return cmp.snippet_backward() end
+              return false
+            end,
+            'fallback',
+          },
+        },
+        snippets = { preset = 'luasnip' },
+        appearance = { nerd_font_variant = 'mono' },
+        completion = {
+          accept = { auto_brackets = { enabled = true } },
+          documentation = { auto_show = true, auto_show_delay_ms = 200 },
+          list = { selection = { preselect = true, auto_insert = false } },
+        },
+        sources = { default = { 'lsp', 'path', 'snippets', 'buffer' } },
+        cmdline = {
+          enabled = true,
+          keymap = { preset = 'cmdline', ['<Right>'] = false, ['<Left>'] = false },
+          completion = {
+            list = { selection = { preselect = false } },
+            menu = { auto_show = function() return vim.fn.getcmdtype() == ':' end },
+            ghost_text = { enabled = true },
+          },
+        },
+      }
+
+      local function accept_completion_or(fallback)
+        return function()
+          local cmp = require 'blink.cmp'
+          if cmp.is_visible() or cmp.is_active() then
+            cmp.select_and_accept()
+            return ''
+          end
+          if type(fallback) == 'function' then return fallback() end
+          return fallback
         end
-        return false
-      end,
-      'fallback',
-    },
-    ['<S-Tab>'] = {
-      function(cmp)
-        if cmp.is_menu_visible() then return cmp.select_prev() end
-        if cmp.snippet_active { direction = -1 } then return cmp.snippet_backward() end
-        return false
-      end,
-      'fallback',
-    },
-  },
-  snippets = { preset = 'luasnip' },
-  appearance = { nerd_font_variant = 'mono' },
-  completion = {
-    accept = { auto_brackets = { enabled = true } },
-    documentation = { auto_show = true, auto_show_delay_ms = 200 },
-    list = { selection = { preselect = true, auto_insert = false } },
-  },
-  sources = { default = { 'lsp', 'path', 'snippets', 'buffer' } },
-  cmdline = {
-    enabled = true,
-    keymap = { preset = 'cmdline', ['<Right>'] = false, ['<Left>'] = false },
-    completion = {
-      list = { selection = { preselect = false } },
-      menu = { auto_show = function() return vim.fn.getcmdtype() == ':' end },
-      ghost_text = { enabled = true },
-    },
-  },
-}
+      end
 
-local function accept_completion_or(fallback)
-  return function()
-    local cmp = require 'blink.cmp'
-    if cmp.is_visible() or cmp.is_active() then
-      cmp.select_and_accept()
-      return ''
-    end
-    if type(fallback) == 'function' then return fallback() end
-    return fallback
-  end
-end
+      local function pair_break_cr()
+        local _, col = unpack(vim.api.nvim_win_get_cursor(0))
+        local line = vim.api.nvim_get_current_line()
+        local pairs = { ['('] = ')', ['['] = ']', ['{'] = '}', ['"'] = '"', ["'"] = "'" }
+        if pairs[line:sub(col, col)] ~= line:sub(col + 1, col + 1) then return '\r' end
 
-local function pair_break_cr()
-  local _, col = unpack(vim.api.nvim_win_get_cursor(0))
-  local line = vim.api.nvim_get_current_line()
-  local pairs = { ['('] = ')', ['['] = ']', ['{'] = '}', ['"'] = '"', ["'"] = "'" }
-  if pairs[line:sub(col, col)] ~= line:sub(col + 1, col + 1) then return '\r' end
+        local row = vim.api.nvim_win_get_cursor(0)[1]
+        local base_indent = line:match '^%s*' or ''
+        local shiftwidth = tonumber(vim.bo.shiftwidth > 0 and vim.bo.shiftwidth or vim.bo.tabstop) or 2
+        local inner_indent = base_indent .. string.rep(' ', shiftwidth)
+        local open_line = line:sub(1, col)
+        local close_line = base_indent .. line:sub(col + 1)
+        vim.schedule(function()
+          if not vim.api.nvim_buf_is_valid(0) then return end
+          vim.api.nvim_set_current_line(open_line)
+          vim.api.nvim_buf_set_lines(0, row, row, false, { inner_indent, close_line })
+          vim.api.nvim_win_set_cursor(0, { row + 1, #inner_indent })
+        end)
+        return ''
+      end
 
-  local row = vim.api.nvim_win_get_cursor(0)[1]
-  local base_indent = line:match '^%s*' or ''
-  local shiftwidth = tonumber(vim.bo.shiftwidth > 0 and vim.bo.shiftwidth or vim.bo.tabstop) or 2
-  local inner_indent = base_indent .. string.rep(' ', shiftwidth)
-  local open_line = line:sub(1, col)
-  local close_line = base_indent .. line:sub(col + 1)
-  vim.schedule(function()
-    if not vim.api.nvim_buf_is_valid(0) then return end
-    vim.api.nvim_set_current_line(open_line)
-    vim.api.nvim_buf_set_lines(0, row, row, false, { inner_indent, close_line })
-    vim.api.nvim_win_set_cursor(0, { row + 1, #inner_indent })
-  end)
-  return ''
-end
+      local function tab_completion()
+        local cmp = require 'blink.cmp'
+        if cmp.is_visible() then
+          cmp.select_next()
+          return ''
+        end
+        if cmp.snippet_active { direction = 1 } then
+          cmp.snippet_forward()
+          return ''
+        end
+        return '\t'
+      end
 
-local function tab_completion()
-  local cmp = require 'blink.cmp'
-  if cmp.is_visible() then
-    cmp.select_next()
-    return ''
-  end
-  if cmp.snippet_active { direction = 1 } then
-    cmp.snippet_forward()
-    return ''
-  end
-  return '\t'
-end
+      local function shift_tab_completion()
+        local cmp = require 'blink.cmp'
+        if cmp.is_visible() then
+          cmp.select_prev()
+          return ''
+        end
+        if cmp.snippet_active { direction = -1 } then
+          cmp.snippet_backward()
+          return ''
+        end
+        return vim.api.nvim_replace_termcodes('<S-Tab>', true, false, true)
+      end
 
-local function shift_tab_completion()
-  local cmp = require 'blink.cmp'
-  if cmp.is_visible() then
-    cmp.select_prev()
-    return ''
-  end
-  if cmp.snippet_active { direction = -1 } then
-    cmp.snippet_backward()
-    return ''
-  end
-  return vim.api.nvim_replace_termcodes('<S-Tab>', true, false, true)
-end
-
-vim.api.nvim_create_autocmd('InsertEnter', {
-  callback = function(args)
-    if vim.bo[args.buf].buftype ~= '' then return end
-    local opts = { buffer = args.buf, expr = true, silent = true, replace_keycodes = true }
-    vim.keymap.set('i', '<CR>', accept_completion_or(pair_break_cr), opts)
-    vim.keymap.set('i', '<Tab>', tab_completion, opts)
-    vim.keymap.set('i', '<S-Tab>', shift_tab_completion, opts)
-  end,
-})
+      vim.api.nvim_create_autocmd('InsertEnter', {
+        callback = function(args)
+          if vim.bo[args.buf].buftype ~= '' then return end
+          local opts = { buffer = args.buf, expr = true, silent = true, replace_keycodes = true }
+          vim.keymap.set('i', '<CR>', accept_completion_or(pair_break_cr), opts)
+          vim.keymap.set('i', '<Tab>', tab_completion, opts)
+          vim.keymap.set('i', '<S-Tab>', shift_tab_completion, opts)
+        end,
+      })
     end,
   },
 }
