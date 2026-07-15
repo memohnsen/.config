@@ -37,6 +37,7 @@ return function()
   vim.keymap.set('n', '<leader>rb', function() Snacks.terminal.toggle('just build', snacks_popup_opts) end, { desc = 'Just Build' })
   vim.keymap.set('n', '<leader>rt', function() Snacks.terminal.toggle('just test', snacks_popup_opts) end, { desc = 'Just Test' })
   vim.keymap.set('n', '<leader>rl', function() Snacks.terminal.toggle('just lint', snacks_popup_opts) end, { desc = 'Just Lint' })
+  vim.keymap.set('n', '<leader>rc', function() Snacks.terminal.toggle('just check-all', snacks_popup_opts) end, { desc = 'Just Check-All' })
 
   pcall(function()
     require('which-key').add {
@@ -49,6 +50,7 @@ return function()
       { '<leader>rb', desc = 'Just Build' },
       { '<leader>rt', desc = 'Just Test' },
       { '<leader>rl', desc = 'Just Lint' },
+      { '<leader>rc', desc = 'Just Check-All' },
       { '<leader>o', group = 'Org' },
       { '<leader>od', desc = 'Daily Note' },
       { '<leader>of', desc = 'Find Org Note' },
