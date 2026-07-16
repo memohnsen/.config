@@ -5,6 +5,13 @@ return {
       local snacks = require 'snacks'
       snacks.setup {
         explorer = { replace_netrw = false },
+        terminal = {
+          win = {
+            keys = {
+              close = { '<C-x>', 'hide', mode = 't', desc = 'Close Terminal Popup' },
+            },
+          },
+        },
         image = { enabled = true, doc = { enabled = false, inline = false, float = true, max_width = 80, max_height = 40 } },
         picker = {
           sources = {
