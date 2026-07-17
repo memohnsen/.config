@@ -2,6 +2,12 @@
 # Keybindings
 # =========================================================
 
+# Debian-only: use zsh's native line editor. The plugin's default NEX
+# engine can cause duplicate redraws on some Linux terminal stacks.
+if [[ -r /etc/debian_version ]]; then
+  ZVM_READKEY_ENGINE=zle
+fi
+
 # Cursor shape per vi mode
 ZVM_INSERT_MODE_CURSOR=$ZVM_CURSOR_BEAM
 ZVM_NORMAL_MODE_CURSOR=$ZVM_CURSOR_BLOCK
