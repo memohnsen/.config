@@ -1,10 +1,5 @@
 .DS_Store
 2048/
-bookokrat/
-emacs/
-doom/config.el
-doom/ghostel/
-doom/debug-adapters/
 gh/
 homebrew/
 op/
@@ -15,3 +10,5 @@ opencode/
 rustcast/
 helix/
 cagent/
+htop/
+btop/
