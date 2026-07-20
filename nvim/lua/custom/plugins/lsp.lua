@@ -103,6 +103,27 @@ return {
         vim.lsp.config(name, server)
         vim.lsp.enable(name)
       end
+
+      -- sourcekit-lsp ships with Xcode / the Swift toolchain (not Mason).
+      -- https://www.swift.org/documentation/articles/zero-to-swift-nvim.html
+      local sourcekit_cmd = { 'sourcekit-lsp' }
+      local xcrun = vim.fn.exepath 'xcrun'
+      if xcrun ~= '' then
+        local result = vim.system({ 'xcrun', '--find', 'sourcekit-lsp' }, { text = true }):wait()
+        if result.code == 0 then
+          local path = vim.fn.trim(result.stdout)
+          if path ~= '' and vim.fn.executable(path) == 1 then sourcekit_cmd = { path } end
+        end
+      end
+      vim.lsp.config('sourcekit', {
+        cmd = sourcekit_cmd,
+        filetypes = { 'swift' },
+        capabilities = vim.tbl_deep_extend('force', {}, completion_capabilities, {
+          workspace = { didChangeWatchedFiles = { dynamicRegistration = true } },
+          textDocument = { diagnostic = { dynamicRegistration = true, relatedDocumentSupport = true } },
+        }),
+      })
+      vim.lsp.enable 'sourcekit'
     end,
   },
 }
