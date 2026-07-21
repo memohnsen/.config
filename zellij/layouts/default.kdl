@@ -32,8 +32,4 @@ layout {
             args "-lc" "nvim; exec zsh -l"
         }
     }
-
-    tab name="terminal" {
-        pane
-    }
 }
