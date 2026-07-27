@@ -22,7 +22,11 @@ alias cat='bat'
 alias grep='rg --color=auto'
 alias diff='diff --color=auto'
 alias df='df -h'
-alias cd='zoxide'
+alias gita='git add .'
+alias gits='git status'
+alias gitc='git commit'
+alias gitpl='git pull'
+alias gitps='git push'
 
 # =========================================================
 # Navigation
