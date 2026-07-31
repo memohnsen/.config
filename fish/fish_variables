@@ -1,4 +1,4 @@
 # This file contains fish universal variable definitions.
 # VERSION: 3.0
 SETUVAR __fish_webconfig_theme_notification:set\x2dtheme\x2dv1\x2d\x231
-SETUVAR fish_user_paths:/Users/maddisenmohnsen/\x2elocal/bin\x1e/opt/homebrew/bin
+SETUVAR fish_user_paths:/Users/maddisenmohnsen/\x2ebun/bin\x1e/Users/maddisenmohnsen/\x2ecargo/bin\x1e/Users/maddisenmohnsen/\x2elocal/bin\x1e/opt/homebrew/bin

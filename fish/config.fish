@@ -1,3 +1,5 @@
+set -g fish_greeting ""
+
 if status is-interactive
     # Commands to run in interactive sessions can go here
 	abbr -a .. cd ..
@@ -18,3 +20,8 @@ set -gx EDITOR nvim
 
 fish_vi_key_bindings
 zoxide init fish | source
+
+# ZVM
+set -gx ZVM_INSTALL "$HOME/.zvm/self"
+set -gx PATH $PATH "$HOME/.zvm/bin"
+set -gx PATH $PATH "$ZVM_INSTALL/"

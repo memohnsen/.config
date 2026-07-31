@@ -1,0 +1,1709 @@
+(setq user-full-name "Maddisen Mohnsen"
+      user-mail-address "memohnsen@gmail.com")
+
+(setq doom-font (font-spec :family "JetBrains Mono NL" :size 13))
+
+;; Match Ghostty/nvim line height (Ghostty renders JetBrains Mono at ~1.3x)
+(setq-default line-spacing 2)
+
+(after! org-modern
+  (setq org-modern-fold-stars
+        '(("▶" . "▼") ("▷" . "▽") ("▶" . "▼") ("▷" . "▽") ("▸" . "▾"))))
+
+(setq doom-theme 'doom-one)
+
+(defface mm-modeline-mode-normal
+  '((t (:foreground "#282c34" :background "#98c379" :weight bold)))
+  "Face for normal state in the lualine-style modeline.")
+
+(defface mm-modeline-mode-insert
+  '((t (:foreground "#282c34" :background "#61afef" :weight bold)))
+  "Face for insert state in the lualine-style modeline.")
+
+(defface mm-modeline-mode-visual
+  '((t (:foreground "#282c34" :background "#c678dd" :weight bold)))
+  "Face for visual state in the lualine-style modeline.")
+
+(defface mm-modeline-mode-command
+  '((t (:foreground "#282c34" :background "#e5c07b" :weight bold)))
+  "Face for command state in the lualine-style modeline.")
+
+(defface mm-modeline-mode-terminal
+  '((t (:foreground "#282c34" :background "#56b6c2" :weight bold)))
+  "Face for terminal state in the lualine-style modeline.")
+
+(defface mm-modeline-mode-replace
+  '((t (:foreground "#282c34" :background "#e06c75" :weight bold)))
+  "Face for replace state in the lualine-style modeline.")
+
+(defface mm-modeline-branch
+  '((t (:foreground "#abb2bf" :background "#3e4452")))
+  "Face for the branch section in the lualine-style modeline.")
+
+(defface mm-modeline-workspace-current
+  '((t (:foreground "#282c34" :background "#61afef" :weight bold)))
+  "Face for the current workspace in the modeline.")
+
+
+(defun mm/apply-onedark-faces ()
+  "Tune Doom's theme to match the Neovim onedark palette."
+  (custom-set-faces!
+    '(default :foreground "#abb2bf" :background "#282c34")
+    '(font-lock-comment-face :foreground "#5c6370" :slant italic)
+    '(font-lock-doc-face :foreground "#5c6370" :slant italic)
+    '(font-lock-string-face :foreground "#98c379")
+    '(font-lock-function-name-face :foreground "#61afef")
+    '(font-lock-keyword-face :foreground "#c678dd")
+    '(font-lock-builtin-face :foreground "#56b6c2")
+    '(font-lock-preprocessor-face :foreground "#56b6c2")
+    '(font-lock-type-face :foreground "#e5c07b")
+    '(font-lock-constant-face :foreground "#56b6c2")
+    '(font-lock-number-face :foreground "#d19a66")
+    '(font-lock-variable-name-face :foreground "#abb2bf")
+    '(font-lock-property-name-face :foreground "#e86671")
+    '(font-lock-property-use-face :foreground "#e86671")
+    '(font-lock-operator-face :foreground "#c678dd")
+    '(line-number :foreground "#5c6370" :background "#282c34")
+    '(line-number-current-line :foreground "#abb2bf" :background "#31353f")
+    '(hl-line :background "#31353f")
+    '(region :background "#3b3f4c")
+    '(mode-line :foreground "#abb2bf" :background "#31353f")
+    '(mode-line-buffer-id :foreground "#61afef" :weight bold)
+    '(doom-modeline :foreground "#abb2bf" :background "#31353f")
+    '(doom-modeline-bar :background "#61afef")
+    '(doom-modeline-bar-inactive :background "#282c34")
+    '(doom-modeline-emphasis :foreground "#abb2bf" :background "#31353f")
+    '(doom-modeline-highlight :foreground "#61afef" :background "#31353f")
+    '(mm-modeline-mode-normal :foreground "#282c34" :background "#98c379" :weight bold)
+    '(mm-modeline-mode-insert :foreground "#282c34" :background "#61afef" :weight bold)
+    '(mm-modeline-mode-visual :foreground "#282c34" :background "#c678dd" :weight bold)
+    '(mm-modeline-mode-command :foreground "#282c34" :background "#e5c07b" :weight bold)
+    '(mm-modeline-mode-terminal :foreground "#282c34" :background "#56b6c2" :weight bold)
+    '(mm-modeline-mode-replace :foreground "#282c34" :background "#e06c75" :weight bold)
+    '(mm-modeline-branch :foreground "#abb2bf" :background "#3e4452")
+    '(mm-modeline-workspace-current :foreground "#282c34" :background "#61afef" :weight bold)
+    '(doom-modeline-buffer-file :foreground "#61afef" :weight bold)
+    '(doom-modeline-buffer-path :foreground "#61afef" :weight bold)
+    '(doom-modeline-buffer-modified :foreground "#56b6c2" :background "#31353f" :weight bold)
+    '(doom-modeline-buffer-major-mode :foreground "#abb2bf" :background "#31353f")
+    '(doom-modeline-project-dir :foreground "#abb2bf" :background "#31353f")
+    '(doom-modeline-project-root-dir :foreground "#61afef" :background "#31353f")
+    '(doom-modeline-vcs-default :foreground "#5c6370" :background "#31353f")
+    '(solaire-mode-line-face :foreground "#abb2bf" :background "#31353f")
+    '(solaire-mode-line-inactive-face :foreground "#5c6370" :background "#282c34")
+    '(mode-line-inactive :foreground "#5c6370" :background "#282c34")
+    '(centaur-tabs-default :foreground "#abb2bf" :background "#282c34")
+    '(centaur-tabs-selected :foreground "#282c34" :background "#61afef" :weight normal)
+    '(centaur-tabs-selected-modified :foreground "#282c34" :background "#61afef" :weight normal)
+    '(centaur-tabs-unselected :foreground "#5c6370" :background "#282c34" :weight normal)
+    '(centaur-tabs-unselected-modified :foreground "#56b6c2" :background "#282c34" :weight normal)
+    '(centaur-tabs-close-unselected :foreground "#5c6370" :background "#282c34")
+    '(centaur-tabs-close-selected :foreground "#282c34" :background "#61afef")
+    '(centaur-tabs-modified-marker-unselected :foreground "#56b6c2" :background "#282c34")
+    '(centaur-tabs-modified-marker-selected :foreground "#282c34" :background "#61afef")
+    '(centaur-tabs-active-bar-face :background "#61afef")
+    '(tab-line :foreground "#abb2bf" :background "#282c34")
+    '(tab-line-tab :foreground "#abb2bf" :background "#282c34")
+    '(tab-line-tab-current :foreground "#282c34" :background "#61afef")
+    '(tab-line-tab-inactive :foreground "#5c6370" :background "#282c34")
+    '(header-line :foreground "#abb2bf" :background "#282c34")))
+
+
+(add-hook 'doom-load-theme-hook #'mm/apply-onedark-faces)
+
+(setq display-line-numbers-type 'relative)
+
+
+(global-display-line-numbers-mode 1)
+
+
+(dolist (hook '(term-mode-hook
+                ghostel-mode-hook
+                shell-mode-hook
+                eshell-mode-hook
+                treemacs-mode-hook))
+  (add-hook hook (lambda () (display-line-numbers-mode -1))))
+
+
+(dolist (hook '(term-mode-hook
+                ghostel-mode-hook
+                shell-mode-hook
+                eshell-mode-hook))
+  (add-hook hook #'mm/disable-terminal-process-query))
+
+(after! doom-modeline
+  (setq doom-modeline-bar-width 0
+        doom-modeline-buffer-file-name-style 'relative-to-project
+        doom-modeline-check 'full
+        doom-modeline-icon t
+        doom-modeline-major-mode-icon nil
+        doom-modeline-modal nil)
+
+  (defun mm/modeline-evil-state ()
+    "Return the current Evil state like lualine's mode component."
+    (upcase
+     (if (bound-and-true-p evil-local-mode)
+         (symbol-name evil-state)
+       (format-mode-line mode-name))))
+
+  (defun mm/modeline-mode-face ()
+    "Return the lualine onedark face for the current mode/state."
+    (pcase (and (bound-and-true-p evil-local-mode) evil-state)
+      ('normal 'mm-modeline-mode-normal)
+      ('insert 'mm-modeline-mode-insert)
+      ('visual 'mm-modeline-mode-visual)
+      ('ghostel 'mm-modeline-mode-terminal)
+      ('replace 'mm-modeline-mode-replace)
+      ('operator 'mm-modeline-mode-command)
+      ('motion 'mm-modeline-mode-normal)
+      (_ 'mm-modeline-mode-normal)))
+
+  (defun mm/modeline-file-name ()
+    "Return the current file name relative to the project when possible."
+    (let ((name (or buffer-file-name (buffer-name))))
+      (if buffer-file-name
+          (let* ((root (or (ignore-errors (doom-project-root))
+                           (locate-dominating-file buffer-file-name ".git")
+                           default-directory))
+                 (relative (file-relative-name buffer-file-name root)))
+            (concat relative
+                    (cond (buffer-read-only " RO")
+                          ((buffer-modified-p) " [+]")
+                          (t ""))))
+        name)))
+
+  (defun mm/modeline-git-root ()
+    "Return the Git root for the current buffer."
+    (when-let ((file buffer-file-name))
+      (locate-dominating-file file ".git")))
+
+  (defun mm/modeline-git-branch ()
+    "Return Git branch information maintained by VC without starting Git."
+    (when (and (boundp 'vc-mode) vc-mode)
+      (string-remove-prefix
+       "Git:"
+       (string-trim (substring-no-properties vc-mode)))))
+
+  (defun mm/modeline-git-diff ()
+    "Return nil.
+
+Per-file diff counts required a synchronous Git subprocess during every
+modeline redisplay. VC's gutter remains the lightweight live diff display."
+    nil)
+
+  (defun mm/modeline-diagnostic-counts ()
+    "Return diagnostics as E:/W:/I:/H: counts like lualine."
+    (let ((error 0)
+          (warning 0)
+          (info 0)
+          (hint 0))
+      (cond
+       ((bound-and-true-p flymake-mode)
+        (dolist (diag (flymake-diagnostics (point-min) (point-max)))
+          (pcase (flymake-diagnostic-type diag)
+            (:error (cl-incf error))
+            (:warning (cl-incf warning))
+            (_ (cl-incf info)))))
+       ((bound-and-true-p flycheck-mode)
+        (dolist (item (flycheck-count-errors flycheck-current-errors))
+          (pcase (flycheck-error-level-compilation-level (car item))
+            (2 (cl-incf error (cdr item)))
+            (1 (cl-incf warning (cdr item)))
+            (0 (cl-incf info (cdr item)))))))
+      (let ((parts nil))
+        (when (> error 0)
+          (push (propertize (format "E:%d" error) 'face 'doom-modeline-urgent) parts))
+        (when (> warning 0)
+          (push (propertize (format "W:%d" warning) 'face 'doom-modeline-warning) parts))
+        (when (> info 0)
+          (push (propertize (format "I:%d" info) 'face 'doom-modeline-info) parts))
+        (when (> hint 0)
+          (push (propertize (format "H:%d" hint) 'face 'doom-modeline-info) parts))
+        (when parts
+          (concat " " (string-join (nreverse parts) " "))))))
+
+  (doom-modeline-def-segment mm-mode
+    "Show Evil mode like lualine_a."
+    (propertize (format " %s " (mm/modeline-evil-state))
+                'face (mm/modeline-mode-face)))
+
+  (doom-modeline-def-segment mm-branch
+    "Show Git branch like lualine_b."
+    (when-let ((branch (mm/modeline-git-branch)))
+      (unless (string-empty-p branch)
+        (propertize (format " %s " branch) 'face 'mm-modeline-branch))))
+
+  (doom-modeline-def-segment mm-diff
+    "Show diff counts like lualine_b."
+    (mm/modeline-git-diff))
+
+  (doom-modeline-def-segment mm-diagnostics
+    "Show diagnostics like lualine_b."
+    (mm/modeline-diagnostic-counts))
+
+  (doom-modeline-def-segment mm-file
+    "Show file path like lualine_c filename path=1."
+    (concat " " (propertize (mm/modeline-file-name)
+                            'face 'doom-modeline-buffer-file)))
+
+  (doom-modeline-def-segment mm-workspaces
+    "Show all open Doom workspaces like the Neovim lualine workspace component."
+    (when (and (bound-and-true-p persp-mode)
+               (fboundp '+workspace-list-names)
+               (fboundp '+workspace-current-name)
+               (ignore-errors (+workspace-current)))
+      (ignore-errors
+        (let ((names (+workspace-list-names))
+              (current-name (+workspace-current-name)))
+          (when names
+            (let ((index 0))
+              (concat
+               " "
+               (mapconcat
+                #'identity
+                (mapcar
+                 (lambda (name)
+                   (setq index (1+ index))
+                   (propertize
+                    (format " %d:%s " index name)
+                    'face (if (equal name current-name)
+                              'mm-modeline-workspace-current
+                            'doom-modeline)))
+                 names)
+                ""))))))))
+
+  (doom-modeline-def-segment mm-location
+    "Show line and column like lualine_z location."
+    (format " %d:%d " (line-number-at-pos) (current-column)))
+
+  (doom-modeline-def-modeline 'main
+    '(mm-mode mm-branch mm-diff mm-diagnostics mm-file)
+    '(mm-workspaces mm-location))
+
+  (doom-modeline-def-modeline 'dashboard
+    '(mm-mode mm-file)
+    '(mm-workspaces mm-location)))
+
+(after! centaur-tabs
+  (setq centaur-tabs-height 14
+        centaur-tabs-bar-height 16
+        centaur-tabs-set-close-button nil
+        centaur-tabs-show-new-tab-button nil
+        centaur-tabs-show-navigation-buttons nil
+        centaur-tabs-left-edge-margin " "
+        centaur-tabs-right-edge-margin " "
+        centaur-tabs-icons-prefix "")
+
+
+(defun mm/apply-centaur-tabs-onedark ()
+    "Keep centaur-tabs' fill/background matched to Neovim onedark."
+    (set-face-attribute centaur-tabs-display-line nil
+                        :foreground "#abb2bf"
+                        :background "#282c34"
+                        :box nil
+                        :overline nil
+                        :underline nil)
+    (set-face-attribute 'centaur-tabs-default nil
+                        :foreground "#abb2bf"
+                        :background "#282c34"
+                        :height 0.9)
+    (dolist (face '(centaur-tabs-selected
+                    centaur-tabs-selected-modified
+                    centaur-tabs-unselected
+                    centaur-tabs-unselected-modified))
+      (set-face-attribute face nil :height 0.9))
+    (centaur-tabs-display-update))
+  (add-hook 'doom-load-theme-hook #'mm/apply-centaur-tabs-onedark)
+  (mm/apply-centaur-tabs-onedark))
+
+(after! treemacs
+  (treemacs-define-RET-action 'file-node-open #'treemacs-visit-node-close-treemacs)
+  (treemacs-define-RET-action 'file-node-closed #'treemacs-visit-node-close-treemacs))
+
+;; This determines the style of line numbers in effect. If set to `nil', line
+;; numbers are disabled. For relative line numbers, set this to `relative'.
+
+;; Without fine undo, evil amalgamates each insert session into one undo step by
+;; stripping undo boundaries up to `evil-undo-list-pointer'
+;; (`evil-refresh-undo-step'). When that pointer goes stale -- e.g. after
+;; `buffer-undo-list' is truncated by `undo-limit' or GC'd -- the strip runs all
+;; the way back to buffer creation, merging the whole history into a single step.
+;; A lone `u' then reverts everything and dumps point at the top of the file.
+;; Fine undo disables that amalgamation, so each change is its own step.
+(setq evil-want-fine-undo t)
+
+(use-package! indent-bars
+  :hook ((prog-mode conf-mode) . indent-bars-mode)
+  :config
+  (setq indent-bars-color '("#61afef" :face-bg nil :blend 0)
+        indent-bars-prefer-character t
+        indent-bars-no-stipple-char ?|
+        indent-bars-display-on-blank-lines t
+        indent-bars-highlight-current-depth t
+        indent-bars-current-depth-color '("#e5c07b" :face-bg nil :blend 0)))
+
+;; Keep completion suggestions usable in both GUI and terminal Emacs.
+
+(after! company
+  (setq company-idle-delay 0.18
+        company-minimum-prefix-length 1
+        company-tooltip-limit 14
+        company-backends '(company-capf)
+        company-auto-complete nil
+        company-auto-commit nil)
+  (setq-default company-backends '(company-capf))
+  (global-company-mode 1))
+
+
+(map! :i "C-SPC" #'company-complete
+      :i "C-@" #'company-complete)
+
+
+(defun mm/rust-company-complete-after-trigger ()
+  "Trigger LSP completion after Rust access and namespace syntax."
+  (when (and (derived-mode-p 'rust-mode 'rustic-mode 'rust-ts-mode)
+             (bound-and-true-p eglot--managed-mode)
+             (or (eq last-command-event ?.)
+                 (and (eq last-command-event ?:)
+                      (eq (char-before (1- (point))) ?:))))
+    (company-manual-begin)))
+
+
+(add-hook! '(rust-mode-hook rustic-mode-hook rust-ts-mode-hook)
+  (defun mm/rust-save-setup-h ()
+    (company-mode 1)
+    (setq-local company-minimum-prefix-length 1
+                ;; Was 0.08, which fired a completion request to rust-analyzer
+                ;; after nearly every keystroke. `.'/`::' still complete
+                ;; instantly via `mm/rust-company-complete-after-trigger'.
+                company-idle-delay 0.2
+                company-backends '(company-capf))
+    (add-hook 'before-save-hook #'mm/rust-organize-imports nil t)
+    (add-hook 'post-self-insert-hook #'mm/rust-company-complete-after-trigger nil t)))
+
+
+
+
+
+(add-hook! '(rust-mode-hook
+             rustic-mode-hook
+             rust-ts-mode-hook)
+  #'mm/rust-eglot-start-h)
+
+(use-package! which-key
+  :demand t
+  :config
+  (which-key-mode 1))
+
+(after! which-key
+  ;; `override-state' is an Evil/General implementation marker, not a key.
+  (unless (string-match-p "override-state" which-key--ignore-non-evil-keys-regexp)
+    (setq which-key--ignore-non-evil-keys-regexp
+          (concat "\\(?:" which-key--ignore-non-evil-keys-regexp
+                  "\\|override-state\\)")))
+  ;; Remove the old leader-group labels from earlier config loads as well as
+  ;; from future startups.  Individual active bindings provide their own
+  ;; descriptions via `map!'.
+  (setq which-key-replacement-alist
+        (cl-remove-if
+         (lambda (entry)
+           (member (and (consp (cdr entry))
+                        (cdr (cdr entry)))
+                   '("buffer" "code" "debugger" "evaluate" "file" "git"
+                     "help" "insert" "multiple cursors" "notes" "open"
+                     "project" "quit/session" "toggle"
+                     "universal argument" "workspace/windows")))
+         which-key-replacement-alist))
+  (which-key-add-key-based-replacements
+    doom-leader-key "leader"
+    (concat doom-leader-key " TAB") "workspace"
+    (concat doom-leader-key " b") "bookmark"
+    (concat doom-leader-key " o") "Org"
+    (concat doom-leader-key " r") "Just Commands"
+    (concat doom-leader-key " s") "search")
+  (when doom-leader-alt-key
+    (which-key-add-key-based-replacements
+      doom-leader-alt-key "leader"
+      (concat doom-leader-alt-key " TAB") "workspace"
+      (concat doom-leader-alt-key " b") "bookmark"
+      (concat doom-leader-alt-key " o") "Org"
+      (concat doom-leader-alt-key " r") "Just Commands"
+      (concat doom-leader-alt-key " s") "search"))
+  ;; Hide Doom's mode-local SPC m prefix from the root leader popup.
+  (defun mm/which-key-filter-removed-leader-bindings
+      (orig &optional prefix keymap filter recursive)
+    (let ((bindings (funcall orig prefix keymap filter recursive)))
+      (if (and (null keymap)
+               (member (key-description prefix)
+                       (delq nil (list doom-leader-key doom-leader-alt-key))))
+          (seq-remove
+           (lambda (binding)
+             (string= (substring-no-properties (car binding)) "m"))
+           bindings)
+        bindings)))
+  (advice-remove #'which-key--get-bindings
+                 #'mm/which-key-filter-removed-leader-bindings)
+  (advice-add #'which-key--get-bindings :around
+              #'mm/which-key-filter-removed-leader-bindings))
+
+(defun mm/toggle-which-key ()
+  "Toggle Which-Key globally, hiding its popup when disabling it."
+  (interactive)
+  (which-key-mode 'toggle)
+  (message "Which-Key %s" (if (default-value 'which-key-mode) "enabled" "disabled")))
+
+(map! :leader
+      ;; Clear Doom's default leader surface, then restore only the requested
+      ;; Neovim-compatible allowlist below.
+      "'" nil "*" nil "," nil "." nil "/" nil ":" nil ";" nil "<" nil
+      "RET" nil "X" nil "`" nil "a" nil "b" nil "c" nil "d" nil "e" nil
+      "f" nil "g" nil "h" nil "i" nil "m" nil "n" nil "o" nil "p" nil "q" nil
+      "r" nil "s" nil "t" nil "u" nil "w" nil "x" nil "~" nil "TAB" nil
+      :desc "Repeat Action" "'" #'vertico-repeat
+      :desc "Jump to bookmark" "RET" #'bookmark-jump
+      :desc "Find files" "SPC" #'mm/project-find-file
+      :desc "File explorer" "e" #'+treemacs/toggle
+      :desc "Git" "g" #'magit-status
+      :desc "Toggle LSP hints" "h" #'mm/toggle-lsp-inlay-hints
+      ;; Block Doom's mode-specific localleader at SPC m.
+      "m" #'ignore
+      :desc "Diagnostics" "d" #'flycheck-list-errors
+      :desc "Toggle Which-Key" "w" #'mm/toggle-which-key
+      :desc "Terminal Popup" "t" #'mm/toggle-bottom-terminal
+      :desc "Terminal Window" "T" #'mm/open-ghostel-frame
+      (:prefix ("b" . "Bookmark")
+       :desc "Set bookmark" "m" #'bookmark-set
+       :desc "Delete bookmark" "M" #'bookmark-delete)
+      (:prefix ("r" . "Just")
+       :desc "Just Run" "r" (cmd! (mm/just "run" (mm/just-root) t))
+       :desc "Just Build" "b" (cmd! (mm/just "build" (mm/just-root) t))
+       :desc "Just Test" "t" (cmd! (mm/just "test" (mm/just-root) t))
+       :desc "Just Lint" "l" (cmd! (mm/just "lint" (mm/just-root) t)))
+      (:prefix ("o" . "Org")
+       :desc "Daily note" "d" #'mm/open-daily-org
+       :desc "Find Org note" "f" #'mm/find-org-note
+       :desc "Grep Org notes" "g" #'mm/grep-org-notes
+       :desc "Org Agenda" "a" #'org-agenda-list
+       :desc "Org Capture" "c" #'org-capture)
+      (:prefix ("s" . "Search")
+       :desc "Current word" "w" #'mm/search-project-symbol-at-point
+       :desc "Project" "p" #'mm/search-project
+       :desc "Diagnostics" "d" #'mm/search-diagnostics
+       :desc "Repeat last search" "r" #'mm/repeat-last-search
+       :desc "Buffer" "b" #'mm/search-buffer
+       :desc "TODO" "t" #'mm/search-project-todos)
+      (:prefix ("TAB" . "Workspace")
+       :desc "Next workspace" "TAB" #'+workspace/switch-right
+       :desc "Load workspace" "l" #'mm/workspace-load
+       :desc "New workspace" "n" #'mm/workspace-new-from-project
+       :desc "Save workspace" "s" #'mm/workspace-save-current
+       :desc "Close workspace" "d" #'mm/workspace-kill
+       :desc "Delete saved workspace" "D" #'mm/workspace-delete
+       :desc "Workspace 1" "1" (cmd! (+workspace/switch-to 0))
+       :desc "Workspace 2" "2" (cmd! (+workspace/switch-to 1))
+       :desc "Workspace 3" "3" (cmd! (+workspace/switch-to 2))
+       :desc "Workspace 4" "4" (cmd! (+workspace/switch-to 3))))
+
+;; Let Doom/Projectile discover projects kept in ~/dev subfolders.
+;; Use `SPC p p` to switch projects, or `SPC p a` to add one manually.
+
+(defun mm/open-ghostel-frame ()
+  "Open Ghostel in a new frame."
+  (interactive)
+  (let ((frame (make-frame))
+        (display-buffer-alist nil)
+        (ghostel-buffer-name (generate-new-buffer-name "*ghostel-frame*")))
+    (select-frame-set-input-focus frame)
+    (ghostel)))
+
+
+(after! eshell
+  (setq eshell-aliases-file (expand-file-name "eshell/aliases" doom-user-dir))
+  
+  (defun eshell/z (&rest args)
+    "Navigate to directory using zoxide."
+    (if (null args)
+        (eshell/cd)
+      (let* ((cmd (concat "zoxide query " (mapconcat #'shell-quote-argument args " ")))
+             (dir (string-trim (shell-command-to-string cmd))))
+        (if (and dir (not (string-empty-p dir)) (file-accessible-directory-p dir))
+            (eshell/cd dir)
+          (eshell-printn (format "zoxide: no match found for %s" (car args)))))))
+
+  (defun mm/zoxide-add-dir ()
+    "Add current directory to zoxide."
+    (start-process "zoxide-add" nil "zoxide" "add" default-directory))
+
+  (add-hook 'eshell-directory-change-hook #'mm/zoxide-add-dir))
+
+(use-package! ghostel
+  :defer t
+  :init
+  ;; Keep the downloaded native module outside straight's package checkout so
+  ;; package rebuilds cannot replace a module that Emacs currently has loaded.
+  (setq ghostel-module-directory (expand-file-name "ghostel/" doom-user-dir)
+        ghostel-module-auto-install 'download)
+  :config
+  (setq ghostel-buffer-name-function nil
+        ghostel-query-before-killing nil)
+  (custom-set-faces!
+    '(ghostel-default :foreground "#abb2bf" :background "#282c34")
+    '(ghostel-color-black :foreground "#282c34")
+    '(ghostel-color-red :foreground "#e86671")
+    '(ghostel-color-green :foreground "#98c379")
+    '(ghostel-color-yellow :foreground "#e5c07b")
+    '(ghostel-color-blue :foreground "#61afef")
+    '(ghostel-color-magenta :foreground "#c678dd")
+    '(ghostel-color-cyan :foreground "#56b6c2")
+    '(ghostel-color-white :foreground "#abb2bf")
+    '(ghostel-color-bright-black :foreground "#5c6370")
+    '(ghostel-color-bright-red :foreground "#e86671")
+    '(ghostel-color-bright-green :foreground "#98c379")
+    '(ghostel-color-bright-yellow :foreground "#e5c07b")
+    '(ghostel-color-bright-blue :foreground "#61afef")
+    '(ghostel-color-bright-magenta :foreground "#c678dd")
+    '(ghostel-color-bright-cyan :foreground "#56b6c2")
+    '(ghostel-color-bright-white :foreground "#ffffff")))
+
+(use-package! evil-ghostel
+  :after (ghostel evil)
+  :hook (ghostel-mode . evil-ghostel-mode))
+
+;; Use Doom's popup manager so this behaves like Doom's former vterm popup,
+;; rather than a regular side-window split.
+(set-popup-rule! "^\\*doom:ghostel-popup:"
+  :size 0.25 :vslot -4 :select t :quit nil :ttl nil)
+
+
+(defun mm/disable-terminal-process-query ()
+  "Do not prompt before closing terminal buffers created from this config."
+  (when-let ((process (get-buffer-process (current-buffer))))
+    (set-process-query-on-exit-flag process nil)))
+
+(defun mm/terminal-buffer-p (&optional buffer)
+  "Return non-nil when BUFFER is a terminal-like buffer."
+  (with-current-buffer (or buffer (current-buffer))
+    (derived-mode-p 'ghostel-mode 'term-mode 'shell-mode 'eshell-mode)))
+
+
+(defun mm/ghostel-popup-buffer-name ()
+  "Return the Ghostel popup buffer name for the current workspace."
+  (format "*doom:ghostel-popup:%s*"
+          (if (bound-and-true-p persp-mode)
+              (safe-persp-name (get-current-persp))
+            "main")))
+
+
+(defun mm/toggle-bottom-terminal ()
+  "Toggle the Doom-managed Ghostel popup for the current workspace."
+  (interactive)
+  (let* ((buffer-name (mm/ghostel-popup-buffer-name))
+         (buffer (get-buffer buffer-name))
+         (window (and buffer (get-buffer-window buffer))))
+    (if window
+        (delete-window window)
+      (let ((ghostel-buffer-name buffer-name))
+        (ghostel)))))
+
+
+(defun mm/send-command-to-current-terminal (command)
+  "Send COMMAND to the current terminal buffer."
+  (cond
+   ((derived-mode-p 'ghostel-mode)
+    (ghostel-send-string (concat command "\n"))
+    t)
+   ((derived-mode-p 'term-mode)
+    (term-send-raw-string (concat command "\n"))
+    t)
+   ((derived-mode-p 'shell-mode)
+    (goto-char (point-max))
+    (insert command)
+    (comint-send-input)
+    t)
+   ((derived-mode-p 'eshell-mode)
+    (goto-char (point-max))
+    (insert command)
+    (eshell-send-input)
+    t)))
+
+
+(defun mm/run-shell-command-in-bottom-window (command directory)
+  "Run COMMAND in DIRECTORY in a bottom shell-like window."
+  (cond
+   ((mm/terminal-buffer-p)
+    (mm/send-command-to-current-terminal command))
+   (t
+    (let ((default-directory directory))
+      (let ((ghostel-buffer-name (generate-new-buffer-name "*ghostel*")))
+        (ghostel)
+        (ghostel-send-string (concat command "\n")))))))
+
+;; `SPC o t` toggles the Ghostel popup; `SPC o T` opens Ghostel in a new frame.
+
+(after! flycheck
+  (remove-hook 'flycheck-mode-hook #'+syntax-init-popups-h)
+  (setq flycheck-display-errors-function #'flycheck-display-error-messages))
+
+(use-package! flyover
+  :hook ((flycheck-mode . flyover-mode)
+         (flymake-mode . flyover-mode))
+  :config
+  (setq flyover-checkers '(flycheck flymake)
+        flyover-levels '(error warning info)
+        flyover-use-theme-colors t
+        flyover-background-lightness 20
+        flyover-text-tint 'lighter
+        flyover-text-tint-percent 15
+        flyover-icon-tint 'lighter
+        flyover-icon-tint-percent 15
+        flyover-icon-background-tint 'darker
+        flyover-icon-background-tint-percent 30
+        flyover-show-icon nil
+        flyover-error-icon ""
+        flyover-warning-icon ""
+        flyover-info-icon ""
+        flyover-border-style 'none
+        flyover-virtual-line-type nil
+        flyover-hide-checker-name t
+        flyover-show-at-eol t
+        flyover-line-position-offset 0
+        flyover-wrap-messages t
+        flyover-max-line-length 100
+        flyover-display-mode 'always
+        flyover-hide-during-completion t
+        flyover-debounce-interval 0.2
+        flyover-cursor-debounce-interval 0.3))
+
+(dolist (path '("~/.cargo/bin"))
+  (let ((expanded-path (expand-file-name path)))
+    (when (file-directory-p expanded-path)
+      (add-to-list 'exec-path expanded-path)
+      (setenv "PATH" (concat expanded-path ":" (getenv "PATH"))))))
+
+(after! project
+  (defun mm/project-try-cargo (dir)
+    (when-let ((root (locate-dominating-file dir "Cargo.toml")))
+      (cons 'mm/cargo root)))
+
+  (cl-defmethod project-root ((project (head mm/cargo)))
+    (cdr project))
+
+  (add-hook 'project-find-functions #'mm/project-try-cargo))
+
+
+(defun mm/project-find-file ()
+  "Project file picker with Evil minibuffer navigation and fresh file cache."
+  (interactive)
+  (when (fboundp 'projectile-invalidate-cache)
+    (projectile-invalidate-cache nil))
+  (mm/with-evil-minibuffer-nav #'projectile-find-file))
+
+
+(after! projectile
+  (setq projectile-project-search-path '(("~/dev" . 1)
+                                         ("~/dev" . 2)
+                                         ("~/dev" . 3)
+                                         ("~/dev" . 4))
+        projectile-auto-discover t)
+  (run-with-idle-timer
+   2 nil
+   (lambda ()
+     (when (file-accessible-directory-p "~/dev")
+       (projectile-discover-projects-in-search-path)
+       (projectile-save-known-projects)))))
+
+(setq rustic-lsp-client 'eglot
+      rustic-lsp-server 'rust-analyzer
+      rustic-lsp-check-command "check")
+
+
+(defun mm/rust-organize-imports ()
+  "Organize Rust imports with rust-analyzer before saving."
+  (when (and (derived-mode-p 'rust-mode 'rustic-mode 'rust-ts-mode)
+             (bound-and-true-p eglot--managed-mode))
+    (eglot-code-actions nil nil "source.organizeImports" t)))
+
+
+(defun mm/rust-eglot-start-h ()
+  "Start rust-analyzer through Eglot for Rust buffers."
+  (when buffer-file-name
+    (run-at-time
+     0.1 nil
+     (lambda (buffer)
+       (when (buffer-live-p buffer)
+         (with-current-buffer buffer
+           (when (derived-mode-p 'rustic-mode 'rust-mode 'rust-ts-mode)
+             (require 'eglot)
+             (condition-case err
+                 ;; `eglot-ensure' is idempotent: it no-ops if a server is
+                 ;; already managing this buffer, so it can't race with Doom's
+                 ;; own `rustic-setup-lsp'. (The old raw `(eglot ...)' call could
+                 ;; open a second, conflicting connection.)
+                 (unless (bound-and-true-p eglot--managed-mode)
+                   (eglot-ensure))
+               (error
+                (message "Rust Eglot failed: %s" (error-message-string err))))))))
+     (current-buffer))))
+
+(after! eglot
+  (add-to-list 'eglot-server-programs
+               '((rust-mode rustic-mode rust-ts-mode) . ("rust-analyzer")))
+  (setq eglot-autoshutdown t)
+  (setq-default eglot-workspace-configuration
+                '(:gopls (:completeUnimported t)
+                  :rust-analyzer
+                  ( ;; Default features only. `:allFeatures t' forces
+                    ;; rust-analyzer to analyze every feature of every crate,
+                    ;; which balloons memory/CPU and is a top cause of stalls in
+                    ;; large workspaces.
+                   :cargo (:buildScripts (:enable t))
+                   ;; `cargo check' (not clippy) on save, and only the current
+                   ;; crate rather than the whole workspace. Full-workspace
+                   ;; clippy-on-save is the main reason rust-analyzer appears to
+                   ;; "freeze": it can't answer highlight/completion requests
+                   ;; while the check runs. Use SPC r for clippy on demand.
+                   :check (:command "check" :workspace :json-false)
+                   :checkOnSave t
+                   ;; Skip the up-front symbol-indexing pass that stalls the
+                   ;; first several seconds after opening a big project.
+                   :cachePriming (:enable :json-false)
+                   ;; Don't scan/watch build artifacts.
+                   :files (:exclude ["target" ".git"])))))
+
+(use-package! just-mode
+  :mode ("/\\(?:[Jj]ustfile\\|\\.justfile\\)\\'" . just-mode))
+
+(defun mm/just-root ()
+  "Return the nearest project root containing a Justfile."
+  (let ((directory (mm/current-buffer-directory)))
+    (or (locate-dominating-file directory "Justfile")
+        (locate-dominating-file directory "justfile")
+        (user-error "No Justfile or justfile found above %s" directory))))
+
+
+(defun mm/just (recipe directory &optional popup close-on-exit)
+  "Run just RECIPE in DIRECTORY.
+
+When POPUP is non-nil, use the Ghostel popup.  When CLOSE-ON-EXIT is non-nil,
+close that popup after the recipe exits."
+  (unless (executable-find "just")
+    (user-error "The `just' executable is not available on Emacs's PATH"))
+  (let ((command (concat "just " (shell-quote-argument recipe))))
+    (cond
+     ((and popup close-on-exit)
+      (mm/run-program-in-popup-terminal command directory))
+     (popup
+      (mm/run-command-in-popup-terminal command directory))
+     (t
+      (mm/run-shell-command-in-bottom-window command directory)))))
+
+(after! dape
+  (add-to-list 'dape-configs
+               `(codelldb
+                 modes (rust-mode rust-ts-mode rustic-mode)
+                 ensure dape-ensure-command
+                 command ,(expand-file-name "~/.config/doom/debug-adapters/codelldb/adapter/codelldb")
+                 command-args ("--port" :autoport)
+                 :type "lldb"
+                 :request "launch"
+                 :cwd dape-cwd
+                 :program dape-buffer-default)))
+
+(after! hl-todo
+  (setq hl-todo-keyword-faces
+        '(("TODO" mm/comment-todo-keyword bold)
+          ("NOTE" mm/comment-note-keyword bold))
+        hl-todo-exclude-modes (delq 'org-mode hl-todo-exclude-modes))
+  (when global-hl-todo-mode
+    (global-hl-todo-mode -1)
+    (global-hl-todo-mode 1)))
+
+(setq org-directory "~/dev/org/")
+
+(defun mm/archive-done-org-tasks-on-save ()
+  "Archive completed non-recurring tasks when saving the main todo.org file."
+  (when (and buffer-file-name
+             (string= (file-truename buffer-file-name)
+                      (file-truename (expand-file-name "todo.org" org-directory))))
+    (let ((script (expand-file-name "scripts/archive-done-org-tasks" doom-user-dir)))
+      (when (file-executable-p script)
+        (let ((exit-code (call-process script nil "*Archive Done Org Tasks*" t
+                                       (expand-file-name org-directory))))
+          (if (zerop exit-code)
+              (progn
+                (revert-buffer :ignore-auto :noconfirm)
+                (message "Archived completed non-recurring tasks from todo.org"))
+            (message "Done task archive failed; see *Archive Done Org Tasks*")))))))
+
+
+(add-hook 'after-save-hook #'mm/archive-done-org-tasks-on-save)
+
+(defun mm/open-daily-org ()
+  "Open today's daily Org note."
+  (interactive)
+  (let* ((daily-dir (expand-file-name "daily/" org-directory))
+         (file (expand-file-name (format-time-string "%Y-%m-%d.org") daily-dir)))
+    (make-directory daily-dir t)
+    (find-file file)
+    (when (= (buffer-size) 0)
+      (insert "#+title: " (format-time-string "%A, %B %e, %Y") "\n\n"
+              "* What I did\n"
+              "* TODO \n\n"
+              "* Notes\n\n"))))
+
+(defun mm/find-org-note ()
+  "Find an Org note under `org-directory'."
+  (interactive)
+  (let ((default-directory (expand-file-name org-directory)))
+    (minibuffer-with-setup-hook #'mm/minibuffer-evil-nav-setup-h
+      (let ((file (completing-read "Org note: "
+                                   (directory-files-recursively default-directory "\\.org\\'")
+                                   nil t)))
+        (find-file file)))))
+
+(defun mm/grep-org-notes ()
+  "Live grep Org notes under `org-directory'."
+  (interactive)
+  (minibuffer-with-setup-hook #'mm/minibuffer-evil-nav-setup-h
+    (consult-ripgrep org-directory nil)))
+
+(defvar-local mm/org--last-fontified-window-start nil
+  "Last Org window start handled by `mm/org-fontify-visible-after-jump-h'.")
+
+(defun mm/org-fontify-visible-after-jump-h ()
+  "Fontify the visible part of an Org buffer after a jump or scroll.
+
+Org's JIT fontifier can reach a distant location before it has seen the
+opening line of a source block.  That leaves the block unfontified until it is
+visited line by line.  Start at the enclosing block header when there is one,
+so Doom's `org-modern' display and native source highlighting appear as soon
+as the location is shown."
+  (when (and (derived-mode-p 'org-mode)
+             (eq (window-buffer (selected-window)) (current-buffer)))
+    (let ((window-start (window-start)))
+      (unless (equal window-start mm/org--last-fontified-window-start)
+        (setq mm/org--last-fontified-window-start window-start)
+        (save-excursion
+          (goto-char window-start)
+          (font-lock-ensure
+           (or (org-babel-where-is-src-block-head) window-start)
+           (window-end nil t)))))))
+
+(defun mm/org-enable-visible-jit-fontification-h ()
+  "Enable jump-aware fontification in the current Org buffer."
+  (add-hook 'post-command-hook #'mm/org-fontify-visible-after-jump-h nil t))
+
+(after! org
+  ;; Apply the targeted JIT-fontification repair only in Org buffers; it does
+  ;; not alter font-lock behavior in other Doom modes.
+  (add-hook 'org-mode-hook #'mm/org-enable-visible-jit-fontification-h)
+  (setq org-agenda-files (directory-files-recursively (expand-file-name org-directory) "\\.org$")
+        org-agenda-show-all-dates nil
+        org-agenda-skip-scheduled-if-done t
+        org-agenda-skip-deadline-if-done t
+        org-agenda-skip-timestamp-if-done t
+        org-agenda-prefix-format
+        '((agenda . " %i %-12:c%?-12t% s")
+          (todo . " %i %-12:c")
+          (tags . " %i %-12:c")
+          (search . " %i %-12:c"))
+        org-agenda-custom-commands
+        '(("a" "Agenda"
+           ((agenda ""
+                    ((org-super-agenda-groups nil)
+                     (org-agenda-sorting-strategy
+                      '(time-up priority-down category-keep))))
+            (todo "TODO"
+                  ((org-agenda-overriding-header "Backlog")
+                   (org-super-agenda-groups nil)
+                   (org-agenda-sorting-strategy
+                    '(priority-down category-keep))
+                   (org-agenda-skip-function
+                    '(org-agenda-skip-entry-if 'scheduled 'deadline)))))))
+        org-log-done 'time
+        org-clock-persist t
+        org-todo-keywords '((sequence "TODO(t)" "NEXT(n)" "WAIT(w)" "|" "DONE(d!)" "CANCELLED(c@)"))
+        org-capture-templates
+        `(("t" "Todo" entry
+           (file+headline ,(expand-file-name "todo.org" org-directory) "Inbox")
+           "* TODO %?\n  %U\n")
+          ("n" "Note" entry
+           (file+headline ,(expand-file-name "notes.org" org-directory) "Notes")
+           "* %?\n  %U\n")
+          ("d" "Daily note" entry
+          (file+olp+datetree ,(expand-file-name "daily-log.org" org-directory))
+           "* %?\n  %U\n")))
+  (map! :map org-mode-map
+        :n "gx" #'org-open-at-point
+        :n "gh" #'evil-beginning-of-line
+        :n "gl" #'evil-end-of-line)
+  (org-clock-persistence-insinuate))
+
+(after! evil-org
+  (map! :map evil-org-mode-map
+        :n "gh" #'evil-beginning-of-line
+        :n "gl" #'evil-end-of-line))
+
+(use-package! org-super-agenda
+  :after org-agenda
+  :config
+  (org-super-agenda-mode)
+  (setq org-super-agenda-groups
+        '((:name "Today" :time-grid t :scheduled today)
+          (:name "Next" :todo "NEXT")
+          (:name "Due soon" :deadline future)
+          (:name "Overdue" :deadline past)
+          (:name "Waiting" :todo "WAIT"))))
+
+(defun mm/org-agenda-line-next (&optional count)
+  "Move down COUNT physical lines in agenda buffers without agenda side effects."
+  (interactive "p")
+  (forward-line (or count 1))
+  (back-to-indentation))
+
+(defun mm/org-agenda-line-previous (&optional count)
+  "Move up COUNT physical lines in agenda buffers without agenda side effects."
+  (interactive "p")
+  (forward-line (- (or count 1)))
+  (back-to-indentation))
+
+(defun mm/org-project-names ()
+  "Return known PROJECT property values from agenda files."
+  (delete-dups
+   (delq nil
+         (org-map-entries
+          (lambda ()
+            (when-let ((project (org-entry-get nil "PROJECT")))
+              (unless (string-empty-p project)
+                project)))
+          nil
+          'agenda))))
+
+(defun mm/org-agenda-marker-at-line ()
+  "Return the Org marker for the current agenda line, if any."
+  (let ((pos (line-beginning-position))
+        (end (line-end-position))
+        marker)
+    (while (and (< pos end) (not marker))
+      (setq marker (or (get-text-property pos 'org-hd-marker)
+                       (get-text-property pos 'org-marker))
+            pos (next-property-change pos nil end)))
+    marker))
+
+(defun mm/org-agenda-project-at-line ()
+  "Return the PROJECT property for the current agenda line, if any."
+  (when-let ((marker (mm/org-agenda-marker-at-line)))
+    (with-current-buffer (marker-buffer marker)
+      (save-excursion
+        (goto-char marker)
+        (org-entry-get nil "PROJECT" t)))))
+
+(defface mm/org-agenda-calendar-personal
+  '((t (:foreground "#d7ecff" :background "#1f3a52" :weight semi-bold :extend t)))
+  "Face for personal calendar events in Org Agenda.")
+
+(defface mm/org-agenda-calendar-teamworks
+  '((t (:foreground "#fff0c2" :background "#4a3a16" :weight semi-bold :extend t)))
+  "Face for Teamworks calendar events in Org Agenda.")
+
+(defface mm/org-agenda-calendar-pg
+  '((t (:foreground "#f2dcff" :background "#3d2a4f" :weight semi-bold :extend t)))
+  "Face for P&G calendar events in Org Agenda.")
+
+(defface mm/org-agenda-calendar-household
+  '((t (:foreground "#ffdede" :background "#4f2626" :weight semi-bold :extend t)))
+  "Face for Household events in Org Agenda.")
+
+(defun mm/org-agenda-calendar-at-line ()
+  "Return the CALENDAR property for the current agenda line, if any."
+  (when-let ((marker (mm/org-agenda-marker-at-line)))
+    (with-current-buffer (marker-buffer marker)
+      (save-excursion
+        (goto-char marker)
+        (org-entry-get nil "CALENDAR" t)))))
+
+(defun mm/org-agenda-calendar-face (calendar)
+  "Return the agenda face for CALENDAR."
+  (pcase calendar
+    ("memohnsen@gmail.com" 'mm/org-agenda-calendar-personal)
+    ("Teamworks H2F" 'mm/org-agenda-calendar-teamworks)
+    ("P&G" 'mm/org-agenda-calendar-pg)
+    ("Home" 'mm/org-agenda-calendar-household)
+    (_ 'org-agenda-calendar-event)))
+
+(defun mm/org-agenda-color-calendar-events ()
+  "Color agenda lines generated from the synced macOS calendar."
+  (let ((inhibit-read-only t))
+    (save-excursion
+      (goto-char (point-min))
+      (while (not (eobp))
+        (when-let* ((calendar (mm/org-agenda-calendar-at-line))
+                    (face (mm/org-agenda-calendar-face calendar)))
+          (add-face-text-property (line-beginning-position)
+                                  (line-end-position)
+                                  face
+                                  t)
+          (end-of-line)
+          (insert " " (propertize (format "[%s]" calendar) 'face face)))
+        (forward-line 1)))))
+
+(defun mm/org-agenda-space-between-days ()
+  "Insert extra vertical space before each agenda day header."
+  (let ((inhibit-read-only t))
+    (save-excursion
+      (goto-char (point-min))
+      (while (not (eobp))
+        (when (and (get-text-property (line-beginning-position) 'org-agenda-date-header)
+                   (not (bobp)))
+          (beginning-of-line)
+          (unless (save-excursion
+                    (forward-line -2)
+                    (looking-at-p "\\s-*$"))
+            (insert "\n")))
+        (forward-line 1)))))
+
+(defun mm/org-agenda-align-projects ()
+  "Display agenda PROJECT values in a right-aligned column."
+  (save-excursion
+    (goto-char (point-min))
+    (while (not (eobp))
+      (when-let ((project (mm/org-agenda-project-at-line)))
+        (let* ((label (format "[%s]" project))
+               (label (if (> (length label) 28)
+                          (concat (substring label 0 27) "]")
+                        label)))
+          (end-of-line)
+          (insert
+           (propertize
+            " "
+            'display `(space :align-to (- right ,(1+ (length label)))))
+           (propertize label 'face 'org-tag))))
+      (forward-line 1))))
+
+(defun mm/org-agenda-set-priority ()
+  "Set the priority for the agenda item at point."
+  (interactive)
+  (let* ((choice (completing-read "Priority: " '("A" "B" "C" "none") nil t))
+         (priority (if (string= choice "none") ?\s (string-to-char choice))))
+    (org-agenda-priority priority)))
+
+(defun mm/org-agenda-set-project ()
+  "Set or clear the PROJECT property for the agenda item at point."
+  (interactive)
+  (let ((project (string-trim
+                  (completing-read "Project (empty clears): "
+                                   (mm/org-project-names)))))
+    (org-agenda-with-point-at-orig-entry nil
+      (if (string-empty-p project)
+          (org-delete-property "PROJECT")
+        (org-entry-put nil "PROJECT" project)))
+    (org-agenda-redo)
+    (if (string-empty-p project)
+        (message "Cleared project")
+      (message "Project: %s" project))))
+
+(defun mm/org-calendar-select ()
+  "Select the date at point while Org is reading a date from Calendar."
+  (interactive)
+  (if (fboundp 'org-calendar-select)
+      (org-calendar-select)
+    (if-let ((date (calendar-cursor-to-date))
+             (minibuffer-window (active-minibuffer-window)))
+        (let* ((time (org-encode-time 0 0 0 (nth 1 date) (nth 0 date) (nth 2 date)))
+               (date-string (format-time-string "%Y-%m-%d" time)))
+          (setq org-ans1 date-string)
+          (with-current-buffer (window-buffer minibuffer-window)
+            (let ((inhibit-read-only t))
+              (erase-buffer)
+              (insert date-string)))
+          (exit-minibuffer))
+      (keyboard-quit))))
+
+(after! calendar
+  (define-key calendar-mode-map (kbd "h") #'calendar-backward-day)
+  (define-key calendar-mode-map (kbd "j") #'calendar-forward-week)
+  (define-key calendar-mode-map (kbd "k") #'calendar-backward-week)
+  (define-key calendar-mode-map (kbd "l") #'calendar-forward-day)
+  (define-key calendar-mode-map (kbd "H") #'calendar-backward-month)
+  (define-key calendar-mode-map (kbd "L") #'calendar-forward-month)
+  (define-key calendar-mode-map (kbd "RET") #'mm/org-calendar-select)
+  (define-key calendar-mode-map (kbd "<return>") #'mm/org-calendar-select)
+  (after! evil
+    (evil-define-key* '(normal motion) calendar-mode-map
+      (kbd "h") #'calendar-backward-day
+      (kbd "j") #'calendar-forward-week
+      (kbd "k") #'calendar-backward-week
+      (kbd "l") #'calendar-forward-day
+      (kbd "H") #'calendar-backward-month
+      (kbd "L") #'calendar-forward-month
+      (kbd "RET") #'mm/org-calendar-select
+      (kbd "<return>") #'mm/org-calendar-select)))
+
+(defun mm/org-agenda-schedule-from-calendar (arg)
+  "Schedule the agenda item at point, starting date selection in Calendar."
+  (interactive "P")
+  (let ((org-read-date-display-type 'calendar)
+        (minibuffer-setup-hook (cons #'mm/select-calendar-window
+                                     minibuffer-setup-hook)))
+    (org-agenda-schedule arg)))
+
+(defvar mm/org-agenda-view-keymap
+  '(("j" . mm/org-agenda-line-next)
+    ("k" . mm/org-agenda-line-previous)
+    ("p" . mm/org-agenda-set-priority)
+    ("P" . mm/org-agenda-set-project)
+    ("s" . mm/org-agenda-schedule-from-calendar)
+    ("d" . org-agenda-day-view)
+    ("w" . org-agenda-week-view)
+    ("m" . org-agenda-month-view)
+    ("y" . org-agenda-year-view)
+    ("." . org-agenda-goto-today)
+    ("f" . org-agenda-later)
+    ("b" . org-agenda-earlier))
+  "Agenda bindings that should win over Org and Evil defaults.")
+
+(defun mm/org-agenda-define-view-keys (keymap)
+  "Install agenda view keys into KEYMAP."
+  (dolist (binding mm/org-agenda-view-keymap)
+    (define-key keymap (kbd (car binding)) (cdr binding))))
+
+(defun mm/org-agenda-setup-view-keys ()
+  "Apply agenda view keys after Org/Evil agenda modes initialize."
+  (mm/org-agenda-define-view-keys org-agenda-mode-map)
+  (when (boundp 'evil-org-agenda-mode-map)
+    (mm/org-agenda-define-view-keys evil-org-agenda-mode-map))
+  (when (boundp 'org-super-agenda-header-map)
+    (mm/org-agenda-define-view-keys org-super-agenda-header-map))
+  (when (fboundp 'evil-local-set-key)
+    (dolist (binding mm/org-agenda-view-keymap)
+      (evil-local-set-key 'motion (kbd (car binding)) (cdr binding))
+      (evil-local-set-key 'normal (kbd (car binding)) (cdr binding)))))
+
+(after! org-agenda
+  (mm/org-agenda-define-view-keys org-agenda-mode-map)
+  (add-hook 'org-agenda-finalize-hook #'mm/org-agenda-color-calendar-events)
+  (add-hook 'org-agenda-finalize-hook #'mm/org-agenda-align-projects)
+  (add-hook 'org-agenda-finalize-hook #'mm/org-agenda-space-between-days)
+  (add-hook 'org-agenda-mode-hook #'mm/org-agenda-setup-view-keys))
+
+(after! evil-org-agenda
+  (mm/org-agenda-define-view-keys evil-org-agenda-mode-map))
+
+(after! org-super-agenda
+  (mm/org-agenda-define-view-keys org-super-agenda-header-map))
+
+(after! persp-mode
+  ;; Keep Doom's default: save workspace sessions, but do not reopen every saved
+  ;; buffer during startup. Stale restored buffers can trip file mode detection.
+  (setq persp-auto-resume-time -1)
+
+(defun +workspace--message-body (message &optional type)
+    "Show workspace messages without Doom's echo-area workspace tabline."
+    (propertize (format "%s" message)
+                'face (pcase type
+                        ('error 'error)
+                        ('warn 'warning)
+                        ('success 'success)
+                        ('info 'font-lock-comment-face))))
+
+(defun +workspace/display ()
+    "Do not show Doom's echo-area workspace tabline."
+    (interactive)
+    (message nil)))
+
+(defun mm/next-error-cyclic ()
+  "Jump to the next error, wrapping to the first if at the end."
+  (interactive)
+  (if (and (bound-and-true-p flycheck-mode) flycheck-current-errors)
+      (condition-case nil
+          (flycheck-next-error)
+        (error (flycheck-next-error 1 t)))
+    (if (bound-and-true-p flymake-mode)
+        (let ((flymake-wrap-around t))
+          (call-interactively #'flymake-goto-next-error))
+      (condition-case nil
+          (next-error)
+        (error (next-error 1 t))))))
+
+(defun mm/previous-error-cyclic ()
+  "Jump to the previous error, wrapping to the last if at the beginning."
+  (interactive)
+  (if (and (bound-and-true-p flycheck-mode) flycheck-current-errors)
+      (condition-case nil
+          (flycheck-previous-error)
+        (error (flycheck-next-error -1 t)))
+    (if (bound-and-true-p flymake-mode)
+        (let ((flymake-wrap-around t))
+          (call-interactively #'flymake-goto-prev-error))
+      (condition-case nil
+          (previous-error)
+        (error nil)))))
+
+(defun mm/workspace-new-from-project ()
+  "Refresh projects, then create a workspace for the selected project."
+  (interactive)
+  (when (fboundp 'projectile-discover-projects-in-search-path)
+    (projectile-discover-projects-in-search-path)
+    (projectile-save-known-projects))
+  (let* ((projects projectile-known-projects)
+         (project-dir (completing-read "Project to open in new workspace: " projects nil t))
+         (workspace-name (file-name-nondirectory (directory-file-name project-dir)))
+         (kill-empty-main-p (mm/workspace-only-empty-main-p)))
+    (when (and project-dir workspace-name)
+      (+workspace-switch workspace-name t)
+      (projectile-switch-project-by-name project-dir)
+      (+workspace-save workspace-name)
+      (mm/workspace-kill-empty-main-maybe kill-empty-main-p))))
+
+(defun mm/workspace-switch-to ()
+  "Switch workspace with Evil minibuffer navigation."
+  (interactive)
+  (mm/with-evil-minibuffer-nav #'+workspace/switch-to))
+
+
+(defun mm/saved-workspace-entry (name)
+  "Return NAME's saved workspace form from Doom's workspace file."
+  (let ((file (expand-file-name +workspaces-data-file persp-save-dir)))
+    (when (file-readable-p file)
+      (with-temp-buffer
+        (insert-file-contents file)
+        (goto-char (point-min))
+        (condition-case nil
+            (cl-find name (read (current-buffer)) :key #'cadr :test #'equal)
+          (error nil))))))
+
+(defun mm/saved-workspace-project-root (name)
+  "Return the saved project root for workspace NAME."
+  (let* ((entry (mm/saved-workspace-entry name))
+         (params (cadr (nth 4 entry))))
+    (or (cdr (assq '+workspace-project params))
+        (cdr (assq 'last-project-root params)))))
+
+(defun mm/workspace-file-buffer-p (buffer)
+  "Return non-nil when BUFFER is a live file buffer."
+  (and (buffer-live-p buffer)
+       (buffer-file-name buffer)))
+
+(defun mm/workspace-only-empty-main-p ()
+  "Return non-nil when the only workspace is empty `main'."
+  (and (bound-and-true-p persp-mode)
+       (equal (+workspace-list-names) '("main"))
+       (equal (+workspace-current-name) "main")
+       (not (cl-some #'mm/workspace-file-buffer-p
+                     (+workspace-buffer-list (+workspace-current))))))
+
+(defun mm/workspace-kill-empty-main-maybe (should-kill)
+  "Kill the empty `main' workspace when SHOULD-KILL is non-nil."
+  (when (and should-kill
+             (+workspace-exists-p "main")
+             (not (equal (+workspace-current-name) "main")))
+    (+workspace/kill "main")))
+
+
+(defun mm/workspace-revive-saved-buffers (name)
+  "Put NAME back on its saved project and first real saved buffer."
+  (when-let* ((persp (+workspace-get name t)))
+    (let* ((project-root (mm/saved-workspace-project-root name))
+           (existing-buffers (cl-remove-if-not
+                              #'mm/workspace-file-buffer-p
+                              (+workspace-buffer-list persp)))
+           (saved-buffers
+            (cl-loop for file in (mm/saved-workspace-buffer-files name)
+                     collect (find-file-noselect file)))
+           (buffers (or existing-buffers saved-buffers)))
+      (when project-root
+        (set-persp-parameter '+workspace-project project-root persp)
+        (set-persp-parameter 'last-project-root project-root persp))
+      (dolist (buffer saved-buffers)
+        (persp-add-buffer buffer persp nil nil))
+      (when-let* ((buffer (car buffers)))
+        (switch-to-buffer buffer)))))
+
+(defun mm/workspace-load (name)
+  "Load workspace NAME and revive its saved file buffers."
+  (interactive
+   (list
+    (minibuffer-with-setup-hook #'mm/minibuffer-evil-nav-setup-h
+      (completing-read
+       "Load workspace: "
+       (persp-list-persp-names-in-file
+        (expand-file-name +workspaces-data-file persp-save-dir))
+       nil t))))
+  (let ((kill-empty-main-p (mm/workspace-only-empty-main-p)))
+    (when (+workspace-load name)
+      (+workspace/switch-to name)
+      (mm/workspace-revive-saved-buffers name)
+      (mm/workspace-kill-empty-main-maybe kill-empty-main-p)
+      (+workspace/display))))
+
+(defun mm/workspace-save-if-saved (name)
+  "Resave workspace NAME when it already exists in the saved workspace file."
+  (when (mm/saved-workspace-entry name)
+    (+workspace-save name)))
+
+(defun mm/workspace-save-current ()
+  "Save the current workspace without prompting for a name."
+  (interactive)
+  (+workspace/save (+workspace-current-name)))
+
+(defun mm/workspace-kill (name)
+  "Close workspace NAME, updating its saved session first when it exists."
+  (interactive
+   (let ((current-name (+workspace-current-name)))
+     (list
+      (if current-prefix-arg
+          (minibuffer-with-setup-hook #'mm/minibuffer-evil-nav-setup-h
+            (completing-read (format "Close workspace (default: %s): " current-name)
+                             (+workspace-list-names)
+                             nil nil nil nil current-name))
+        current-name))))
+  (mm/workspace-save-if-saved name)
+  (+workspace/kill name))
+
+(defun mm/workspace-delete ()
+  "Delete saved workspace with Evil minibuffer navigation."
+  (interactive)
+  (mm/with-evil-minibuffer-nav #'+workspace/delete))
+
+(defun mm/minibuffer-escape-to-normal ()
+  "Use ESC in minibuffer to enter Evil normal state, never abort."
+  (interactive)
+  (when (and (fboundp 'evil-local-mode)
+             (not (bound-and-true-p evil-local-mode)))
+    (evil-local-mode 1))
+  (when (fboundp 'evil-normal-state)
+    (evil-normal-state)))
+
+(defun mm/minibuffer-evil-nav-setup-h ()
+  "Enable ESC->normal plus j/k navigation and q quit for minibuffer."
+  (when (fboundp 'evil-local-mode)
+    (evil-local-mode 1))
+  ;; Override Doom's default physical Escape abort in minibuffers for this session.
+  ;; Do not bind textual "ESC"/"C-[" here; Emacs uses that prefix to read Meta keys
+  ;; such as M-RET, and making it non-prefix breaks Vertico's keymap setup.
+  (local-set-key [escape] #'mm/minibuffer-escape-to-normal)
+  (when (and (bound-and-true-p evil-local-mode)
+             (fboundp 'evil-local-set-key))
+    (evil-local-set-key 'insert [escape] #'mm/minibuffer-escape-to-normal)
+    (if (and (fboundp 'vertico-next)
+             (fboundp 'vertico-previous)
+             (fboundp 'vertico-exit))
+        (progn
+          (evil-local-set-key 'normal (kbd "j") #'vertico-next)
+          (evil-local-set-key 'normal (kbd "k") #'vertico-previous)
+          (evil-local-set-key 'normal (kbd "RET") #'vertico-exit)
+          (evil-local-set-key 'normal (kbd "<return>") #'vertico-exit))
+      (progn
+        (evil-local-set-key 'normal (kbd "j") #'next-line)
+        (evil-local-set-key 'normal (kbd "k") #'previous-line)
+        (evil-local-set-key 'normal (kbd "RET") #'exit-minibuffer)
+        (evil-local-set-key 'normal (kbd "<return>") #'exit-minibuffer)))
+    (evil-local-set-key 'normal (kbd "q") #'abort-recursive-edit)))
+
+(defun mm/with-evil-minibuffer-nav (command)
+  "Run COMMAND with minibuffer ESC->normal and j/k/q navigation enabled."
+  (minibuffer-with-setup-hook #'mm/minibuffer-evil-nav-setup-h
+    (call-interactively command)))
+
+(defvar mm/last-search-command nil
+  "The most recently invoked command from the leader Search menu.")
+
+(defvar mm/last-search-input nil
+  "The final minibuffer input from the most recent leader Search command.")
+
+(defun mm/record-search-command (command)
+  "Record COMMAND so `mm/repeat-last-search' can invoke it again."
+  (setq mm/last-search-command command))
+
+(defun mm/save-search-input-h ()
+  "Save the final contents of the search minibuffer before it closes."
+  (setq mm/last-search-input (minibuffer-contents-no-properties)))
+
+(defun mm/capture-search-input-h ()
+  "Install a buffer-local hook to remember this search's input."
+  (add-hook 'minibuffer-exit-hook #'mm/save-search-input-h nil t))
+
+(defun mm/restore-search-input-h (input)
+  "Replace the new search minibuffer contents with INPUT."
+  (delete-minibuffer-contents)
+  (insert input))
+
+(defmacro mm/with-recorded-search (command &rest body)
+  "Run BODY as COMMAND and remember its final minibuffer input."
+  `(progn
+     (mm/record-search-command ,command)
+     (minibuffer-with-setup-hook #'mm/capture-search-input-h
+       ,@body)))
+
+(defun mm/repeat-last-search ()
+  "Resume the most recently used leader Search command and its query."
+  (interactive)
+  (if mm/last-search-command
+      (minibuffer-with-setup-hook
+          (apply-partially #'mm/restore-search-input-h mm/last-search-input)
+        (call-interactively mm/last-search-command))
+    (user-error "No leader search has been run yet")))
+
+(defun mm/search-buffer ()
+  "Search current buffer with Evil minibuffer navigation."
+  (interactive)
+  (mm/with-recorded-search #'mm/search-buffer
+    (mm/with-evil-minibuffer-nav #'+default/search-buffer)))
+
+(defun mm/search-project-symbol-at-point ()
+  "Search the project for the symbol at point."
+  (interactive)
+  (mm/with-recorded-search #'mm/search-project-symbol-at-point
+    (mm/with-evil-minibuffer-nav #'+default/search-project-for-symbol-at-point)))
+
+(defun mm/search-diagnostics ()
+  "Search Flycheck diagnostics."
+  (interactive)
+  (mm/with-recorded-search #'mm/search-diagnostics
+    (call-interactively #'consult-flycheck)))
+
+(defun mm/search-all-open-buffers ()
+  "Search all open buffers with Evil minibuffer navigation."
+  (interactive)
+  (if (fboundp 'consult-line-multi)
+      (minibuffer-with-setup-hook #'mm/minibuffer-evil-nav-setup-h
+        (consult-line-multi 'all-buffers))
+    (user-error "consult-line-multi is unavailable")))
+
+(defun mm/search-cwd ()
+  "Search current directory with Evil minibuffer navigation."
+  (interactive)
+  (mm/with-evil-minibuffer-nav #'+default/search-cwd))
+
+(defun mm/search-other-cwd ()
+  "Search another directory with Evil minibuffer navigation."
+  (interactive)
+  (mm/with-evil-minibuffer-nav #'+default/search-other-cwd))
+
+(defun mm/search-emacsd ()
+  "Search Doom Emacs config with Evil minibuffer navigation."
+  (interactive)
+  (mm/with-evil-minibuffer-nav #'+default/search-emacsd))
+
+(defun mm/search-project ()
+  "Search project, including hidden files, with Evil minibuffer navigation."
+  (interactive)
+  (mm/with-recorded-search #'mm/search-project
+    (minibuffer-with-setup-hook #'mm/minibuffer-evil-nav-setup-h
+      (+default/search-project t))))
+
+(defun mm/search-project-todos ()
+  "Search the current project for TODO markers, ignoring case."
+  (interactive)
+  (mm/with-recorded-search #'mm/search-project-todos
+    (let ((project-root (or (doom-project-root)
+                            (user-error "Not in a project")))
+          (consult-ripgrep-args
+           (concat consult-ripgrep-args " --ignore-case")))
+      (minibuffer-with-setup-hook #'mm/minibuffer-evil-nav-setup-h
+        (consult-ripgrep project-root "todo")))))
+
+(defun mm/search-other-project ()
+  "Search another project with Evil minibuffer navigation."
+  (interactive)
+  (mm/with-evil-minibuffer-nav #'+default/search-other-project))
+
+;; Save the current file with Command-s.
+
+
+(defun mm/saved-workspace-buffer-files (name)
+  "Return file paths saved in workspace NAME."
+  (cl-loop for buffer in (nth 2 (mm/saved-workspace-entry name))
+           for file = (nth 2 buffer)
+           when (and (stringp file) (file-readable-p file))
+           collect file))
+
+;; Configure the macOS traffic-light titlebar to match the current theme.
+(when (eq system-type 'darwin)
+  (setq ns-use-proxy-icon nil
+        frame-title-format nil))
+
+(defun mm/tab-left ()
+  "Move to the tab visually left of the current tab."
+  (interactive)
+  (if (fboundp 'centaur-tabs-backward-tab)
+      (centaur-tabs-backward-tab)
+    (previous-buffer)))
+
+
+(defun mm/tab-right ()
+  "Move to the tab visually right of the current tab."
+  (interactive)
+  (if (fboundp 'centaur-tabs-forward-tab)
+      (centaur-tabs-forward-tab)
+    (next-buffer)))
+
+;; Open the project file explorer with `SPC e`, similar to LazyVim.
+
+
+(map! :n "H" #'mm/tab-left)
+(map! :n "L" #'mm/tab-right)
+
+(require 'cl-lib)
+
+(defface mm/comment-todo-keyword
+  '((t (:foreground "#000000"
+        :background "#61afef"
+        :weight bold
+        :box (:line-width (1 . -1) :color "#61afef"))))
+  "Face for TODO keywords in code comments.")
+
+(defface mm/comment-note-keyword
+  '((t (:foreground "#000000"
+        :background "#c678dd"
+        :weight bold
+        :box (:line-width (1 . -1) :color "#c678dd"))))
+  "Face for NOTE keywords in code comments, matching Neovim's hint purple.")
+
+(after! org
+  (font-lock-add-keywords
+   'org-mode
+   '(("\\_<NOTE\\_>[!:]?" 0 'mm/comment-note-keyword prepend)))
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (when (derived-mode-p 'org-mode)
+        (font-lock-flush)))))
+
+(when (fboundp 'font-lock-flush)
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (when (bound-and-true-p hl-todo-mode)
+        (font-lock-flush)))))
+
+(add-to-list 'completion-styles 'flex)
+
+(require 'subr-x)
+
+;; Generated Org files do not benefit from restoring serialized parser cache.
+;; Keep Org's in-memory parser cache, but avoid stale on-disk cache files.
+(setq org-element-cache-persistent nil)
+
+(defun mm/open-calendar ()
+  "Open Doom's Org-backed calendar view."
+  (interactive)
+  (require 'calfw-org)
+  (calfw-org-open-calendar nil "Org" "Seagreen4" :view 'week))
+
+(defun mm/select-calendar-window ()
+  "Move focus to the visible Calendar window."
+  (when-let ((window (get-buffer-window "*Calendar*" t)))
+    (select-window window)))
+
+(defun mm/current-buffer-directory ()
+  "Return the current buffer's directory or `default-directory'."
+  (or (when-let ((file-name (buffer-file-name)))
+        (file-name-directory file-name))
+      default-directory))
+
+(defun mm/run-command-in-popup-terminal (command directory)
+  "Run COMMAND in DIRECTORY inside the current workspace's Ghostel popup."
+  (let* ((buffer-name (mm/ghostel-popup-buffer-name))
+         (buffer (get-buffer buffer-name))
+         (window (and buffer (get-buffer-window buffer)))
+         (default-directory directory))
+    ;; If the window is not currently open/visible, toggle it open.
+    (unless window
+      (mm/toggle-bottom-terminal)
+      (setq buffer (get-buffer buffer-name))
+      (setq window (get-buffer-window buffer)))
+    ;; Select the terminal window
+    (select-window window)
+    ;; Switch to the buffer to run commands
+    (with-current-buffer buffer
+      (let* ((cd-cmd (format "cd %s" (shell-quote-argument (expand-file-name directory))))
+             (full-cmd (concat cd-cmd " && " command)))
+        (unless (mm/send-command-to-current-terminal full-cmd)
+          (compile full-cmd))))))
+
+
+(defun mm/close-popup-terminal-on-exit (buffer _event)
+  "Close the bottom popup terminal window when its program exits.
+Intended for `ghostel-exit-functions': only acts on Ghostel popup buffers;
+other Ghostel buffers are left untouched."
+  (when (and (bufferp buffer)
+             (buffer-live-p buffer)
+             (string-prefix-p "*doom:ghostel-popup:" (buffer-name buffer)))
+    (let ((window (get-buffer-window buffer)))
+      (when (window-live-p window)
+        (delete-window window)))
+    ))
+
+
+(after! ghostel
+  (add-hook 'ghostel-exit-functions #'mm/close-popup-terminal-on-exit))
+
+
+(defun mm/run-program-in-popup-terminal (command directory)
+  "Run COMMAND in DIRECTORY in the bottom popup terminal, closing the popup
+when the program quits (normal exit, panic, or C-c).
+The program is started with `exec' so the terminal's process *becomes* the
+program; when it dies, `mm/close-popup-terminal-on-exit' removes the window."
+  (let* ((buffer-name (mm/ghostel-popup-buffer-name))
+         (buffer (get-buffer buffer-name))
+         (window (and buffer (get-buffer-window buffer)))
+         (default-directory directory))
+    (unless window
+      (mm/toggle-bottom-terminal)
+      (setq buffer (get-buffer buffer-name))
+      (setq window (get-buffer-window buffer)))
+    (select-window window)
+    (with-current-buffer buffer
+      (let* ((cd-cmd (format "cd %s" (shell-quote-argument (expand-file-name directory))))
+             ;; `exec' replaces the shell with the program, so quitting the
+             ;; program (including C-c, which kills the now-foreground process)
+             ;; ends the terminal's process and triggers the exit hook.
+             (full-cmd (concat cd-cmd " && exec " command)))
+        (unless (mm/send-command-to-current-terminal full-cmd)
+          (compile full-cmd))))))
+
+(defun mm/toggle-lsp-inlay-hints ()
+  "Toggle Eglot inlay hints in the current LSP-managed buffer."
+  (interactive)
+  (unless (bound-and-true-p eglot--managed-mode)
+    (user-error "The current buffer is not managed by Eglot"))
+  (eglot-inlay-hints-mode (if eglot-inlay-hints-mode -1 1)))
+
+(defun mm/goto-definition-in-split ()
+  "Go to a definition, splitting right when it is in the current buffer."
+  (interactive)
+  (let ((origin-window (selected-window))
+        (origin-buffer (current-buffer))
+        (origin-point (point)))
+    (call-interactively #'+lookup/definition)
+    (when (and (window-live-p origin-window)
+               (eq (selected-window) origin-window)
+               (eq (current-buffer) origin-buffer)
+               (/= (point) origin-point))
+      (let ((definition-point (point))
+            (definition-window (split-window origin-window nil 'right)))
+        (with-selected-window origin-window
+          (goto-char origin-point))
+        (select-window definition-window)
+        (switch-to-buffer origin-buffer)
+        (goto-char definition-point)))))
+
+(map! "s-s" #'save-buffer)
+
+;; Redo with Shift-u in normal mode.
+
+(map! :n "U" #'evil-redo)
+
+;; g-direction motion keys.
+
+(map! :n "ge" #'evil-goto-line)
+(map! :n "gh" #'evil-beginning-of-line)
+(map! :n "gl" #'evil-end-of-line)
+(map! :n "gd" #'mm/goto-definition-in-split)
+(map! :n "gte" #'mm/next-error-cyclic)
+(map! :n "gtE" #'mm/previous-error-cyclic)
+
+(after! eglot
+  (map! :map eglot-mode-map
+        :n "gd" #'mm/goto-definition-in-split))
+
+;; Cycle buffers with Shift-h/l in normal mode.
