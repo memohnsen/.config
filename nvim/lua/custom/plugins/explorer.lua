@@ -8,7 +8,7 @@ return {
         terminal = {
           win = {
             keys = {
-              close = { '<C-x>', 'hide', mode = 't', desc = 'Close Terminal Popup' },
+              close = { '<C-;>', 'hide', mode = 't', desc = 'Close Terminal Popup' },
             },
           },
         },

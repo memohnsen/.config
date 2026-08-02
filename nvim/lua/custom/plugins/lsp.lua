@@ -54,6 +54,13 @@ return {
           map('gk', peek_definition, 'Pee[k] Definition')
 
           local client = vim.lsp.get_client_by_id(event.data.client_id)
+          if client and client:supports_method('textDocument/inlayHint', event.buf) then
+            map('<leader>h', function()
+              local enabled = vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }
+              vim.lsp.inlay_hint.enable(not enabled, { bufnr = event.buf })
+            end, 'Toggle Inlay Hints')
+          end
+
           if client and client:supports_method('textDocument/documentHighlight', event.buf) then
             local group = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
             vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, { buffer = event.buf, group = group, callback = vim.lsp.buf.document_highlight })
