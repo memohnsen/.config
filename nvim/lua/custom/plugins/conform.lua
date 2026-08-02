@@ -19,31 +19,39 @@ return {
           union_declaration = true,
         }
 
-        local function add_trailing_comma(node)
+        local function add_trailing_comma(node, last_item)
           local _, _, end_row, end_col = node:range()
           local closing = vim.api.nvim_buf_get_text(bufnr, end_row, end_col - 1, end_row, end_col, {})[1]
           if closing ~= '}' and closing ~= ')' then return end
 
-          local last_named = node:named_child(node:named_child_count() - 1)
-          if not last_named then return end
-          local _, _, row, col = last_named:range()
-          local suffix = table.concat(vim.api.nvim_buf_get_text(bufnr, row, col, end_row, end_col - 1, {}), '\n')
-          if not suffix:find(',', 1, true) then table.insert(edits, { row = row, col = col }) end
+          if not last_item then return end
+          local _, _, row, col = last_item:range()
+          local item_line = vim.api.nvim_buf_get_lines(bufnr, row, row + 1, false)[1] or ''
+          local next_char = item_line:sub(col + 1, col + 1)
+          if next_char ~= ',' then table.insert(edits, { row = row, col = col }) end
         end
 
         local function visit(node)
           if container_types[node:type()] then
             local fields = 0
+            local last_field
             for child in node:iter_children() do
-              if child:named() and child:type() == 'container_field' then fields = fields + 1 end
+              if child:named() and child:type() == 'container_field' then
+                fields = fields + 1
+                last_field = child
+              end
             end
-            if fields > 1 then add_trailing_comma(node) end
+            if fields > 1 then add_trailing_comma(node, last_field) end
           elseif node:type() == 'parameters' then
             local parameters = 0
+            local last_parameter
             for child in node:iter_children() do
-              if child:named() and child:type() == 'parameter' then parameters = parameters + 1 end
+              if child:named() and child:type() == 'parameter' then
+                parameters = parameters + 1
+                last_parameter = child
+              end
             end
-            if parameters > zig_max_inline_parameters then add_trailing_comma(node) end
+            if parameters > zig_max_inline_parameters then add_trailing_comma(node, last_parameter) end
           end
 
           for child in node:iter_children() do visit(child) end

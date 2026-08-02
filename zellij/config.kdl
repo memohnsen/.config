@@ -80,7 +80,7 @@ keybinds clear-defaults=true {
         bind "up" { MovePane "up"; }
         bind "right" { MovePane "right"; }
         bind "h" { MovePane "left"; }
-        bind "Ctrl h" { SwitchToMode "normal"; }
+        bind "esc" { SwitchToMode "normal"; }
         bind "j" { MovePane "down"; }
         bind "k" { MovePane "up"; }
         bind "l" { MovePane "right"; }
@@ -100,6 +100,7 @@ keybinds clear-defaults=true {
         bind "w" { SearchToggleOption "Wrap"; }
     }
     session {
+        bind "d" { Detach; }
         bind "a" {
             LaunchOrFocusPlugin "zellij:about" {
                 floating true
@@ -168,7 +169,7 @@ keybinds clear-defaults=true {
         bind "Ctrl q" { Quit; }
     }
     shared_except "locked" "move" {
-        bind "Ctrl h" { SwitchToMode "move"; }
+        bind "Ctrl m" { SwitchToMode "move"; }
     }
     shared_except "locked" "session" {
         bind "Ctrl o" { SwitchToMode "session"; }
@@ -233,47 +234,25 @@ keybinds clear-defaults=true {
         bind "Ctrl y" {
             LaunchOrFocusPlugin "file:~/.config/zellij/plugins/zellij_forgot.wasm" {
                 "LOAD_ZELLIJ_BINDINGS" "false"
-                "lock"                  "ctrl + g"
-                "unlock"                "ctrl + g"
-                "new pane"              "ctrl + p + n"
-                "change focus of pane"  "ctrl + p + arrow key"
-                "close pane"            "ctrl + p + x"
-                "rename pane"           "ctrl + p + c"
-                "toggle fullscreen"     "ctrl + p + f"
-                "toggle floating pane"  "ctrl + p + w"
-                "toggle embed pane"     "ctrl + p + e"
-                "choose right pane"     "ctrl + p + l"
-                "choose left pane"      "ctrl + p + r"
-                "choose upper pane"     "ctrl + p + k"
-                "choose lower pane"     "ctrl + p + j"
-                "new tab"               "ctrl + t + n"
-                "close tab"             "ctrl + t + x"
-                "change focus of tab"   "ctrl + t + arrow key"
-                "rename tab"            "ctrl + t + r"
-                "sync tab"              "ctrl + t + s"
-                "brake pane to new tab" "ctrl + t + b"
-                "brake pane left"       "ctrl + t + ["
-                "brake pane right"      "ctrl + t + ]"
-                "toggle tab"            "ctrl + t + tab"
-                "increase pane size"    "ctrl + n + +"
-                "decrease pane size"    "ctrl + n + -"
-                "increase pane top"     "ctrl + n + k"
-                "increase pane right"   "ctrl + n + l"
-                "increase pane bottom"  "ctrl + n + j"
-                "increase pane left"    "ctrl + n + h"
-                "decrease pane top"     "ctrl + n + K"
-                "decrease pane right"   "ctrl + n + L"
-                "decrease pane bottom"  "ctrl + n + J"
-                "decrease pane left"    "ctrl + n + H"
-                "move pane to top"      "ctrl + h + k"
-                "move pane to right"    "ctrl + h + l"
-                "move pane to bottom"   "ctrl + h + j"
-                "move pane to left"     "ctrl + h + h"
-                "search"                "ctrl + s + s"
-                "go into edit mode"     "ctrl + s + e"
-                "detach session"        "ctrl + o + w"
-                "open session manager"  "ctrl + o + w"
-                "quit zellij"           "ctrl + q"
+                "lock/unlock"              "ctrl + g"
+                "new pane"                 "ctrl + p + n"
+                "close pane"               "ctrl + p + x"
+                "rename pane"              "ctrl + p + c"
+                "move panes"               "alt + hjkl"
+                "toggle fullscreen"        "ctrl + p + f"
+                "toggle floating pane"     "alt + f"
+                "toggle embeded pane"      "ctrl + p + e"
+                "new tab"                  "ctrl + t + n"
+                "close tab"                "ctrl + t + x"
+                "rename tab"               "ctrl + t + r"
+                "move pane to new tab"     "ctrl + t + b"
+                "move pane to left tab"    "ctrl + t + ["
+                "move pane to right tab"   "ctrl + t + ]"
+                "resize pane"              "ctrl + n + hkjl"
+                "move pane"                "ctrl + m + hjkl"
+                "detach session"           "ctrl + o + d"
+                "open session manager"     "ctrl + o + w"
+                "quit zellij"              "ctrl + q"
                 floating true
             }
         }

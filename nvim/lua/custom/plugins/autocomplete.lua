@@ -8,11 +8,40 @@ return {
     config = function()
       require('luasnip').setup {}
 
+      local function finish_zig_import()
+        if vim.bo.filetype ~= 'zig' then return end
+
+        local bufnr = vim.api.nvim_get_current_buf()
+        local row = vim.api.nvim_win_get_cursor(0)[1] - 1
+
+        local function add_semicolon()
+          if not vim.api.nvim_buf_is_valid(bufnr) or vim.bo[bufnr].filetype ~= 'zig' then return true end
+          local line = vim.api.nvim_buf_get_lines(bufnr, row, row + 1, false)[1]
+          if not line then return true end
+
+          local content = line:gsub('%s+$', '')
+          if content:sub(-1) == ';' then return true end
+          if not content:match '@import%s*%b()$' then return false end
+
+          vim.api.nvim_buf_set_text(bufnr, row, #content, row, #content, { ';' })
+          return true
+        end
+
+        -- Function-kind brackets are present immediately. Semantic-token
+        -- brackets can arrive asynchronously, so retry after Blink's timeout.
+        if not add_semicolon() then vim.defer_fn(add_semicolon, 450) end
+      end
+
       require('blink.cmp').setup {
         keymap = {
           preset = 'enter',
-          ['<CR>'] = { 'select_and_accept', 'fallback' },
-          ['<C-y>'] = { 'select_and_accept' },
+          ['<CR>'] = {
+            function(cmp) return cmp.select_and_accept { callback = finish_zig_import } end,
+            'fallback',
+          },
+          ['<C-y>'] = {
+            function(cmp) return cmp.select_and_accept { callback = finish_zig_import } end,
+          },
           ['<Tab>'] = {
             function(cmp)
               if cmp.is_menu_visible() then return cmp.select_next() end
@@ -58,7 +87,7 @@ return {
         return function()
           local cmp = require 'blink.cmp'
           if cmp.is_visible() or cmp.is_active() then
-            cmp.select_and_accept()
+            cmp.select_and_accept { callback = finish_zig_import }
             return ''
           end
           if type(fallback) == 'function' then return fallback() end
