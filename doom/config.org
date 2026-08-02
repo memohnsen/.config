@@ -352,6 +352,11 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
 
 * Editor Behavior
 ** Editor Polish
+*** Scrolling
+#+begin_src emacs-lisp
+(setq scroll-margin 20)
+#+end_src
+
 *** Undo Jump-to-Top Fix
 #+begin_src emacs-lisp
 ;; Without fine undo, evil amalgamates each insert session into one undo step by
@@ -834,6 +839,11 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
   (add-to-list 'eglot-server-programs
                '((rust-mode rustic-mode rust-ts-mode) . ("rust-analyzer")))
   (setq eglot-autoshutdown t)
+  ;; Eglot enables inlay hints when it starts managing a buffer. Disable them
+  ;; immediately afterward while keeping `mm/toggle-lsp-inlay-hints' available.
+  (add-hook 'eglot-managed-mode-hook
+            (defun mm/disable-lsp-inlay-hints-h ()
+              (eglot-inlay-hints-mode -1)))
   (setq-default eglot-workspace-configuration
                 '(:gopls (:completeUnimported t)
                   :rust-analyzer

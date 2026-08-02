@@ -323,6 +323,8 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `relative'.
 
+(setq scroll-margin 20)
+
 ;; Without fine undo, evil amalgamates each insert session into one undo step by
 ;; stripping undo boundaries up to `evil-undo-list-pointer'
 ;; (`evil-refresh-undo-step'). When that pointer goes stale -- e.g. after
@@ -750,6 +752,11 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
   (add-to-list 'eglot-server-programs
                '((rust-mode rustic-mode rust-ts-mode) . ("rust-analyzer")))
   (setq eglot-autoshutdown t)
+  ;; Eglot enables inlay hints when it starts managing a buffer. Disable them
+  ;; immediately afterward while keeping `mm/toggle-lsp-inlay-hints' available.
+  (add-hook 'eglot-managed-mode-hook
+            (defun mm/disable-lsp-inlay-hints-h ()
+              (eglot-inlay-hints-mode -1)))
   (setq-default eglot-workspace-configuration
                 '(:gopls (:completeUnimported t)
                   :rust-analyzer

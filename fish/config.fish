@@ -12,6 +12,13 @@ if status is-interactive
 	abbr -a la eza -lah --icons --git
 	abbr -a tree eza --tree --icons
 	abbr -a cat bat
+	abbr -a zls zellij ls
+	abbr -a zda zellij da
+	abbr -a zka zellij ka
+	abbr -a jr just run
+	abbr -a jb just build
+	abbr -a jt just test
+	abbr -a jl just lint
 end
 
 fish_add_path /opt/homebrew/bin

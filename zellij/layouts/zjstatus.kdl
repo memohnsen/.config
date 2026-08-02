@@ -3,7 +3,7 @@ layout {
         children
         pane size=1 borderless=true {
             plugin location="file:/Users/maddisenmohnsen/.config/zellij/plugins/zjstatus.wasm" {
-                format_left   "#[fg=#282C34,bg=#61AFEF,bold] {session} #[bg=#1E222A]{tabs}"
+                format_left   "{mode}{tabs}"
                 format_center ""
                 format_right  "{datetime}"
                 format_space  "#[bg=#1E222A]"
@@ -13,8 +13,8 @@ layout {
                 border_format   "#[fg=#1E222A,bg=#1E222A]{char}"
                 border_position "top"
 
-                mode_normal  "#[fg=#282C34,bg=#61AFEF,bold] {name} "
-                mode_tmux    "#[fg=#282C34,bg=#E5C07B,bold] {name} "
+                mode_normal  "#[fg=#282C34,bg=#98C379,bold] UNLOCKED "
+                mode_locked  "#[fg=#FFFFFF,bg=#E06C75,bold] LOCKED "
 
                 tab_normal   "#[fg=#5C6370,bg=#1E222A] {index} {name} "
                 tab_active   "#[fg=#ABB2BF,bg=#1E222A,bold,italic] {index} {name} "
