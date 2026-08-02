@@ -80,6 +80,7 @@ return {
       local servers = {
         postgres_lsp = {},
         stylua = {},
+        zls = {},
         lua_ls = {
           on_init = function(client)
             client.server_capabilities.documentFormattingProvider = false
