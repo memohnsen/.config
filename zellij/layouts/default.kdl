@@ -24,8 +24,8 @@ layout {
     }
 
     tab name="nvim" focus=true {
-        pane command="zsh" {
-            args "-lc" "nvim; exec zsh -l"
+        pane command="fish" {
+            args "-lc" "nvim; exec fish -l"
         }
     }
 }

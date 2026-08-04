@@ -38,28 +38,6 @@
                         "vendor_id": 16700
                     },
                     "ignore_vendor_events": true
-                },
-                {
-                    "identifiers": { "is_keyboard": true },
-                    "simple_modifications": [
-                        {
-                            "from": { "key_code": "escape" },
-                            "to": [{ "key_code": "caps_lock" }]
-                        }
-                    ]
-                },
-                {
-                    "identifiers": {
-                        "is_keyboard": true,
-                        "product_id": 50495,
-                        "vendor_id": 1133
-                    },
-                    "simple_modifications": [
-                        {
-                            "from": { "key_code": "escape" },
-                            "to": [{ "key_code": "caps_lock" }]
-                        }
-                    ]
                 }
             ],
             "name": "Default profile",
