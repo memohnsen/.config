@@ -20,6 +20,12 @@ if status is-interactive
 	abbr -a jt just test
 	abbr -a jl just lint
 	abbr -a top btop
+	abbr -a co codex
+	abbr -a cl clear
+	abbr -a jt just test
+	abbr -a jr just run
+	abbr -a jb just build
+	abbr -a jl just lint
 end
 
 fish_add_path /opt/homebrew/bin

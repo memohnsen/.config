@@ -6,7 +6,15 @@ return {
       { 'L3MON4D3/LuaSnip', version = '2.*', build = vim.fn.executable 'make' == 1 and 'make install_jsregexp' or nil },
     },
     config = function()
-      require('luasnip').setup {}
+      local luasnip = require 'luasnip'
+      luasnip.setup {}
+      luasnip.add_snippets('zig', {
+        luasnip.snippet('tte', {
+          luasnip.text_node 'try testing.expect(',
+          luasnip.insert_node(1),
+          luasnip.text_node ');',
+        }),
+      })
 
       local function finish_zig_import()
         if vim.bo.filetype ~= 'zig' then return end

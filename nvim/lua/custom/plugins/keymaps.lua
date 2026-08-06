@@ -1,7 +1,7 @@
 return function()
   local builtin = require 'telescope.builtin'
 
-  vim.keymap.set('n', 'gh', '0', { desc = 'Go to Line Start' })
+  vim.keymap.set('n', 'gh', '_', { desc = 'Go to Line Start' })
   vim.keymap.set('n', 'gl', '$', { desc = 'Go to Line End' })
   vim.keymap.set('n', 'U', '<C-r>', { desc = 'Redo' })
   vim.keymap.set('n', 'H', '<cmd>bprevious<CR>', { desc = 'Previous Buffer' })

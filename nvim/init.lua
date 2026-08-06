@@ -22,6 +22,17 @@ do
   vim.o.splitbelow = true
   vim.o.list = true
   vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
+  -- Odin conventionally uses real tabs. Keep them compact instead of
+  -- Neovim's eight-column default.
+  vim.api.nvim_create_autocmd('FileType', {
+    pattern = 'odin',
+    callback = function()
+      vim.bo.expandtab = false
+      vim.bo.tabstop = 4
+      vim.bo.shiftwidth = 4
+      vim.bo.softtabstop = 0
+    end,
+  })
   vim.o.inccommand = 'split'
   vim.o.cursorline = true
   vim.o.scrolloff = 20
