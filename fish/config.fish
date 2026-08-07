@@ -15,6 +15,7 @@ if status is-interactive
 	abbr -a zls zellij ls
 	abbr -a zda zellij da
 	abbr -a zka zellij ka
+	abbr -a za zellij a
 	abbr -a jr just run
 	abbr -a jb just build
 	abbr -a jt just test

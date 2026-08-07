@@ -28,4 +28,7 @@ layout {
             args "-lc" "nvim; exec fish -l"
         }
     }
+
+    tab name="scratch" focus=false {
+    }
 }
