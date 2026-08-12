@@ -23,12 +23,16 @@ layout {
         }
     }
 
-    tab name="nvim" focus=true {
-        pane command="fish" {
-            args "-lc" "nvim; exec fish -l"
-        }
+    tab name="scratch" focus=false {
     }
 
-    tab name="scratch" focus=false {
+    tab name="nvim" focus=true {
+        pane split_direction="vertical" {
+            pane command="fish" size="60%" {
+                args "-lc" "nvim; exec fish -l"
+            }
+            pane command="fish" size="40%" {
+            }
+        }
     }
 }

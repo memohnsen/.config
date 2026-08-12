@@ -8,11 +8,48 @@ return {
     config = function()
       local luasnip = require 'luasnip'
       luasnip.setup {}
-      luasnip.add_snippets('zig', {
-        luasnip.snippet('tte', {
-          luasnip.text_node 'try testing.expect(',
-          luasnip.insert_node(1),
-          luasnip.text_node ');',
+
+      local ls = require 'luasnip'
+
+      ls.add_snippets('rust', {
+        ls.snippet('test', {
+          ls.text_node '#[test]',
+        }),
+
+        ls.snippet('cfgtest', {
+          ls.text_node { '#[cfg(test)]', 'mod tests {', 'use super::*;', '', '#[test]', '', '}' },
+        }),
+      })
+
+      ls.add_snippets('zig', {
+        ls.snippet('tte', {
+          ls.text_node 'try testing.expect(',
+          ls.insert_node(1),
+          ls.text_node ');',
+        }),
+
+        ls.snippet('std', {
+          ls.text_node 'const std = @import("std");',
+        }),
+
+        ls.snippet('mem', {
+          ls.text_node 'const mem = std.mem;',
+        }),
+
+        ls.snippet('testing', {
+          ls.text_node 'const testing = std.testing;',
+        }),
+
+        ls.snippet('tst', {
+          ls.text_node 'test "',
+          ls.insert_node(1),
+          ls.text_node { '" {', '  var ' },
+          ls.insert_node(2),
+          ls.text_node ' = ',
+          ls.insert_node(3),
+          ls.text_node { '{};', '  const allocator = testing.allocator;', '  defer ' },
+          ls.insert_node(4),
+          ls.text_node { '.deinit(allocator);', '}' },
         }),
       })
 

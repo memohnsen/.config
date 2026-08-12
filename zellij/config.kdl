@@ -272,6 +272,7 @@ keybinds clear-defaults=true {
                 "move pane to left tab"    "ctrl + t + ["
                 "move pane to right tab"   "ctrl + t + ]"
                 "resize pane"              "ctrl + n + hkjl"
+                "scroll pane"              "ctrl + s"
                 "move pane"                "ctrl + m + hjkl"
                 "detach session"           "ctrl + o + d"
                 "open session manager"     "ctrl + o + w"
