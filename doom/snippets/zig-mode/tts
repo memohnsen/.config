@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: testing.expectEqualStrings
+# key: tts
+# --
+try testing.expectEqualStrings(${1}, ${2});$0

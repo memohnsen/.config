@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: std.mem
+# key: mem
+# --
+const mem = std.mem;

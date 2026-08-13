@@ -59,11 +59,16 @@
 (package! ghostel)
 (package! evil-ghostel)
 (package! just-mode)
+(package! shell-maker)
+(package! acp)
+(package! agent-shell)
 
 ;; Codeberg is unavailable from this network, so use the projects' mirrors.
 (package! zig-mode
   :recipe (:host github :repo "ziglang/zig-mode")
   :pin "66490933a468b5d55a90645c4c87067c508ccd04")
+(package! zig-ts-mode
+  :recipe (:host github :repo "emacsmirror/zig-ts-mode"))
 (package! shift-number
   :recipe (:repo "https://git.savannah.gnu.org/git/emacs/elpa.git"
            :branch "externals/shift-number"

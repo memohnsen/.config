@@ -107,7 +107,7 @@
        ;;ein               ; tame Jupyter notebooks with emacs
        (eval +overlay)     ; run code, run (also, repls)
        lookup              ; navigate your code and its documentation
-       ;;llm               ; when I said you needed friends, I didn't mean...
+       llm               ; when I said you needed friends, I didn't mean...
        (lsp +eglot +booster) ; M-x vscode
        (magit +forge)    ; a git porcelain for Emacs, with GitHub/GitLab issues & PRs
        ;;make              ; run make tasks from Emacs
@@ -188,7 +188,7 @@
        ;;terra             ; Earth and Moon in alignment for performance.
        ;;web               ; the tubes
        yaml              ; JSON, but readable
-       (zig +lsp)          ; C, but simpler
+       (zig +lsp +tree-sitter) ; C, but simpler
 
        :email
        ;;(mu4e +org +gmail)

@@ -28,6 +28,22 @@ return {
           ls.text_node ');',
         }),
 
+        ls.snippet('tts', {
+          ls.text_node 'try testing.expectEqualStrings(',
+          ls.insert_node(1),
+          ls.text_node ', ',
+          ls.insert_node(2),
+          ls.text_node ');',
+        }),
+
+        ls.snippet('ttee', {
+          ls.text_node 'try testing.expectEqual(',
+          ls.insert_node(1),
+          ls.text_node ', ',
+          ls.insert_node(2),
+          ls.text_node ');',
+        }),
+
         ls.snippet('std', {
           ls.text_node 'const std = @import("std");',
         }),

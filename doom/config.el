@@ -3,12 +3,109 @@
 
 (setq doom-font (font-spec :family "JetBrains Mono NL" :size 13))
 
-;; Match Ghostty/nvim line height (Ghostty renders JetBrains Mono at ~1.3x)
-(setq-default line-spacing 2)
+;; Keep buffer lines compact without changing font size or horizontal spacing.
+(setq-default line-spacing 0)
+
+;; Always wrap long lines and never shift a window horizontally as point moves.
+(setq-default truncate-lines nil
+              word-wrap t)
+(setq truncate-partial-width-windows nil
+      auto-hscroll-mode nil)
+(when (fboundp 'horizontal-scroll-bar-mode)
+  (horizontal-scroll-bar-mode -1))
+
+(defun mm/force-soft-wrap-h ()
+  "Wrap long lines in every regular buffer and reset horizontal scrolling."
+  (unless (minibufferp)
+    (visual-line-mode 1)
+    (setq-local truncate-lines nil
+                word-wrap t)
+    (dolist (window (get-buffer-window-list (current-buffer) nil t))
+      (set-window-hscroll window 0))))
+
+(add-hook 'after-change-major-mode-hook #'mm/force-soft-wrap-h 100)
+(global-visual-line-mode 1)
 
 (after! org-modern
   (setq org-modern-fold-stars
         '(("▶" . "▼") ("▷" . "▽") ("▶" . "▼") ("▷" . "▽") ("▸" . "▾"))))
+
+(defun mm/zig-ts-max-font-lock-h ()
+  "Enable every tree-sitter font-lock feature in Zig buffers."
+  (setq-local treesit-font-lock-level 4)
+  (treesit-font-lock-recompute-features)
+  (font-lock-flush))
+
+(after! zig-ts-mode
+  (add-hook 'zig-ts-mode-hook #'mm/zig-ts-max-font-lock-h))
+
+(defconst mm/zig-max-inline-parameters 3
+  "Maximum Zig parameters allowed before forcing a multiline list.")
+
+(defun mm/zig-force-multiline-lists-before-save-h ()
+  "Add trailing commas that make `zig fmt' preserve multiline lists.
+
+This mirrors the Neovim Tree-sitter save hook: enums, structs, and unions
+with more than one field are forced multiline, as are parameter lists with
+more than `mm/zig-max-inline-parameters' parameters."
+  (when (and (derived-mode-p 'zig-mode 'zig-ts-mode)
+             (treesit-language-available-p 'zig))
+    (save-restriction
+      (widen)
+      (let* ((parser (or (seq-find
+                          (lambda (candidate)
+                            (eq (treesit-parser-language candidate) 'zig))
+                          (treesit-parser-list))
+                         (treesit-parser-create 'zig)))
+             (root (treesit-parser-root-node parser))
+             edits)
+        (dolist (capture
+                 (treesit-query-capture
+                  root
+                  '((enum_declaration) @container
+                    (struct_declaration) @container
+                    (union_declaration) @container
+                    (parameters) @parameters)))
+          (let* ((kind (car capture))
+                 (node (cdr capture))
+                 (item-type (if (eq kind 'container)
+                                "container_field"
+                              "parameter"))
+                 (items (seq-filter
+                         (lambda (child)
+                           (string= (treesit-node-type child) item-type))
+                         (treesit-node-children node t)))
+                 (minimum (if (eq kind 'container)
+                              1
+                            mm/zig-max-inline-parameters))
+                 (last-item (car (last items))))
+            (when (and (> (length items) minimum)
+                       last-item
+                       (memq (char-before (treesit-node-end node)) '(?} ?\)))
+                       (not (eq (char-after (treesit-node-end last-item)) ?,)))
+              (push (treesit-node-end last-item) edits))))
+        (atomic-change-group
+          (save-excursion
+            (dolist (position (sort (delete-dups edits) #'>))
+              (goto-char position)
+              (insert ","))))))))
+
+(defun mm/zig-format-on-save-setup-h ()
+  "Format Zig synchronously before save, after enforcing multiline lists."
+  ;; Doom normally routes Zig through Apheleia after the first disk write.
+  ;; Keep Zig's save path synchronous so the Tree-sitter edit reaches `zig fmt'
+  ;; before the file is written.
+  (setq-local apheleia-inhibit t)
+  (when (bound-and-true-p apheleia-mode)
+    (apheleia-mode -1))
+  (zig-format-on-save-mode 1)
+  (remove-hook 'before-save-hook
+               #'mm/zig-force-multiline-lists-before-save-h t)
+  (add-hook 'before-save-hook
+            #'mm/zig-force-multiline-lists-before-save-h -90 t))
+
+(add-hook! '(zig-mode-hook zig-ts-mode-hook)
+  #'mm/zig-format-on-save-setup-h)
 
 (setq doom-theme 'doom-one)
 
@@ -323,7 +420,10 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `relative'.
 
-(setq scroll-margin 20)
+(setq scroll-margin 20
+      maximum-scroll-margin 0.5
+      scroll-conservatively 101
+      scroll-preserve-screen-position t)
 
 ;; Without fine undo, evil amalgamates each insert session into one undo step by
 ;; stripping undo boundaries up to `evil-undo-list-pointer'
@@ -351,9 +451,15 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
         company-minimum-prefix-length 1
         company-tooltip-limit 14
         company-backends '(company-capf)
+        company-selection-wrap-around t
         company-auto-complete nil
         company-auto-commit nil)
   (setq-default company-backends '(company-capf))
+  ;; Navigate LSP candidates immediately.  Company's default TAB command
+  ;; expands the longest common prefix before it starts moving through them.
+  (define-key company-active-map [tab] #'company-select-next)
+  (define-key company-active-map (kbd "TAB") #'company-select-next)
+  (define-key company-active-map [backtab] #'company-select-previous)
   (global-company-mode 1))
 
 
@@ -420,6 +526,7 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
     doom-leader-key "leader"
     (concat doom-leader-key " TAB") "workspace"
     (concat doom-leader-key " b") "bookmark"
+    (concat doom-leader-key " m") "Multicursor"
     (concat doom-leader-key " o") "Org"
     (concat doom-leader-key " r") "Just Commands"
     (concat doom-leader-key " s") "search")
@@ -428,25 +535,13 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
       doom-leader-alt-key "leader"
       (concat doom-leader-alt-key " TAB") "workspace"
       (concat doom-leader-alt-key " b") "bookmark"
+      (concat doom-leader-alt-key " m") "Multicursor"
       (concat doom-leader-alt-key " o") "Org"
       (concat doom-leader-alt-key " r") "Just Commands"
       (concat doom-leader-alt-key " s") "search"))
-  ;; Hide Doom's mode-local SPC m prefix from the root leader popup.
-  (defun mm/which-key-filter-removed-leader-bindings
-      (orig &optional prefix keymap filter recursive)
-    (let ((bindings (funcall orig prefix keymap filter recursive)))
-      (if (and (null keymap)
-               (member (key-description prefix)
-                       (delq nil (list doom-leader-key doom-leader-alt-key))))
-          (seq-remove
-           (lambda (binding)
-             (string= (substring-no-properties (car binding)) "m"))
-           bindings)
-        bindings)))
+  ;; Undo the old filter that hid SPC m before it became Multicursor.
   (advice-remove #'which-key--get-bindings
-                 #'mm/which-key-filter-removed-leader-bindings)
-  (advice-add #'which-key--get-bindings :around
-              #'mm/which-key-filter-removed-leader-bindings))
+                 #'mm/which-key-filter-removed-leader-bindings))
 
 (defun mm/toggle-which-key ()
   "Toggle Which-Key globally, hiding its popup when disabling it."
@@ -466,9 +561,7 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
       :desc "Find files" "SPC" #'mm/project-find-file
       :desc "File explorer" "e" #'+treemacs/toggle
       :desc "Git" "g" #'magit-status
-      :desc "Toggle LSP hints" "h" #'mm/toggle-lsp-inlay-hints
-      ;; Block Doom's mode-specific localleader at SPC m.
-      "m" #'ignore
+      :desc "Toggle LSP hints globally" "h" #'mm/toggle-lsp-inlay-hints
       :desc "Diagnostics" "d" #'flycheck-list-errors
       :desc "Toggle Which-Key" "w" #'mm/toggle-which-key
       :desc "Terminal Popup" "t" #'mm/toggle-bottom-terminal
@@ -476,11 +569,25 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
       (:prefix ("b" . "Bookmark")
        :desc "Set bookmark" "m" #'bookmark-set
        :desc "Delete bookmark" "M" #'bookmark-delete)
-      (:prefix ("r" . "Just")
+      (:prefix ("j" . "Just")
        :desc "Just Run" "r" (cmd! (mm/just "run" (mm/just-root) t))
        :desc "Just Build" "b" (cmd! (mm/just "build" (mm/just-root) t))
        :desc "Just Test" "t" (cmd! (mm/just "test" (mm/just-root) t))
        :desc "Just Lint" "l" (cmd! (mm/just "lint" (mm/just-root) t)))
+      (:prefix ("m" . "Multicursor")
+       :desc "Select all matches" "a" #'evil-mc-make-all-cursors
+       :desc "Add next match" "n" #'evil-mc-make-and-goto-next-match
+       :desc "Add previous match" "p" #'evil-mc-make-and-goto-prev-match
+       :desc "Skip next match" "N" #'evil-mc-skip-and-goto-next-match
+       :desc "Skip previous match" "P" #'evil-mc-skip-and-goto-prev-match
+       :desc "Add cursor below" "j" #'evil-mc-make-cursor-move-next-line
+       :desc "Add cursor above" "k" #'evil-mc-make-cursor-move-prev-line
+       :desc "Cursors at line beginnings" "b" #'evil-mc-make-cursor-in-visual-selection-beg
+       :desc "Cursors at line endings" "e" #'evil-mc-make-cursor-in-visual-selection-end
+       :desc "Undo last cursor" "u" #'evil-mc-undo-last-added-cursor
+       :desc "Remove all cursors" "q" #'evil-mc-undo-all-cursors
+       :desc "Pause cursors" "s" #'evil-mc-pause-cursors
+       :desc "Resume cursors" "r" #'evil-mc-resume-cursors)
       (:prefix ("o" . "Org")
        :desc "Daily note" "d" #'mm/open-daily-org
        :desc "Find Org note" "f" #'mm/find-org-note
@@ -498,7 +605,6 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
        :desc "Next workspace" "TAB" #'+workspace/switch-right
        :desc "Load workspace" "l" #'mm/workspace-load
        :desc "New workspace" "n" #'mm/workspace-new-from-project
-       :desc "Save workspace" "s" #'mm/workspace-save-current
        :desc "Close workspace" "d" #'mm/workspace-kill
        :desc "Delete saved workspace" "D" #'mm/workspace-delete
        :desc "Workspace 1" "1" (cmd! (+workspace/switch-to 0))
@@ -568,9 +674,27 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
     '(ghostel-color-bright-cyan :foreground "#56b6c2")
     '(ghostel-color-bright-white :foreground "#ffffff")))
 
+(defun mm/ghostel-popup-double-escape ()
+  "Preserve the first Escape and close this bottom popup on the second."
+  (interactive)
+  (if (eq last-command #'mm/ghostel-popup-double-escape)
+      (when (window-live-p (selected-window))
+        (delete-window (selected-window)))
+    (if (eq evil-state 'insert)
+        (evil-ghostel--escape)
+      (evil-force-normal-state))))
+
+(defun mm/setup-ghostel-popup-double-escape-h ()
+  "Install double-Escape closing only in bottom Ghostel popup buffers."
+  (when (string-prefix-p "*doom:ghostel-popup:" (buffer-name))
+    (dolist (state '(insert normal visual operator motion))
+      (evil-local-set-key state (kbd "<escape>")
+                          #'mm/ghostel-popup-double-escape))))
+
 (use-package! evil-ghostel
   :after (ghostel evil)
-  :hook (ghostel-mode . evil-ghostel-mode))
+  :hook ((ghostel-mode . evil-ghostel-mode)
+         (evil-ghostel-mode . mm/setup-ghostel-popup-double-escape-h)))
 
 ;; Use Doom's popup manager so this behaves like Doom's former vterm popup,
 ;; rather than a regular side-window split.
@@ -752,13 +876,11 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
   (add-to-list 'eglot-server-programs
                '((rust-mode rustic-mode rust-ts-mode) . ("rust-analyzer")))
   (setq eglot-autoshutdown t)
-  ;; Eglot enables inlay hints when it starts managing a buffer. Disable them
-  ;; immediately afterward while keeping `mm/toggle-lsp-inlay-hints' available.
-  (add-hook 'eglot-managed-mode-hook
-            (defun mm/disable-lsp-inlay-hints-h ()
-              (eglot-inlay-hints-mode -1)))
+  ;; Apply the global hint preference whenever Eglot starts managing a buffer.
+  (add-hook 'eglot-managed-mode-hook #'mm/apply-global-lsp-inlay-hints-h)
   (setq-default eglot-workspace-configuration
                 '(:gopls (:completeUnimported t)
+                  :zls (:build_on_save_args ["check" "test" "-fincremental"])
                   :rust-analyzer
                   ( ;; Default features only. `:allFeatures t' forces
                     ;; rust-analyzer to analyze every feature of every crate,
@@ -943,13 +1065,13 @@ as the location is shown."
            "* %?\n  %U\n")))
   (map! :map org-mode-map
         :n "gx" #'org-open-at-point
-        :n "gh" #'evil-beginning-of-line
+        :n "gh" #'evil-first-non-blank
         :n "gl" #'evil-end-of-line)
   (org-clock-persistence-insinuate))
 
 (after! evil-org
   (map! :map evil-org-mode-map
-        :n "gh" #'evil-beginning-of-line
+        :n "gh" #'evil-first-non-blank
         :n "gl" #'evil-end-of-line))
 
 (use-package! org-super-agenda
@@ -1247,6 +1369,10 @@ as the location is shown."
           (previous-error)
         (error nil)))))
 
+(map! :m
+      :desc "Next diagnostic" "]d" #'mm/next-error-cyclic
+      :desc "Previous diagnostic" "[d" #'mm/previous-error-cyclic)
+
 (defun mm/workspace-new-from-project ()
   "Refresh projects, then create a workspace for the selected project."
   (interactive)
@@ -1328,15 +1454,21 @@ as the location is shown."
         (switch-to-buffer buffer)))))
 
 (defun mm/workspace-load (name)
-  "Load workspace NAME and revive its saved file buffers."
+  "Load closed workspace NAME and revive its saved file buffers."
   (interactive
-   (list
-    (minibuffer-with-setup-hook #'mm/minibuffer-evil-nav-setup-h
-      (completing-read
-       "Load workspace: "
-       (persp-list-persp-names-in-file
-        (expand-file-name +workspaces-data-file persp-save-dir))
-       nil t))))
+   (let* ((saved-workspaces
+           (persp-list-persp-names-in-file
+            (expand-file-name +workspaces-data-file persp-save-dir)))
+          (open-workspaces (+workspace-list-names))
+          (closed-workspaces
+           (cl-remove-if (lambda (workspace)
+                           (member workspace open-workspaces))
+                         saved-workspaces)))
+     (unless closed-workspaces
+       (user-error "No closed saved workspaces"))
+     (list
+      (minibuffer-with-setup-hook #'mm/minibuffer-evil-nav-setup-h
+        (completing-read "Load workspace: " closed-workspaces nil t)))))
   (let ((kill-empty-main-p (mm/workspace-only-empty-main-p)))
     (when (+workspace-load name)
       (+workspace/switch-to name)
@@ -1344,18 +1476,20 @@ as the location is shown."
       (mm/workspace-kill-empty-main-maybe kill-empty-main-p)
       (+workspace/display))))
 
-(defun mm/workspace-save-if-saved (name)
-  "Resave workspace NAME when it already exists in the saved workspace file."
-  (when (mm/saved-workspace-entry name)
-    (+workspace-save name)))
+(defun mm/workspace-save-all-on-exit-h ()
+  "Persist every open workspace before Emacs exits."
+  (when (bound-and-true-p persp-mode)
+    (dolist (name (+workspace-list-names))
+      (condition-case err
+          (+workspace-save name)
+        (error
+         (message "Could not auto-save workspace %s: %s"
+                  name (error-message-string err)))))))
 
-(defun mm/workspace-save-current ()
-  "Save the current workspace without prompting for a name."
-  (interactive)
-  (+workspace/save (+workspace-current-name)))
+(add-hook 'kill-emacs-hook #'mm/workspace-save-all-on-exit-h -90)
 
 (defun mm/workspace-kill (name)
-  "Close workspace NAME, updating its saved session first when it exists."
+  "Auto-save and close workspace NAME."
   (interactive
    (let ((current-name (+workspace-current-name)))
      (list
@@ -1365,7 +1499,7 @@ as the location is shown."
                              (+workspace-list-names)
                              nil nil nil nil current-name))
         current-name))))
-  (mm/workspace-save-if-saved name)
+  (+workspace-save name)
   (+workspace/kill name))
 
 (defun mm/workspace-delete ()
@@ -1500,8 +1634,12 @@ as the location is shown."
     (minibuffer-with-setup-hook #'mm/minibuffer-evil-nav-setup-h
       (+default/search-project t))))
 
+(defconst mm/todo-comments-ripgrep-pattern
+  "\\b\\(?:FIX\\|FIXME\\|BUG\\|FIXIT\\|ISSUE\\|TODO\\|UNIMPLEMENTED\\|HACK\\|WARN\\|WARNING\\|XXX\\|PERF\\|OPTIM\\|PERFORMANCE\\|OPTIMIZE\\|NOTE\\|INFO\\|TEST\\|TESTING\\|PASSED\\|FAILED\\)[:!]"
+  "Consult regexp matching Neovim todo-comments keywords and aliases.")
+
 (defun mm/search-project-todos ()
-  "Search the current project for TODO markers, ignoring case."
+  "Search the project for Neovim-style TODO comment markers, ignoring case."
   (interactive)
   (mm/with-recorded-search #'mm/search-project-todos
     (let ((project-root (or (doom-project-root)
@@ -1509,7 +1647,7 @@ as the location is shown."
           (consult-ripgrep-args
            (concat consult-ripgrep-args " --ignore-case")))
       (minibuffer-with-setup-hook #'mm/minibuffer-evil-nav-setup-h
-        (consult-ripgrep project-root "todo")))))
+        (consult-ripgrep project-root mm/todo-comments-ripgrep-pattern)))))
 
 (defun mm/search-other-project ()
   "Search another project with Evil minibuffer navigation."
@@ -1669,12 +1807,58 @@ program; when it dies, `mm/close-popup-terminal-on-exit' removes the window."
         (unless (mm/send-command-to-current-terminal full-cmd)
           (compile full-cmd))))))
 
-(defun mm/toggle-lsp-inlay-hints ()
-  "Toggle Eglot inlay hints in the current LSP-managed buffer."
+(defconst mm/matching-pairs
+  '((?\{ . ?\}) (?\( . ?\)) (?\[ . ?\]))
+  "Opening and closing pairs expanded by `mm/smart-newline-between-pairs'.")
+
+(defun mm/smart-newline-between-pairs ()
+  "Expand an empty pair onto three lines, or insert a normal newline.
+
+When point is directly between {}, (), or [], put the closing delimiter on
+its own line and leave point correctly indented on the blank middle line."
   (interactive)
-  (unless (bound-and-true-p eglot--managed-mode)
-    (user-error "The current buffer is not managed by Eglot"))
-  (eglot-inlay-hints-mode (if eglot-inlay-hints-mode -1 1)))
+  (if (eq (alist-get (char-before) mm/matching-pairs) (char-after))
+      (progn
+        ;; Move the closer down first so indentation sees a genuinely empty
+        ;; interior line rather than a line beginning with the closer.
+        (newline 2)
+        (indent-according-to-mode)
+        (forward-line -1)
+        (indent-according-to-mode))
+    (newline-and-indent)))
+
+(defun mm/setup-smart-pair-newline-h ()
+  "Use smart pair newlines locally in programming buffers."
+  (evil-local-set-key 'insert (kbd "RET")
+                      #'mm/smart-newline-between-pairs)
+  (evil-local-set-key 'insert (kbd "<return>")
+                      #'mm/smart-newline-between-pairs))
+
+(add-hook 'prog-mode-hook #'mm/setup-smart-pair-newline-h)
+
+(defvar mm/lsp-inlay-hints-enabled nil
+  "Non-nil when Eglot inlay hints are enabled globally.")
+
+(defun mm/apply-global-lsp-inlay-hints-h ()
+  "Apply the global inlay-hint preference to the current Eglot buffer."
+  (when (bound-and-true-p eglot--managed-mode)
+    (eglot-inlay-hints-mode (if mm/lsp-inlay-hints-enabled 1 -1))
+    ;; Enabling the minor mode only registers Eglot's JIT renderer.  Regions
+    ;; that are already fontified otherwise remain unchanged until edited.
+    (when mm/lsp-inlay-hints-enabled
+      (font-lock-flush)
+      (dolist (window (get-buffer-window-list (current-buffer) nil t))
+        (font-lock-ensure (window-start window) (window-end window t))))))
+
+(defun mm/toggle-lsp-inlay-hints ()
+  "Toggle Eglot inlay hints globally in current and future LSP buffers."
+  (interactive)
+  (setq mm/lsp-inlay-hints-enabled (not mm/lsp-inlay-hints-enabled))
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (mm/apply-global-lsp-inlay-hints-h)))
+  (message "LSP inlay hints globally %s"
+           (if mm/lsp-inlay-hints-enabled "enabled" "disabled")))
 
 (defun mm/goto-definition-in-split ()
   "Go to a definition, splitting right when it is in the current buffer."
@@ -1704,14 +1888,96 @@ program; when it dies, `mm/close-popup-terminal-on-exit' removes the window."
 ;; g-direction motion keys.
 
 (map! :n "ge" #'evil-goto-line)
-(map! :n "gh" #'evil-beginning-of-line)
+(map! :n "gh" #'evil-first-non-blank)
 (map! :n "gl" #'evil-end-of-line)
 (map! :n "gd" #'mm/goto-definition-in-split)
 (map! :n "gte" #'mm/next-error-cyclic)
 (map! :n "gtE" #'mm/previous-error-cyclic)
+
+;; Match Vim/Neovim's number increment and decrement commands.
+(map! :nv "C-a" #'evil-numbers/inc-at-pt
+      :nv "C-x" #'evil-numbers/dec-at-pt)
 
 (after! eglot
   (map! :map eglot-mode-map
         :n "gd" #'mm/goto-definition-in-split))
 
 ;; Cycle buffers with Shift-h/l in normal mode.
+
+;; Native Codex chat via agent-shell and the Codex ACP adapter.
+(use-package! agent-shell
+  :commands (agent-shell-openai-start-codex agent-shell-toggle)
+  :init
+  (setq agent-shell-display-action
+        '((display-buffer-in-side-window)
+          (side . right)
+          (slot . 0)
+          (window-width . 0.38)
+          (window-parameters . ((no-delete-other-windows . t)))))
+  :config
+  (setq agent-shell-openai-authentication
+        (agent-shell-openai-make-authentication :login t)
+        agent-shell-openai-default-session-mode-id "agent-full-access"
+        agent-shell-session-strategy 'prompt
+        agent-shell-session-restore-verbosity 'full))
+
+(defun mm/agent-shell-use-full-window-height-h ()
+  "Do not reserve editor scroll margins in Agent Shell buffers."
+  (setq-local scroll-margin 0
+              maximum-scroll-margin 0.25
+              scroll-preserve-screen-position nil))
+
+(add-hook 'agent-shell-mode-hook #'mm/agent-shell-use-full-window-height-h)
+
+(defun mm/codex-toggle ()
+  "Show or hide Codex beside the editor, starting it when necessary."
+  (interactive)
+  (require 'agent-shell)
+  (if (agent-shell-buffers)
+      (agent-shell-toggle)
+    (agent-shell-openai-start-codex)))
+
+(defun mm/evil-close-kills-agent-shell-a (original &rest args)
+  "Kill Agent Shell when Evil closes its window; otherwise call ORIGINAL."
+  (if (derived-mode-p 'agent-shell-mode)
+      (let ((buffer (current-buffer))
+            (window (selected-window)))
+        (when-let ((process (get-buffer-process buffer)))
+          (set-process-query-on-exit-flag process nil))
+        (set-buffer-modified-p nil)
+        (kill-buffer buffer)
+        (when (window-live-p window)
+          (ignore-errors (delete-window window))))
+    (apply original args)))
+
+(after! evil
+  (unless (advice-member-p #'mm/evil-close-kills-agent-shell-a
+                           #'evil-window-delete)
+    (advice-add #'evil-window-delete :around
+                #'mm/evil-close-kills-agent-shell-a)))
+
+(map! :leader
+      :desc "Toggle Codex" "c" #'mm/codex-toggle)
+
+;; Move between Emacs windows with Option/Alt + h/j/k/l.
+(map! "M-h" #'windmove-left
+      "M-j" #'windmove-down
+      "M-k" #'windmove-up
+      "M-l" #'windmove-right)
+
+;; Org binds M-h/M-l to outline promotion/demotion; keep window movement
+;; consistent there too.
+(after! org
+  (map! :map org-mode-map
+        "M-h" #'windmove-left
+        "M-j" #'windmove-down
+        "M-k" #'windmove-up
+        "M-l" #'windmove-right))
+
+;; `evil-org-mode' is a minor mode and therefore outranks `org-mode-map'.
+(after! evil-org
+  (evil-define-key '(normal insert visual motion operator) evil-org-mode-map
+    (kbd "M-h") #'windmove-left
+    (kbd "M-j") #'windmove-down
+    (kbd "M-k") #'windmove-up
+    (kbd "M-l") #'windmove-right))

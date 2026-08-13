@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: testing.expect
+# key: tte
+# --
+try testing.expect(${1});$0

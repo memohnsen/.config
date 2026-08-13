@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: std.testing
+# key: testing
+# --
+const testing = std.testing;
