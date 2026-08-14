@@ -9,10 +9,15 @@
       url = "github:nix-community/home-manager/master";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    nix-darwin = {
+      url = "github:nix-darwin/nix-darwin/master";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
-    { nixpkgs, home-manager, ... }:
+    inputs@{ nixpkgs, home-manager, nix-darwin, ... }:
     {
       homeConfigurations.maddisenmohnsen = home-manager.lib.homeManagerConfiguration {
         pkgs = import nixpkgs {
@@ -21,6 +26,21 @@
             builtins.elem (nixpkgs.lib.getName package) [ "claude-code" ];
         };
         modules = [ ./home.nix ];
+      };
+
+      darwinConfigurations."Maddisens-MacBook-Pro" = nix-darwin.lib.darwinSystem {
+        specialArgs = { inherit inputs; };
+        modules = [
+          ./darwin.nix
+          home-manager.darwinModules.home-manager
+          {
+            # Keep the existing user profile path so GUI-launched editors and
+            # shells continue to resolve the same Home Manager executables.
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = false;
+            home-manager.users.maddisenmohnsen = import ./home.nix;
+          }
+        ];
       };
     };
 }

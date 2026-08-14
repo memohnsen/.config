@@ -1,5 +1,9 @@
 { pkgs, ... }:
 
+let
+  asc-cli = pkgs.callPackage ./packages/asc.nix { };
+  meetcal-cli = pkgs.callPackage ./packages/meetcal.nix { };
+in
 {
   home.username = "maddisenmohnsen";
   home.homeDirectory = "/Users/maddisenmohnsen";
@@ -12,14 +16,17 @@
   # macOS services, and project-specific toolchains remain untouched.
   programs.home-manager.enable = true;
 
-  # General-purpose user tools belong here. Language toolchains, databases,
-  # and project build dependencies remain in each repository's flake.
+  # General-purpose tools and editor-wide runtimes belong here. Repositories
+  # still pin project-specific toolchains and build dependencies in their flakes.
   home.packages = with pkgs; [
+    asc-cli
     aspell
     bat
     btop
+    bun
     cloc
     claude-code
+    codex
     cargo-insta
     cargo-make
     coreutils
@@ -40,20 +47,28 @@
     gnugrep
     gnused
     gnutar
-    helix
     hyperfine
     jq
     just
+    maestro
+    meetcal-cli
     neovim
+    nodejs_24
     opencode
     pandoc
+    prettier
+    postgresql_18
     ripgrep
     sentry-cli
     shellcheck
     starship
+    tailwindcss-language-server
     tesseract
     tree-sitter
+    typescript
+    typescript-language-server
     uv
+    vscode-langservers-extracted
     zellij
     zoxide
   ];

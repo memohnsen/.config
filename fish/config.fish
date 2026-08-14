@@ -31,7 +31,6 @@ end
 
 # Prefer Home Manager packages while retaining Homebrew as a fallback.
 fish_add_path --append /opt/homebrew/bin
-fish_add_path ~/.npm-global/bin
 fish_add_path ~/.local/bin
 set -gx EDITOR nvim
 

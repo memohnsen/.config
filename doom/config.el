@@ -907,11 +907,16 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
   (advice-add #'flyover--build-final-overlay-string :filter-return
               #'mm/flyover-keep-cursor-before-eol-a))
 
-(dolist (path '("~/.cargo/bin"))
-  (let ((expanded-path (expand-file-name path)))
-    (when (file-directory-p expanded-path)
-      (add-to-list 'exec-path expanded-path)
-      (setenv "PATH" (concat expanded-path ":" (getenv "PATH"))))))
+(let* ((nix-paths (list (expand-file-name "~/.nix-profile/bin")
+                        "/nix/var/nix/profiles/default/bin"))
+       (current-paths (split-string (or (getenv "PATH") "") path-separator t))
+       (paths (delete-dups
+               (seq-filter #'file-directory-p
+                           (append nix-paths current-paths)))))
+  ;; GUI Emacs does not inherit the interactive shell's Home Manager PATH.
+  ;; Keep Nix tools first and discard stale paths left by removed toolchains.
+  (setenv "PATH" (string-join paths path-separator))
+  (setq exec-path (append paths (list exec-directory))))
 
 (after! project
   (defun mm/project-try-cargo (dir)
@@ -925,11 +930,18 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
 
 
 (defun mm/project-find-file ()
-  "Project file picker with Evil minibuffer navigation and fresh file cache."
+  "Find a file in this project, or across known projects when outside one."
   (interactive)
   (when (fboundp 'projectile-invalidate-cache)
     (projectile-invalidate-cache nil))
-  (mm/with-evil-minibuffer-nav #'projectile-find-file))
+  (mm/with-evil-minibuffer-nav
+   (if (projectile-project-p)
+       #'projectile-find-file
+     (progn
+       (unless (projectile-known-projects)
+         (projectile-discover-projects-in-search-path)
+         (projectile-save-known-projects))
+       #'projectile-find-file-in-known-projects))))
 
 
 (after! projectile

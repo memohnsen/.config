@@ -1,3 +1,3 @@
-# Build and activate the Home Manager configuration.
+# Build and activate nix-darwin and its integrated Home Manager configuration.
 nix:
-    home-manager switch --flake ./home-manager#maddisenmohnsen
+    system_path="$(nix build ./home-manager#darwinConfigurations.Maddisens-MacBook-Pro.system --no-link --print-out-paths)" && sudo "$system_path/activate"
