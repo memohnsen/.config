@@ -25,13 +25,10 @@ in
     aspell
     bat
     btop
-    bun
     cloc
     claude-code
     codex
     codex-acp
-    cargo-insta
-    cargo-make
     coreutils
     discount
     direnv
@@ -42,7 +39,6 @@ in
     emacs-lsp-booster
     eza
     fd
-    fish
     fzf
     gh
     git
@@ -53,28 +49,20 @@ in
     gnutar
     hyperfine
     jq
-    just
     maestro
     meetcal-cli
     neovim
-    nodejs_24
     nixfmt
     opencode
     pandoc
     prettier
-    postgresql_18
     ripgrep
     sentry-cli
     shellcheck
     shfmt
     starship
-    tailwindcss-language-server
     tesseract
     tree-sitter
-    typescript
-    typescript-language-server
-    uv
-    vscode-langservers-extracted
     zellij
     zoxide
   ];

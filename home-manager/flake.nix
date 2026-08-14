@@ -19,6 +19,11 @@
   outputs =
     inputs@{ nixpkgs, home-manager, nix-darwin, ... }:
     {
+      devShells.aarch64-darwin.default = nixpkgs.legacyPackages.aarch64-darwin.mkShellNoCC {
+        packages = [ nixpkgs.legacyPackages.aarch64-darwin.just ];
+        shellHook = ''echo "Nix dev shell: config"'';
+      };
+
       homeConfigurations.maddisenmohnsen = home-manager.lib.homeManagerConfiguration {
         pkgs = import nixpkgs {
           system = "aarch64-darwin";

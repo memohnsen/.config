@@ -4,7 +4,7 @@ return {
     cmd = { 'Codex', 'CodexToggle' },
     keys = {
       {
-        '<leader>c',
+        '<leader>cc',
         function() require('codex').toggle() end,
         desc = 'Toggle Codex panel',
         mode = { 'n', 't' },
