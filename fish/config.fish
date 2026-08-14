@@ -31,6 +31,7 @@ end
 
 # Prefer Home Manager packages while retaining Homebrew as a fallback.
 fish_add_path --append /opt/homebrew/bin
+fish_add_path ~/.npm-global/bin
 fish_add_path ~/.local/bin
 set -gx EDITOR nvim
 
@@ -40,8 +41,3 @@ zoxide init fish | source
 if command -q direnv
 	direnv hook fish | source
 end
-
-# ZVM
-set -gx ZVM_INSTALL "$HOME/.zvm/self"
-set -gx PATH $PATH "$HOME/.zvm/bin"
-set -gx PATH $PATH "$ZVM_INSTALL/"

@@ -15,7 +15,11 @@
     { nixpkgs, home-manager, ... }:
     {
       homeConfigurations.maddisenmohnsen = home-manager.lib.homeManagerConfiguration {
-        pkgs = nixpkgs.legacyPackages.aarch64-darwin;
+        pkgs = import nixpkgs {
+          system = "aarch64-darwin";
+          config.allowUnfreePredicate = package:
+            builtins.elem (nixpkgs.lib.getName package) [ "claude-code" ];
+        };
         modules = [ ./home.nix ];
       };
     };

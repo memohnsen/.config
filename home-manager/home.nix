@@ -19,11 +19,14 @@
     bat
     btop
     cloc
+    claude-code
     coreutils
     discount
     direnv
     docker
     docker-compose
+    eas-cli
+    emacs-lsp-booster
     eza
     fd
     fish
@@ -32,6 +35,7 @@
     git
     git-filter-repo
     git-lfs
+    gemini-cli
     gnugrep
     gnused
     gnutar
