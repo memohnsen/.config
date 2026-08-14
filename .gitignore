@@ -1,4 +1,6 @@
 .DS_Store
+.android/cache/
+1Password/telemetry-enabled
 2048/
 gh/
 homebrew/

@@ -527,7 +527,9 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
         indent-bars-prefer-character t
         indent-bars-no-stipple-char ?|
         indent-bars-display-on-blank-lines t
-        indent-bars-highlight-current-depth t
+        ;; The current-depth idle timer can run before a perspective-restored
+        ;; buffer has a live window position, producing a nil marker error.
+        indent-bars-highlight-current-depth nil
         indent-bars-current-depth-color '("#e5c07b" :face-bg nil :blend 0)))
 
 ;; Keep completion suggestions usable in both GUI and terminal Emacs.
@@ -746,7 +748,7 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
   ;; package rebuilds cannot replace a module that Emacs currently has loaded.
   (setq ghostel-module-directory (expand-file-name "ghostel/" doom-user-dir)
         ghostel-module-auto-install 'download
-        ghostel-shell "/opt/homebrew/bin/fish")
+        ghostel-shell "/run/current-system/sw/bin/fish")
   :config
   (setq ghostel-buffer-name-function nil
         ghostel-query-before-killing nil)
@@ -907,7 +909,9 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
   (advice-add #'flyover--build-final-overlay-string :filter-return
               #'mm/flyover-keep-cursor-before-eol-a))
 
-(let* ((nix-paths (list (expand-file-name "~/.nix-profile/bin")
+(let* ((nix-fish "/run/current-system/sw/bin/fish")
+       (nix-bash "/run/current-system/sw/bin/bash")
+       (nix-paths (list (expand-file-name "~/.nix-profile/bin")
                         "/nix/var/nix/profiles/default/bin"))
        (current-paths (split-string (or (getenv "PATH") "") path-separator t))
        (paths (delete-dups
@@ -915,8 +919,48 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
                            (append nix-paths current-paths)))))
   ;; GUI Emacs does not inherit the interactive shell's Home Manager PATH.
   ;; Keep Nix tools first and discard stale paths left by removed toolchains.
+  (setenv "SHELL" nix-fish)
   (setenv "PATH" (string-join paths path-separator))
-  (setq exec-path (append paths (list exec-directory))))
+  (setq shell-file-name nix-bash
+        explicit-shell-file-name nix-fish
+        exec-path (append paths (list exec-directory))))
+
+;; Load direnv before Doom restores workspaces.  The stock module waits for the
+;; first file, which is too late when a session restores an existing buffer and
+;; starts its LSP server before `envrc-global-mode' has been enabled.
+(use-package! envrc
+  :demand t
+  :config
+  (envrc-global-mode 1)
+  ;; The Doom module normally delays this until `doom-first-file'.  Since we
+  ;; enable it before session restore, leaving that hook would toggle it twice.
+  (remove-hook 'doom-first-file-hook #'envrc-global-mode)
+
+  (defun mm/envrc-refresh-workspace-h (&rest _)
+    "Apply the nearest direnv environment to every visible workspace buffer."
+    (when envrc-global-mode
+      (dolist (buffer
+               (delete-dups
+                (cons (current-buffer)
+                      (when (fboundp '+workspace-buffer-list)
+                        (+workspace-buffer-list)))))
+        (when (buffer-live-p buffer)
+          (with-current-buffer buffer
+            (when (and default-directory
+                       (not (file-remote-p default-directory)))
+              (unless envrc-mode
+                (envrc-mode 1))
+              (envrc--update)))))))
+
+  (defun mm/envrc-refresh-workspace-deferred-h (&rest _)
+    "Refresh direnv after workspace/session state has finished switching."
+    (run-at-time 0 nil #'mm/envrc-refresh-workspace-h))
+
+  (add-hook 'projectile-after-switch-project-hook
+            #'mm/envrc-refresh-workspace-deferred-h 100)
+  (with-eval-after-load 'persp-mode
+    (add-hook 'persp-activated-functions
+              #'mm/envrc-refresh-workspace-deferred-h 100)))
 
 (after! project
   (defun mm/project-try-cargo (dir)
@@ -1036,7 +1080,14 @@ When POPUP is non-nil, use the Ghostel popup.  When CLOSE-ON-EXIT is non-nil,
 close that popup after the recipe exits."
   (unless (executable-find "just")
     (user-error "The `just' executable is not available on Emacs's PATH"))
-  (let ((command (concat "just " (shell-quote-argument recipe))))
+  (unless (executable-find "direnv")
+    (user-error "The `direnv' executable is not available on Emacs's PATH"))
+  ;; Ghostel runs a separate long-lived shell whose environment is not the
+  ;; buffer-local environment installed by envrc.  Enter the flake explicitly
+  ;; so Just recipes always see project tools such as Zig and Rust.
+  (let ((command (format "direnv exec %s just %s"
+                         (shell-quote-argument (expand-file-name directory))
+                         (shell-quote-argument recipe))))
     (cond
      ((and popup close-on-exit)
       (mm/run-program-in-popup-terminal command directory))

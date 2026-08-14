@@ -2,7 +2,9 @@
 
 let
   asc-cli = pkgs.callPackage ./packages/asc.nix { };
+  codex-acp = pkgs.callPackage ./packages/codex-acp.nix { };
   meetcal-cli = pkgs.callPackage ./packages/meetcal.nix { };
+  toml-grammar = pkgs.tree-sitter-grammars.tree-sitter-toml;
 in
 {
   home.username = "maddisenmohnsen";
@@ -27,6 +29,7 @@ in
     cloc
     claude-code
     codex
+    codex-acp
     cargo-insta
     cargo-make
     coreutils
@@ -34,6 +37,7 @@ in
     direnv
     docker
     docker-compose
+    dockfmt
     eas-cli
     emacs-lsp-booster
     eza
@@ -54,6 +58,7 @@ in
     meetcal-cli
     neovim
     nodejs_24
+    nixfmt
     opencode
     pandoc
     prettier
@@ -61,6 +66,7 @@ in
     ripgrep
     sentry-cli
     shellcheck
+    shfmt
     starship
     tailwindcss-language-server
     tesseract
@@ -72,4 +78,9 @@ in
     zellij
     zoxide
   ];
+
+  # Doom already loads grammars from this directory. Let Home Manager supply
+  # TOML alongside Doom's Zig grammar so GUI Emacs never needs an ad-hoc build.
+  home.file.".config/emacs/.local/etc/tree-sitter/libtree-sitter-toml.dylib".source =
+    "${toml-grammar}/parser";
 }

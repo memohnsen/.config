@@ -55,6 +55,18 @@
   };
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.optimise.automatic = true;
+  nix.gc = {
+    automatic = true;
+    interval = [
+      {
+        Weekday = 7;
+        Hour = 4;
+        Minute = 0;
+      }
+    ];
+    options = "--delete-older-than 30d";
+  };
 
   # Keep native Homebrew tools and applications reachable while their
   # remaining macOS-specific packages are still intentionally installed.

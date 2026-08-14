@@ -35,6 +35,7 @@ return function()
       { '<leader>t', desc = 'Toggle Terminal Popup' },
       { '<leader>j', group = 'Just Commands' },
       { '<leader>o', group = 'Org' },
+      { '<leader>c', group = 'Codex' },
       { '<leader>od', desc = 'Daily Note' },
       { '<leader>of', desc = 'Find Org Note' },
       { '<leader>og', desc = 'Grep Org Notes' },

@@ -13,8 +13,6 @@
 # PATHS
 # =========================================================
 
-export PATH="/opt/homebrew/bin:/opt/anaconda3/bin:$HOME/.npm-global/bin:$HOME/.bun/bin:$PATH"
-
 # =========================================================
 # History
 # =========================================================
@@ -122,9 +120,6 @@ export PATH=$PATH:$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools
 # DISABLE BUGGY SESSION RESUME
 export SHELL_SESSIONS_DISABLE=1
 export PATH="$HOME/.local/bin:$PATH"
-export TODO_DIR="$HOME/dev/org/tuxedo"
-export TODO_FILE="$TODO_DIR/todo.txt"
-
 # Initialize zoxide after shell hooks are configured.
 if [[ -t 0 && -t 1 ]] && command -v zoxide >/dev/null 2>&1; then
   eval "$(zoxide init zsh)"
