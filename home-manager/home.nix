@@ -14,8 +14,6 @@
 
   # General-purpose user tools belong here. Language toolchains, databases,
   # and project build dependencies remain in each repository's flake.
-  # direnv remains in its separately pinned Nix profile until fallback
-  # installations are intentionally cleaned up.
   home.packages = with pkgs; [
     aspell
     bat
@@ -23,6 +21,7 @@
     cloc
     coreutils
     discount
+    direnv
     docker
     docker-compose
     eza

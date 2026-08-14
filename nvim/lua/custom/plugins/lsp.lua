@@ -78,9 +78,6 @@ return {
 
       local completion_capabilities = require('blink.cmp').get_lsp_capabilities()
       local servers = {
-        -- Installed with Homebrew so this stays on OLS stable rather than
-        -- Mason's nightly-only package.
-        ols = { cmd = { '/opt/homebrew/bin/ols' } },
         postgres_lsp = {},
         stylua = {},
         zls = {
@@ -112,8 +109,7 @@ return {
       }
 
       require('mason').setup {}
-      local mason_servers = vim.tbl_filter(function(name) return name ~= 'ols' end, vim.tbl_keys(servers))
-      require('mason-lspconfig').setup { ensure_installed = mason_servers, automatic_enable = { exclude = { 'rust_analyzer' } } }
+      require('mason-lspconfig').setup { ensure_installed = vim.tbl_keys(servers), automatic_enable = { exclude = { 'rust_analyzer' } } }
       require('mason-tool-installer').setup {
         ensure_installed = { 'debugpy', 'rust-analyzer', 'codelldb', 'taplo', 'prettier', 'sqlfluff' },
         integrations = { ['mason-lspconfig'] = false },

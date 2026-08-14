@@ -3,6 +3,7 @@ return {
     'rmagatti/auto-session',
     config = function()
       vim.o.sessionoptions = 'blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions'
+      local direnv = require 'custom.direnv'
 
       local function open_workspaces()
         _G.kickstart_open_workspaces = _G.kickstart_open_workspaces or {}
@@ -46,7 +47,10 @@ return {
           picker = 'telescope',
         },
         post_restore_cmds = {
-          function(session_name) mark_workspace_open(session_name) end,
+          function(session_name)
+            direnv.refresh()
+            mark_workspace_open(session_name)
+          end,
         },
       }
 
@@ -374,6 +378,7 @@ return {
           if not choice or choice == '' then return end
 
           local auto_session = require 'auto-session'
+          stop_lsp_clients()
           auto_session.auto_save_session()
 
           vim.cmd.cd(vim.fn.fnameescape(choice))

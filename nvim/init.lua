@@ -22,17 +22,6 @@ do
   vim.o.splitbelow = true
   vim.o.list = true
   vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
-  -- Odin conventionally uses real tabs. Keep them compact instead of
-  -- Neovim's eight-column default.
-  vim.api.nvim_create_autocmd('FileType', {
-    pattern = 'odin',
-    callback = function()
-      vim.bo.expandtab = false
-      vim.bo.tabstop = 4
-      vim.bo.shiftwidth = 4
-      vim.bo.softtabstop = 0
-    end,
-  })
   vim.o.inccommand = 'split'
   vim.o.cursorline = true
   vim.o.scrolloff = 20
@@ -64,6 +53,8 @@ do
     callback = function() vim.hl.on_yank() end,
   })
 end
+
+require('custom.direnv').setup()
 
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
 if not vim.uv.fs_stat(lazypath) then
