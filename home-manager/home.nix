@@ -20,6 +20,8 @@
     btop
     cloc
     claude-code
+    cargo-insta
+    cargo-make
     coreutils
     discount
     direnv
@@ -38,6 +40,7 @@
     gnugrep
     gnused
     gnutar
+    helix
     hyperfine
     jq
     just
