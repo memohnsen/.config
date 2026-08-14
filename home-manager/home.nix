@@ -35,7 +35,6 @@
     git
     git-filter-repo
     git-lfs
-    gemini-cli
     gnugrep
     gnused
     gnutar
