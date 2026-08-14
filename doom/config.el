@@ -42,12 +42,40 @@
 (defconst mm/zig-max-inline-parameters 3
   "Maximum Zig parameters allowed before forcing a multiline list.")
 
+(defconst mm/zig-max-inline-expression-length 100
+  "Maximum width of a Zig expression before forcing it multiline.")
+
+(defun mm/zig-logical-binary-p (node)
+  "Return non-nil when NODE is a Zig `and' or `or' expression."
+  (when (and node (string= (treesit-node-type node) "binary_expression"))
+    (when-let ((operator (treesit-node-child-by-field-name node "operator")))
+      (member (treesit-node-type operator) '("and" "or")))))
+
+(defun mm/zig-logical-operator-ends (node)
+  "Return the end positions of every logical operator below NODE."
+  (let (positions)
+    (cl-labels ((walk (candidate)
+                  (when (string= (treesit-node-type candidate)
+                                 "binary_expression")
+                    (when (mm/zig-logical-binary-p candidate)
+                      (push (treesit-node-end
+                             (treesit-node-child-by-field-name candidate
+                                                                "operator"))
+                            positions))
+                    (dolist (child (treesit-node-children candidate t))
+                      (when (string= (treesit-node-type child)
+                                     "binary_expression")
+                        (walk child))))))
+      (walk node))
+    positions))
+
 (defun mm/zig-force-multiline-lists-before-save-h ()
   "Add trailing commas that make `zig fmt' preserve multiline lists.
 
-This mirrors the Neovim Tree-sitter save hook: enums, structs, and unions
-with more than one field are forced multiline, as are parameter lists with
-more than `mm/zig-max-inline-parameters' parameters."
+This mirrors the Neovim Tree-sitter save hook: enums, structs, unions, and
+anonymous struct initializers with more than one field are forced multiline,
+as are parameter lists with more than `mm/zig-max-inline-parameters'
+parameters."
   (when (and (derived-mode-p 'zig-mode 'zig-ts-mode)
              (treesit-language-available-p 'zig))
     (save-restriction
@@ -65,30 +93,74 @@ more than `mm/zig-max-inline-parameters' parameters."
                   '((enum_declaration) @container
                     (struct_declaration) @container
                     (union_declaration) @container
+                    (initializer_list) @initializer
+                    (if_expression) @if-expression
                     (parameters) @parameters)))
           (let* ((kind (car capture))
-                 (node (cdr capture))
-                 (item-type (if (eq kind 'container)
-                                "container_field"
-                              "parameter"))
-                 (items (seq-filter
+                 (node (cdr capture)))
+            (if (eq kind 'if-expression)
+                (let* ((text (treesit-node-text node t))
+                       (children (treesit-node-children node))
+                       (consequence (treesit-node-child node 1 t))
+                       (else-token
+                        (seq-find
                          (lambda (child)
-                           (string= (treesit-node-type child) item-type))
-                         (treesit-node-children node t)))
-                 (minimum (if (eq kind 'container)
-                              1
-                            mm/zig-max-inline-parameters))
-                 (last-item (car (last items))))
-            (when (and (> (length items) minimum)
-                       last-item
-                       (memq (char-before (treesit-node-end node)) '(?} ?\)))
-                       (not (eq (char-after (treesit-node-end last-item)) ?,)))
-              (push (treesit-node-end last-item) edits))))
+                           (string= (treesit-node-type child) "else"))
+                         children))
+                       ;; Literals such as `null' are anonymous Tree-sitter
+                       ;; nodes, so take the child directly following `else'.
+                       (alternative (cadr (memq else-token children))))
+                  (when (and (> (string-width text)
+                                mm/zig-max-inline-expression-length)
+                             (not (string-match-p "\n" text)))
+                    (when consequence
+                      (push (cons (treesit-node-start consequence) "\n") edits))
+                    (when else-token
+                      (push (cons (treesit-node-start else-token) "\n") edits))
+                    ;; Preserve `else if' on one line, but split a final else body.
+                    (when (and alternative
+                               (not (string= (treesit-node-type alternative)
+                                             "if_expression")))
+                      (push (cons (treesit-node-start alternative) "\n") edits))))
+              (let* ((item-type (pcase kind
+                                  ('container "container_field")
+                                  ('initializer "assignment_expression")
+                                  (_ "parameter")))
+                     (items (seq-filter
+                             (lambda (child)
+                               (string= (treesit-node-type child) item-type))
+                             (treesit-node-children node t)))
+                     (minimum (if (eq kind 'parameters)
+                                  mm/zig-max-inline-parameters
+                                1))
+                     (last-item (car (last items))))
+                (when (and (> (length items) minimum)
+                           last-item
+                           (memq (char-before (treesit-node-end node)) '(?} ?\)))
+                           (not (eq (char-after (treesit-node-end last-item)) ?,)))
+                  (push (cons (treesit-node-end last-item) ",") edits))))))
+        ;; `zig fmt' preserves intentional line breaks after logical operators.
+        ;; Only split the root of a long chain so nested captures do not add
+        ;; duplicate newlines.
+        (dolist (capture
+                 (treesit-query-capture
+                  root '((binary_expression) @logical-expression)))
+          (let* ((node (cdr capture))
+                 (text (treesit-node-text node t))
+                 (parent (treesit-node-parent node)))
+            (when (and (mm/zig-logical-binary-p node)
+                       (not (mm/zig-logical-binary-p parent))
+                       (> (string-width text)
+                          mm/zig-max-inline-expression-length)
+                       (not (string-match-p "\n" text)))
+              (dolist (position (mm/zig-logical-operator-ends node))
+                (push (cons position "\n") edits)))))
         (atomic-change-group
           (save-excursion
-            (dolist (position (sort (delete-dups edits) #'>))
-              (goto-char position)
-              (insert ","))))))))
+            (dolist (edit (sort (delete-dups edits)
+                                (lambda (left right) (> (car left) (car right)))))
+              (goto-char (car edit))
+              (insert (cdr edit)))))))))
 
 (defun mm/zig-format-on-save-setup-h ()
   "Format Zig synchronously before save, after enforcing multiline lists."
@@ -106,6 +178,20 @@ more than `mm/zig-max-inline-parameters' parameters."
 
 (add-hook! '(zig-mode-hook zig-ts-mode-hook)
   #'mm/zig-format-on-save-setup-h)
+
+(defun mm/zig-preformat-before-write-a (&rest _)
+  "Run Zig's multiline pre-pass even when the buffer is unmodified."
+  (when (derived-mode-p 'zig-mode 'zig-ts-mode)
+    (mm/zig-force-multiline-lists-before-save-h)))
+
+;; `save-buffer' normally skips `before-save-hook' for an unchanged buffer.
+;; Run the structural pre-pass before that check so older inline code can be
+;; reformatted simply by writing the file.
+(advice-add #'save-buffer :before #'mm/zig-preformat-before-write-a)
+
+(after! evil
+  ;; Evil's :w has its own write path, so cover it directly as well.
+  (advice-add #'evil-write :before #'mm/zig-preformat-before-write-a))
 
 (setq doom-theme 'doom-one)
 
@@ -549,6 +635,15 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
   (which-key-mode 'toggle)
   (message "Which-Key %s" (if (default-value 'which-key-mode) "enabled" "disabled")))
 
+(defun mm/toggle-diagnostics ()
+  "Show or hide the Flycheck diagnostics window."
+  (interactive)
+  (require 'flycheck)
+  (if-let ((window (get-buffer-window flycheck-error-list-buffer
+                                      (selected-frame))))
+      (quit-window nil window)
+    (flycheck-list-errors)))
+
 (map! :leader
       ;; Clear Doom's default leader surface, then restore only the requested
       ;; Neovim-compatible allowlist below.
@@ -562,7 +657,7 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
       :desc "File explorer" "e" #'+treemacs/toggle
       :desc "Git" "g" #'magit-status
       :desc "Toggle LSP hints globally" "h" #'mm/toggle-lsp-inlay-hints
-      :desc "Diagnostics" "d" #'flycheck-list-errors
+      :desc "Toggle diagnostics" "d" #'mm/toggle-diagnostics
       :desc "Toggle Which-Key" "w" #'mm/toggle-which-key
       :desc "Terminal Popup" "t" #'mm/toggle-bottom-terminal
       :desc "Terminal Window" "T" #'mm/open-ghostel-frame
@@ -794,12 +889,23 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
         flyover-hide-checker-name t
         flyover-show-at-eol t
         flyover-line-position-offset 0
-        flyover-wrap-messages t
+        ;; Keep inline diagnostics on their source line; text beyond the
+        ;; window edge is clipped instead of creating continuation lines.
+        flyover-wrap-messages nil
         flyover-max-line-length 100
         flyover-display-mode 'always
         flyover-hide-during-completion t
         flyover-debounce-interval 0.2
-        flyover-cursor-debounce-interval 0.3))
+        flyover-cursor-debounce-interval 0.3)
+
+  (defun mm/flyover-keep-cursor-before-eol-a (text)
+    "Keep point visually before Flyover's end-of-line annotation."
+    (when (and flyover-show-at-eol (not (string-empty-p text)))
+      (put-text-property 0 1 'cursor t text))
+    text)
+
+  (advice-add #'flyover--build-final-overlay-string :filter-return
+              #'mm/flyover-keep-cursor-before-eol-a))
 
 (dolist (path '("~/.cargo/bin"))
   (let ((expanded-path (expand-file-name path)))

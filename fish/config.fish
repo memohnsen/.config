@@ -29,12 +29,17 @@ if status is-interactive
 	abbr -a jl just lint
 end
 
-fish_add_path /opt/homebrew/bin
+# Prefer Home Manager packages while retaining Homebrew as a fallback.
+fish_add_path --append /opt/homebrew/bin
 fish_add_path ~/.local/bin
 set -gx EDITOR nvim
 
 fish_vi_key_bindings
 zoxide init fish | source
+
+if command -q direnv
+	direnv hook fish | source
+end
 
 # ZVM
 set -gx ZVM_INSTALL "$HOME/.zvm/self"
