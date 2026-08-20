@@ -19,7 +19,7 @@ return {
     'navarasu/onedark.nvim',
     priority = 1000,
     config = function()
-      require('onedark').setup { style = 'dark', code_style = { comments = 'none' } }
+      require('onedark').setup { style = 'dark', code_style = { comments = 'none' }, highlights = { LspInlayHint = { fg = '#5c6370' } } }
       vim.cmd.colorscheme 'onedark'
     end,
   },

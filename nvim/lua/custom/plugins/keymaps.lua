@@ -26,18 +26,23 @@ return function()
 
   -- Toggle a snacks terminal popup
   vim.keymap.set('n', '<leader>t', function() Snacks.terminal.toggle() end, { desc = 'Toggle Terminal' })
+  vim.keymap.set('n', '<leader>bd', function() Snacks.bufdelete() end, { desc = 'Delete Buffer' })
+  vim.api.nvim_create_user_command('Bdelete', function(opts) Snacks.bufdelete { force = opts.bang } end, { bang = true })
+  vim.cmd [[cnoreabbrev <expr> bd (getcmdtype() == ':' && getcmdline() == 'bd') ? 'Bdelete' : 'bd']]
 
   pcall(function()
     require('which-key').add {
       -- { '<leader>z', desc = 'Change Directory' },
       { '<leader>x', group = 'Diagnostics' },
       { '<leader>b', group = 'Buffer' },
+      { '<leader>bd', desc = 'Delete Buffer' },
       { '<leader>t', desc = 'Toggle Terminal Popup' },
-      { '<leader>j', group = 'Just Commands' },
+      { '<leader>j', group = 'Mise Tasks' },
       { '<leader>o', group = 'Org' },
       { '<leader>c', group = 'AI' },
       { '<leader>cc', group = 'Codex' },
-      { '<leader>co', group = 'Opencode' },
+      { '<leader>co', desc = 'Opencode Toggle' },
+      { '<leader>cu', desc = 'Toggle Cursor Agent' },
       { '<leader>od', desc = 'Daily Note' },
       { '<leader>of', desc = 'Find Org Note' },
       { '<leader>og', desc = 'Grep Org Notes' },

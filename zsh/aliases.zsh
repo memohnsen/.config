@@ -49,5 +49,5 @@ lf() { # zsh follow lf navigation
 # =========================================================
 
 alias vim='nvim'
-alias nivm='nvim'
-alias nvin='nvim'
+alias nivm='/opt/homebrew/bin/nvim'
+alias nvin='/opt/homebrew/bin/nvim'

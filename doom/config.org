@@ -660,18 +660,20 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
     doom-leader-key "leader"
     (concat doom-leader-key " TAB") "workspace"
     (concat doom-leader-key " b") "bookmark"
+    (concat doom-leader-key " c") "code"
+    (concat doom-leader-key " j") "Mise task"
     (concat doom-leader-key " m") "Multicursor"
     (concat doom-leader-key " o") "Org"
-    (concat doom-leader-key " r") "Just Commands"
     (concat doom-leader-key " s") "search")
   (when doom-leader-alt-key
     (which-key-add-key-based-replacements
       doom-leader-alt-key "leader"
       (concat doom-leader-alt-key " TAB") "workspace"
       (concat doom-leader-alt-key " b") "bookmark"
+      (concat doom-leader-alt-key " c") "code"
+      (concat doom-leader-alt-key " j") "Mise task"
       (concat doom-leader-alt-key " m") "Multicursor"
       (concat doom-leader-alt-key " o") "Org"
-      (concat doom-leader-alt-key " r") "Just Commands"
       (concat doom-leader-alt-key " s") "search"))
   ;; Undo the old filter that hid SPC m before it became Multicursor.
   (advice-remove #'which-key--get-bindings
@@ -717,11 +719,17 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
       (:prefix ("b" . "Bookmark")
        :desc "Set bookmark" "m" #'bookmark-set
        :desc "Delete bookmark" "M" #'bookmark-delete)
-      (:prefix ("j" . "Just")
-       :desc "Just Run" "r" (cmd! (mm/just "run" (mm/just-root) t))
-       :desc "Just Build" "b" (cmd! (mm/just "build" (mm/just-root) t))
-       :desc "Just Test" "t" (cmd! (mm/just "test" (mm/just-root) t))
-       :desc "Just Lint" "l" (cmd! (mm/just "lint" (mm/just-root) t)))
+      (:prefix ("c" . "code")
+       :desc "LSP Execute code action" "a" #'eglot-code-actions
+       :desc "LSP Rename" "r" #'eglot-rename
+       :desc "LSP Find declaration" "j" #'eglot-find-declaration
+       :desc "Jump to symbol in current workspace" "J" #'consult-eglot-symbols
+       :desc "Format buffer/region" "f" #'+format/region-or-buffer
+       :desc "List errors" "x" #'+default/diagnostics
+       :desc "Toggle Codex" "c" #'mm/codex-toggle
+       :desc "Toggle Cursor" "u" #'mm/cursor-toggle
+       :desc "Open OpenCode session" "o" #'opencode)
+      :desc "Mise task" "j" #'mm/mise-select
       (:prefix ("m" . "Multicursor")
        :desc "Select all matches" "a" #'evil-mc-make-all-cursors
        :desc "Add next match" "n" #'evil-mc-make-and-goto-next-match
@@ -811,7 +819,7 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
   ;; package rebuilds cannot replace a module that Emacs currently has loaded.
   (setq ghostel-module-directory (expand-file-name "ghostel/" doom-user-dir)
         ghostel-module-auto-install 'download
-        ghostel-shell "/run/current-system/sw/bin/fish")
+        ghostel-shell "/opt/homebrew/bin/fish")
   :config
   (setq ghostel-buffer-name-function nil
         ghostel-query-before-killing nil)
@@ -896,11 +904,78 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
         (ghostel)))))
 
 
+(defvar-local mm/ghostel-follow-timer nil
+  "Idle timer that keeps pumping Ghostel output after programmatic sends.")
+
+(defun mm/ghostel-ensure-ready (&optional timeout)
+  "Wait briefly for the current Ghostel PTY to become ready."
+  (let ((deadline (+ (float-time) (or timeout 1.0))))
+    (while (and (not (and (bound-and-true-p ghostel--process)
+                          (process-live-p ghostel--process)
+                          (bound-and-true-p ghostel--term)))
+                (< (float-time) deadline))
+      (accept-process-output nil 0.05))))
+
+(defun mm/ghostel-flush-output (&optional seconds)
+  "Drain Ghostel PTY output and force a redraw for SECONDS (default 0.25)."
+  (when (and (derived-mode-p 'ghostel-mode)
+             (bound-and-true-p ghostel--process)
+             (process-live-p ghostel--process))
+    (let ((deadline (+ (float-time) (or seconds 0.25))))
+      (while (< (float-time) deadline)
+        (accept-process-output ghostel--process 0.05 nil t))
+      (when (fboundp 'ghostel--redraw-now)
+        (ghostel--redraw-now (current-buffer) t))
+      (when (and (fboundp 'ghostel--anchor-window)
+                 (window-live-p (selected-window)))
+        (ghostel--anchor-window (selected-window) t))
+      (redisplay t))))
+
+(defun mm/ghostel-start-follow (&optional seconds)
+  "Keep draining/redrawing the current Ghostel buffer for SECONDS."
+  (when mm/ghostel-follow-timer
+    (cancel-timer mm/ghostel-follow-timer)
+    (setq mm/ghostel-follow-timer nil))
+  (let* ((buffer (current-buffer))
+         (deadline (+ (float-time) (or seconds 8.0)))
+         (timer nil))
+    (setq timer
+          (run-with-timer
+           0.05 0.1
+           (lambda ()
+             (if (and (buffer-live-p buffer)
+                      (< (float-time) deadline))
+                 (with-current-buffer buffer
+                   (when (and (derived-mode-p 'ghostel-mode)
+                              (bound-and-true-p ghostel--process)
+                              (process-live-p ghostel--process))
+                     (accept-process-output ghostel--process 0.01 nil t)
+                     (when (fboundp 'ghostel--redraw-now)
+                       (ghostel--redraw-now buffer))))
+               (when (timerp timer)
+                 (cancel-timer timer))
+               (when (buffer-live-p buffer)
+                 (with-current-buffer buffer
+                   (setq mm/ghostel-follow-timer nil)))))))
+    (setq mm/ghostel-follow-timer timer)))
+
 (defun mm/send-command-to-current-terminal (command)
   "Send COMMAND to the current terminal buffer."
   (cond
    ((derived-mode-p 'ghostel-mode)
-    (ghostel-send-string (concat command "\n"))
+    ;; Ghostel is a real PTY: shells expect CR to submit a line, not LF.
+    ;; Also force follow/redraw so programmatic sends paint immediately,
+    ;; even when Evil is in normal state.
+    (mm/ghostel-ensure-ready)
+    (when (and (bound-and-true-p evil-local-mode)
+               (not (memq evil-state '(insert emacs))))
+      (evil-insert-state))
+    (when (and (fboundp 'ghostel--anchor-window)
+               (window-live-p (selected-window)))
+      (ghostel--anchor-window (selected-window) t))
+    (ghostel-send-string (concat command "\r"))
+    (mm/ghostel-flush-output)
+    (mm/ghostel-start-follow)
     t)
    ((derived-mode-p 'term-mode)
     (term-send-raw-string (concat command "\n"))
@@ -926,7 +1001,8 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
     (let ((default-directory directory))
       (let ((ghostel-buffer-name (generate-new-buffer-name "*ghostel*")))
         (ghostel)
-        (ghostel-send-string (concat command "\n")))))))
+        (with-current-buffer (current-buffer)
+          (mm/send-command-to-current-terminal command)))))))
 
 ;; `SPC o t` toggles the Ghostel popup; `SPC o T` opens Ghostel in a new frame.
 #+end_src
@@ -985,21 +1061,17 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
 
 *** Paths & Environment
 #+begin_src emacs-lisp
-(let* ((nix-fish "/run/current-system/sw/bin/fish")
-       (nix-bash "/run/current-system/sw/bin/bash")
-       (nix-paths (list (expand-file-name "~/.nix-profile/bin")
-                        "/nix/var/nix/profiles/default/bin"))
-       (current-paths (split-string (or (getenv "PATH") "") path-separator t))
-       (paths (delete-dups
-               (seq-filter #'file-directory-p
-                           (append nix-paths current-paths)))))
-  ;; GUI Emacs does not inherit the interactive shell's Home Manager PATH.
-  ;; Keep Nix tools first and discard stale paths left by removed toolchains.
-  (setenv "SHELL" nix-fish)
+(let ((paths (seq-filter (lambda (path)
+                           (not (or (string-prefix-p "/nix/" path)
+                                    (string-prefix-p (expand-file-name "~/.nix-profile/") path))))
+                         (split-string (or (getenv "PATH") "") path-separator t))))
   (setenv "PATH" (string-join paths path-separator))
-  (setq shell-file-name nix-bash
-        explicit-shell-file-name nix-fish
-        exec-path (append paths (list exec-directory))))
+  (setq exec-path (append paths (list exec-directory))))
+(dolist (path '("/opt/homebrew/bin" "~/.cargo/bin" "~/.local/bin" "~/.bun/bin"))
+  (let ((expanded-path (expand-file-name path)))
+    (when (file-directory-p expanded-path)
+      (add-to-list 'exec-path expanded-path)
+      (setenv "PATH" (concat expanded-path ":" (getenv "PATH"))))))
 #+end_src
 
 *** Direnv & Restored Workspaces
@@ -1157,32 +1229,101 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
 
 *** Just Utilities
 #+begin_src emacs-lisp
-(use-package! just-mode
-  :mode ("/\\(?:[Jj]ustfile\\|\\.justfile\\)\\'" . just-mode))
+(defconst mm/mise-config-names '("mise.toml" ".mise.toml"))
 
-(defun mm/just-root ()
-  "Return the nearest project root containing a Justfile."
-  (let ((directory (mm/current-buffer-directory)))
-    (or (locate-dominating-file directory "Justfile")
-        (locate-dominating-file directory "justfile")
-        (user-error "No Justfile or justfile found above %s" directory))))
+(defun mm/mise-config-p (file)
+  "Return non-nil when FILE is a Mise configuration."
+  (and file
+       (member (file-name-nondirectory file) mm/mise-config-names)
+       (file-regular-p file)))
 
+(defun mm/mise-config-in-directory-p (directory)
+  "Return the Mise configuration path in DIRECTORY, or nil."
+  (cl-some (lambda (name)
+             (let ((path (expand-file-name name directory)))
+               (and (file-regular-p path) path)))
+           mm/mise-config-names))
 
-(defun mm/just (recipe directory &optional popup close-on-exit)
-  "Run just RECIPE in DIRECTORY.
+(defun mm/mise-root (&optional start)
+  "Return the nearest directory containing a Mise configuration."
+  (let* ((start (expand-file-name (or start (mm/current-buffer-directory))))
+         (candidates (cl-delete-duplicates
+                      (delq nil
+                            (list start
+                                  default-directory
+                                  (when (fboundp 'doom-project-root)
+                                    (ignore-errors (doom-project-root)))
+                                  (when (fboundp 'projectile-project-root)
+                                    (ignore-errors (projectile-project-root)))
+                                  (when (fboundp 'project-current)
+                                    (when-let ((project (project-current nil start)))
+                                      (project-root project)))
+                                  (ignore-errors
+                                    (locate-dominating-file start ".git"))))
+                      :test (lambda (a b)
+                              (string-equal (expand-file-name a)
+                                            (expand-file-name b)))))
+         (root (cl-some (lambda (candidate)
+                          (locate-dominating-file candidate #'mm/mise-config-in-directory-p))
+                        candidates)))
+    (or root
+        (user-error "No mise.toml found above %s" start))))
+
+(defun mm/mise-config-path (&optional start)
+  "Return the nearest Mise configuration path."
+  (when-let ((root (ignore-errors (mm/mise-root start))))
+    (mm/mise-config-in-directory-p root)))
+
+(defun mm/mise--call (directory &rest args)
+  "Run `mise' ARGS in DIRECTORY and return (EXIT-CODE . OUTPUT)."
+  (let* ((directory (expand-file-name directory))
+         (default-directory directory)
+         (buffer (generate-new-buffer " *mm-mise*"))
+         (destination (list buffer null-device))
+         exit-code)
+    (unwind-protect
+        (progn
+          (setq exit-code
+                (cond
+                 ((executable-find "mise")
+                  (apply #'call-process "mise" nil destination nil args))
+                 (t
+                  (user-error "The `mise' executable is not available on Emacs's PATH"))))
+          (cons exit-code
+                (with-current-buffer buffer (buffer-string))))
+      (kill-buffer buffer))))
+
+(defun mm/mise-tasks (&optional directory)
+  "Return Mise task names for DIRECTORY (or `mm/mise-root')."
+  (let* ((directory (expand-file-name (or directory (mm/mise-root))))
+         (result (mm/mise--call directory "tasks" "ls" "--name-only"))
+         (exit-code (car result))
+         (output (string-trim (cdr result)))
+         (tasks (and (zerop exit-code) (split-string output "\n" t))))
+    (unless (zerop exit-code)
+      (user-error "Failed to list Mise tasks in %s%s"
+                  directory
+                  (if (string-empty-p output) "" (concat ":\n" output))))
+    (or tasks
+        (user-error "No Mise tasks found in %s" directory))))
+
+(defun mm/mise-select ()
+  "Pick a Mise task with completion and run it in a popup terminal."
+  (interactive)
+  (let* ((directory (mm/mise-root))
+         (task (completing-read "Mise task: "
+                                  (mm/mise-tasks directory)
+                                  nil t)))
+    (mm/mise task directory t)))
+
+(defun mm/mise (task directory &optional popup close-on-exit)
+  "Run Mise TASK in DIRECTORY.
 
 When POPUP is non-nil, use the Ghostel popup.  When CLOSE-ON-EXIT is non-nil,
 close that popup after the recipe exits."
-  (unless (executable-find "just")
-    (user-error "The `just' executable is not available on Emacs's PATH"))
-  (unless (executable-find "direnv")
-    (user-error "The `direnv' executable is not available on Emacs's PATH"))
-  ;; Ghostel runs a separate long-lived shell whose environment is not the
-  ;; buffer-local environment installed by envrc.  Enter the flake explicitly
-  ;; so Just recipes always see project tools such as Zig and Rust.
-  (let ((command (format "direnv exec %s just %s"
-                         (shell-quote-argument (expand-file-name directory))
-                         (shell-quote-argument recipe))))
+  (unless (executable-find "mise")
+    (user-error "The `mise' executable is not available on Emacs's PATH"))
+  (let ((command (format "mise run %s" (shell-quote-argument task))))
     (cond
      ((and popup close-on-exit)
       (mm/run-program-in-popup-terminal command directory))
@@ -2201,9 +2342,11 @@ its own line and leave point correctly indented on the blank middle line."
 
 ;; Cycle buffers with Shift-h/l in normal mode.
 
-;; Native Codex chat via agent-shell and the Codex ACP adapter.
+;; Native Codex/Cursor chat via agent-shell ACP adapters.
 (use-package! agent-shell
-  :commands (agent-shell-openai-start-codex agent-shell-toggle)
+  :commands (agent-shell-openai-start-codex
+             agent-shell-cursor-start-agent
+             agent-shell-toggle)
   :init
   (setq agent-shell-display-action
         '((display-buffer-in-side-window)
@@ -2216,7 +2359,15 @@ its own line and leave point correctly indented on the blank middle line."
         (agent-shell-openai-make-authentication :login t)
         agent-shell-openai-default-session-mode-id "agent-full-access"
         agent-shell-session-strategy 'prompt
-        agent-shell-session-restore-verbosity 'full))
+        agent-shell-session-restore-verbosity 'full
+        ;; Official binary is `cursor-agent` (Home Manager installs it that way).
+        agent-shell-cursor-acp-command
+        (list (or (executable-find "cursor-agent")
+                  (executable-find "agent")
+                  "cursor-agent")
+              "acp")
+        agent-shell-cursor-authentication
+        (agent-shell-cursor-make-authentication :none t)))
 
 (defun mm/agent-shell-use-full-window-height-h ()
   "Do not reserve editor scroll margins in Agent Shell buffers."
@@ -2226,13 +2377,22 @@ its own line and leave point correctly indented on the blank middle line."
 
 (add-hook 'agent-shell-mode-hook #'mm/agent-shell-use-full-window-height-h)
 
-(defun mm/codex-toggle ()
-  "Show or hide Codex beside the editor, starting it when necessary."
-  (interactive)
+(defun mm/agent-shell-toggle-or-start (start-fn)
+  "Toggle an existing Agent Shell, otherwise call START-FN."
   (require 'agent-shell)
   (if (agent-shell-buffers)
       (agent-shell-toggle)
-    (agent-shell-openai-start-codex)))
+    (funcall start-fn)))
+
+(defun mm/codex-toggle ()
+  "Show or hide Codex beside the editor, starting it when necessary."
+  (interactive)
+  (mm/agent-shell-toggle-or-start #'agent-shell-openai-start-codex))
+
+(defun mm/cursor-toggle ()
+  "Show or hide Cursor Agent beside the editor, starting it when necessary."
+  (interactive)
+  (mm/agent-shell-toggle-or-start #'agent-shell-cursor-start-agent))
 
 (defun mm/evil-close-kills-agent-shell-a (original &rest args)
   "Kill Agent Shell when Evil closes its window; otherwise call ORIGINAL."
@@ -2253,8 +2413,28 @@ its own line and leave point correctly indented on the blank middle line."
     (advice-add #'evil-window-delete :around
                 #'mm/evil-close-kills-agent-shell-a)))
 
-(map! :leader
-      :desc "Toggle Codex" "c" #'mm/codex-toggle)
+(use-package! emacs-opencode
+  :commands (opencode opencode-ask opencode-ask-contextual
+              opencode-open-session opencode-send-to-session
+              opencode-send-context-to-session)
+  :init
+  ;; Resolve the Homebrew-managed executable for GUI Emacs too.
+  ;; No node/bun here, so force the curl SSE backend.
+  (setq opencode-server-command (or (executable-find "opencode") "opencode")
+        opencode-session-default-agent "build"
+        opencode-sse-backend 'curl
+        opencode-ready-timeout 30)
+  :config
+  ;; OpenCode currently emits `id' before `type'.  The client parser assumes
+  ;; `type' is the first JSON field, so accept either property order.
+  (defun mm/opencode-sse-extract-event-type (data)
+    "Extract an OpenCode SSE event type from DATA regardless of field order."
+    (when (string-match
+           "\"type\"[[:space:]]*:[[:space:]]*\"\\([^\"]+\\)\""
+           data)
+      (match-string 1 data)))
+  (advice-add #'opencode-sse--extract-event-type :override
+              #'mm/opencode-sse-extract-event-type))
 
 ;; Move between Emacs windows with Option/Alt + h/j/k/l.
 (map! "M-h" #'windmove-left

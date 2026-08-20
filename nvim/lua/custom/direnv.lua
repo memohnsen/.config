@@ -2,18 +2,27 @@ local M = {}
 
 local configured = false
 local last_error
-local nix_daemon_bin = '/nix/var/nix/profiles/default/bin'
 
-local function ensure_nix_on_path()
-  if vim.fn.executable(nix_daemon_bin .. '/nix') ~= 1 then return end
-
-  local path = vim.env.PATH or ''
-  for entry in vim.gsplit(path, ':', { plain = true }) do
-    if entry == nix_daemon_bin then return end
+local function remove_nix_paths()
+  local paths = {}
+  for entry in vim.gsplit(vim.env.PATH or '', ':', { plain = true }) do
+    if not vim.startswith(entry, '/nix/') and not vim.startswith(entry, vim.fn.expand '~/.nix-profile/') then
+      paths[#paths + 1] = entry
+    end
   end
-
-  vim.env.PATH = nix_daemon_bin .. (path ~= '' and (':' .. path) or '')
+  vim.env.PATH = table.concat(paths, ':')
+  vim.env.NIX_PROFILES = nil
+  vim.env.NIX_PATH = nil
+  vim.env.NIX_SSL_CERT_FILE = nil
 end
+-- Keep Neovim's original temporary directory when a project environment
+-- changes variables, so Zellij's session socket remains reachable.
+local preserved_temp_vars = {
+  TMPDIR = vim.env.TMPDIR,
+  TMP = vim.env.TMP,
+  TEMP = vim.env.TEMP,
+  TEMPDIR = vim.env.TEMPDIR,
+}
 
 local function notify_error(cwd, message)
   local error_key = cwd .. '\n' .. message
@@ -41,8 +50,6 @@ end
 
 function M.refresh(options)
   options = options or {}
-  ensure_nix_on_path()
-
   local executable = vim.fn.exepath 'direnv'
   if executable == '' then
     if not options.silent then notify_error(vim.uv.cwd() or '?', 'executable not found') end
@@ -72,6 +79,12 @@ function M.refresh(options)
 
   last_error = nil
   local changed = apply_environment(environment)
+  for name, value in pairs(preserved_temp_vars) do
+    if vim.env[name] ~= value then
+      vim.env[name] = value
+      changed = true
+    end
+  end
   if changed then vim.api.nvim_exec_autocmds('User', {
     pattern = 'DirenvLoaded',
     modeline = false,
@@ -85,6 +98,7 @@ end
 function M.setup()
   if configured then return end
   configured = true
+  remove_nix_paths()
 
   -- Run before plugins initialize so formatters and language servers inherit
   -- the project environment even when Neovim starts inside a repository.

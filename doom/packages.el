@@ -58,10 +58,14 @@
 (package! flyover)
 (package! ghostel)
 (package! evil-ghostel)
-(package! just-mode)
 (package! shell-maker)
 (package! acp)
 (package! agent-shell)
+(package! request)
+(package! emacs-opencode
+  :recipe (:host github
+           :repo "jdormit/emacs-opencode"
+           :files ("*.el" "opencode-sse-bridge.js")))
 
 ;; Codeberg is unavailable from this network, so use the projects' mirrors.
 (package! zig-mode

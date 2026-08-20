@@ -81,15 +81,18 @@ return {
             end
             if parameters > zig_max_inline_parameters then add_trailing_comma(node, last_parameter) end
           elseif node:type() == 'initializer_list' then
-            local fields = 0
-            local last_field
+            local start_row, start_col, end_row, end_col = node:range()
+            local single_line = start_row == end_row
+            local named_items = 0
+            local last_item
             for child in node:iter_children() do
-              if child:named() and child:type() == 'assignment_expression' then
-                fields = fields + 1
-                last_field = child
+              if child:named() then
+                named_items = named_items + 1
+                last_item = child
               end
             end
-            if fields > 1 then add_trailing_comma(node, last_field) end
+            local force = (named_items > 1) or (single_line and (end_col - start_col) > zig_max_inline_expression_length)
+            if force then add_trailing_comma(node, last_item) end
           elseif node:type() == 'if_expression' then
             local start_row, start_col, end_row, end_col = node:range()
             if start_row == end_row and end_col - start_col > zig_max_inline_expression_length then

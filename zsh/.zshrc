@@ -13,6 +13,18 @@
 # PATHS
 # =========================================================
 
+export PATH="/opt/homebrew/bin:/opt/anaconda3/bin:$HOME/.npm-global/bin:$HOME/.bun/bin:$PATH"
+# nix-darwin may still inject its profile from /etc/zshenv until it is removed.
+typeset -a clean_path
+clean_path=()
+for entry in $path; do
+  [[ "$entry" == /nix/* || "$entry" == "$HOME/.nix-profile"/* || "$entry" == /run/current-system/* ]] && continue
+  clean_path+=("$entry")
+done
+path=($clean_path)
+typeset -U path
+unset NIX_PROFILES NIX_PATH NIX_SSL_CERT_FILE
+
 # =========================================================
 # History
 # =========================================================
@@ -120,6 +132,7 @@ export PATH=$PATH:$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools
 # DISABLE BUGGY SESSION RESUME
 export SHELL_SESSIONS_DISABLE=1
 export PATH="$HOME/.local/bin:$PATH"
+eval "$(mise activate zsh)"
 # Initialize zoxide after shell hooks are configured.
 if [[ -t 0 && -t 1 ]] && command -v zoxide >/dev/null 2>&1; then
   eval "$(zoxide init zsh)"

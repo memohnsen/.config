@@ -94,6 +94,7 @@ return {
       end
 
       require('blink.cmp').setup {
+         enabled = function() return true end,
         keymap = {
           preset = 'enter',
           ['<CR>'] = {
@@ -130,7 +131,12 @@ return {
         completion = {
           accept = { auto_brackets = { enabled = true } },
           documentation = { auto_show = true, auto_show_delay_ms = 200 },
-          list = { selection = { preselect = true, auto_insert = false } },
+           list = { selection = { preselect = true, auto_insert = false } },
+           menu = {
+             auto_show = function(ctx)
+               return vim.bo[ctx.bufnr].filetype ~= 'opencode' or ctx.trigger.kind == 'trigger_character'
+             end,
+           },
         },
         sources = { default = { 'lsp', 'path', 'snippets', 'buffer' } },
         cmdline = {
