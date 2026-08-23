@@ -1,6 +1,9 @@
 background-opacity = 1.00
 window-show-tab-bar = always
 
+# True-black, high-contrast palette shared with Emacs and Neovim.
+theme = Black Vivid
+
 font-family = ""
 font-family = "JetBrains Mono"
 font-family = "Symbols Nerd Font Mono"

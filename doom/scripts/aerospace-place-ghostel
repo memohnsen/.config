@@ -1,0 +1,34 @@
+#!/bin/zsh
+
+# Keep all AeroSpace accessibility calls outside Emacs's UI process.  The
+# polling and move loops are deliberately bounded so this helper always exits.
+set -u
+
+aerospace_bin=/opt/homebrew/bin/aerospace
+emacs_pid=$1
+window_token=$2
+target_width=$3
+window_id=""
+
+for attempt in {1..30}; do
+    window_id=$(
+        "$aerospace_bin" list-windows \
+            --monitor all \
+            --pid "$emacs_pid" \
+            --format '%{window-id}|%{window-title}' 2>/dev/null \
+        | awk -F '|' -v token="$window_token" \
+            'index($0, token) { print $1; exit }'
+    )
+    [[ -n "$window_id" ]] && break
+    sleep 0.1
+done
+
+[[ -n "$window_id" ]] || exit 0
+
+for attempt in {1..8}; do
+    "$aerospace_bin" move --window-id "$window_id" left >/dev/null 2>&1 || break
+done
+
+"$aerospace_bin" resize \
+    --window-id "$window_id" \
+    width "$target_width" >/dev/null 2>&1

@@ -2,6 +2,24 @@ return {
   {
     'nvim-lualine/lualine.nvim',
     config = function()
+      local colors = require 'onedark.colors'
+      local black_onedark = {
+        normal = {
+          a = { fg = colors.bg0, bg = colors.green, gui = 'bold' },
+          b = { fg = colors.fg, bg = colors.bg2 },
+          c = { fg = colors.fg, bg = colors.bg1 },
+        },
+        command = { a = { fg = colors.bg0, bg = colors.yellow, gui = 'bold' } },
+        insert = { a = { fg = colors.bg0, bg = colors.blue, gui = 'bold' } },
+        visual = { a = { fg = colors.bg0, bg = colors.purple, gui = 'bold' } },
+        terminal = { a = { fg = colors.bg0, bg = colors.cyan, gui = 'bold' } },
+        replace = { a = { fg = colors.bg0, bg = colors.red, gui = 'bold' } },
+        inactive = {
+          a = { fg = colors.light_grey, bg = colors.bg0, gui = 'bold' },
+          b = { fg = colors.light_grey, bg = colors.bg0 },
+          c = { fg = colors.light_grey, bg = colors.bg1 },
+        },
+      }
       local workspace_order_file = vim.fn.stdpath 'data' .. '/auto-session-workspace-order'
 
       local function read_workspace_order()
@@ -102,7 +120,9 @@ return {
         return table.concat(parts, '')
       end
 
-      local function apply_workspace_highlights() vim.api.nvim_set_hl(0, 'LualineWorkspaceActive', { fg = '#282c34', bg = '#61afef', bold = true }) end
+      local function apply_workspace_highlights()
+        vim.api.nvim_set_hl(0, 'LualineWorkspaceActive', { fg = colors.bg0, bg = colors.blue, bold = true })
+      end
 
       apply_workspace_highlights()
 
@@ -113,7 +133,7 @@ return {
 
       require('lualine').setup {
         options = {
-          theme = 'onedark',
+          theme = black_onedark,
           icons_enabled = vim.g.have_nerd_font,
           globalstatus = true,
           component_separators = '',

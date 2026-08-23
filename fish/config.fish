@@ -27,13 +27,14 @@ if status is-interactive
 	abbr -a zda zellij da
 	abbr -a zka zellij ka
 	abbr -a za zellij a
-	abbr -a jr mise run run
-	abbr -a jb mise run build
-	abbr -a jt mise run test
-	abbr -a jl mise run lint
+	abbr -a mr mise run run
+	abbr -a mb mise run build
+	abbr -a mt mise run test
+	abbr -a ml mise run lint
 	abbr -a top btop
 	abbr -a co codex
 	abbr -a cl clear
+    abbr -a emacs emacs -nw
 end
 
 # Prefer Home Manager packages while retaining Homebrew as a fallback.

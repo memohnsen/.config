@@ -83,9 +83,10 @@ return {
         zls = {
           settings = {
             zls = {
-              -- The project's `check` step avoids emitting a binary; keeping
-              -- the compiler alive makes diagnostics after edits near-instant.
-              build_on_save_args = { 'check', 'test', '-fincremental' },
+              -- Let ZLS discover the project's non-linking `check` step.
+              -- Incremental compilation keeps save diagnostics near-instant;
+              -- tests remain an explicit command instead of save-time work.
+              build_on_save_args = { '-fincremental' },
             },
           },
         },

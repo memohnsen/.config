@@ -133,6 +133,7 @@ return {
           documentation = { auto_show = true, auto_show_delay_ms = 200 },
            list = { selection = { preselect = true, auto_insert = false } },
            menu = {
+             border = 'rounded',
              auto_show = function(ctx)
                return vim.bo[ctx.bufnr].filetype ~= 'opencode' or ctx.trigger.kind == 'trigger_character'
              end,

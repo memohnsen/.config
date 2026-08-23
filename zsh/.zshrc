@@ -137,3 +137,4 @@ eval "$(mise activate zsh)"
 if [[ -t 0 && -t 1 ]] && command -v zoxide >/dev/null 2>&1; then
   eval "$(zoxide init zsh)"
 fi
+export PATH=$PATH:$HOME/.maestro/bin

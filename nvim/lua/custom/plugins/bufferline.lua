@@ -9,11 +9,11 @@ return {
     config = function()
       vim.opt.showtabline = 2
 
-      local bg = hl_color('Normal', 'bg') or '#282c34'
-      local fg = hl_color('Normal', 'fg') or '#abb2bf'
-      local muted = hl_color('Comment', 'fg') or '#5c6370'
+      local bg = hl_color('Normal', 'bg') or '#000000'
+      local fg = hl_color('Normal', 'fg') or '#d8dee9'
+      local muted = hl_color('Comment', 'fg') or '#6b7280'
       local accent = hl_color('DiagnosticInfo', 'fg') or fg
-      local selected_bg = hl_color('Function', 'fg') or '#61afef'
+      local selected_bg = hl_color('Function', 'fg') or '#5aa9ff'
 
       require('bufferline').setup {
         options = {

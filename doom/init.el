@@ -4,9 +4,48 @@
 ;; `emacs-mac' port also uses `scroll-bar-background' to tint the native
 ;; titlebar/traffic-light area.
 (when (eq system-type 'darwin)
-  (dolist (parameter '((background-color . "#282c34")))
+  (dolist (parameter '((background-color . "#000000")))
     (add-to-list 'initial-frame-alist parameter)
     (add-to-list 'default-frame-alist parameter)))
+
+;; Loading hundreds of package .eln files as separate dynamic libraries has a
+;; large dyld/malloc cost on macOS.  Keep Emacs's native-compiled core, but use
+;; Doom's existing .elc files for packages in interactive sessions.  Leave CLI
+;; operations such as `doom sync' untouched so this is a reversible runtime
+;; experiment rather than a package-cache migration.
+(defconst mm-prefer-byte-compiled-packages t
+  "Prefer package .elc files over .eln files to reduce macOS memory use.")
+
+(defvar mm-system-native-eln-load-path
+  (and (boundp 'native-comp-eln-load-path)
+       (copy-sequence (last native-comp-eln-load-path)))
+  "Native load path containing only Emacs's system .eln directory.")
+
+(defun mm/prefer-byte-compiled-package-files-h ()
+  "Keep native compilation for Emacs core while loading packages as .elc."
+  (setq native-comp-jit-compilation nil
+        native-comp-deferred-compilation nil
+        native-comp-enable-subr-trampolines nil
+        native-comp-eln-load-path mm-system-native-eln-load-path))
+
+(when (and mm-prefer-byte-compiled-packages
+           (not noninteractive)
+           mm-system-native-eln-load-path)
+  (mm/prefer-byte-compiled-package-files-h)
+  ;; startup.el updates the ELN cache path after reading this file.  Doom runs
+  ;; `before-init-hook' immediately after that update and before its modules.
+  (add-hook 'before-init-hook #'mm/prefer-byte-compiled-package-files-h -100))
+
+;; Doom normally disables GC throughout startup.  Apple's allocator retains
+;; the resulting peak as dirty MALLOC_SMALL regions even after Lisp GC has
+;; reclaimed the objects, which makes an otherwise idle session look enormous.
+;; A modest cap costs a little startup time but prevents that high-water mark.
+(defconst mm-low-memory-gc-threshold (* 4 1024 1024)
+  "GC threshold used while loading Doom on macOS.")
+
+(when (eq system-type 'darwin)
+  (setq gc-cons-threshold mm-low-memory-gc-threshold
+        gc-cons-percentage 0.1))
 
 ;; This file controls what Doom modules are enabled and what order they load
 ;; in. Remember to run 'doom sync' after modifying it!
@@ -101,14 +140,13 @@
        ;;biblio            ; Writes a PhD for you (citation needed)
        ;;collab            ; buffers with friends
        debugger          ; stepping through code, to help you add bugs
-       ;;direnv
        docker
        ;;editorconfig      ; let someone else argue about tabs vs spaces
        ;;ein               ; tame Jupyter notebooks with emacs
        (eval +overlay)     ; run code, run (also, repls)
        lookup              ; navigate your code and its documentation
        llm               ; when I said you needed friends, I didn't mean...
-       (lsp +eglot +booster) ; M-x vscode
+       (lsp +eglot)          ; M-x vscode
        (magit +forge)    ; a git porcelain for Emacs, with GitHub/GitLab issues & PRs
        ;;make              ; run make tasks from Emacs
        ;;pass              ; password manager for nerds

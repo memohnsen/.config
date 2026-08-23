@@ -7,16 +7,9 @@ return {
       { 'nvim-telescope/telescope.nvim', optional = true },
       { 'MeanderingProgrammer/render-markdown.nvim', optional = true },
       { 'folke/snacks.nvim', optional = true },
-      { 'agent-shell', optional = true }, -- For Cursor ACP integration
     },
     cmd = 'CodeCompanion',
     keys = {
-      {
-        '<leader>cc',
-        function() require('codecompanion').chat() end,
-        desc = 'Open Chat',
-        mode = { 'n', 'i' },
-      },
       {
         '<leader>ca',
         function() require('codecompanion').actions.apply_action() end,
@@ -25,7 +18,11 @@ return {
       },
       {
         '<leader>cu',
-        function() require('codecompanion').chat() end,
+        function()
+          require('codecompanion').chat {
+            params = { adapter = 'cursor_cli' },
+          }
+        end,
         desc = 'Open Cursor Chat',
         mode = { 'n', 'i' },
       },
@@ -38,33 +35,16 @@ return {
     },
     config = function()
       require('codecompanion').setup({
-        adapters = {
-          cursor = {
-            command = { 'cursor', 'acp' },
-            args = {},
-            schema = 'cursor',
-            proxy_adapter = true,
-          },
-          -- Configure opencode as fallback
-          opencode = {
-            command = 'opencode',
-            args = { 'serve' },
-            schema = 'opencode',
-            family = 'opencode',
-          },
-        },
         strategies = {
           chat = {
-            adapter = 'cursor',
+            -- `cursor_cli` is CodeCompanion's maintained ACP adapter.  It
+            -- starts the locally installed `agent acp` server.
+            adapter = 'cursor_cli',
           },
         },
         opts = {
           auto_accept = true,
           mixins = {
-            -- Maybe provide additional options for cursor
-            [' modelos'] = {
-              force_mix_in_strategies = 'chat',
-            },
           },
           logging = false,
         },

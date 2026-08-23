@@ -30,13 +30,35 @@
   (setq org-modern-fold-stars
         '(("▶" . "▼") ("▷" . "▽") ("▶" . "▼") ("▷" . "▽") ("▸" . "▾"))))
 
+(defvar mm/zig-onedark-font-lock-settings nil
+  "Zig Tree-sitter overrides matching Neovim's One Dark captures.")
+
 (defun mm/zig-ts-max-font-lock-h ()
-  "Enable every tree-sitter font-lock feature in Zig buffers."
+  "Enable full Zig highlighting and Neovim-compatible captures."
+  ;; zig-ts-mode treats enum members as generic properties and its later
+  ;; constant rule can overwrite container type definitions.  Neovim captures
+  ;; those as @constant and @type, respectively.
+  (setq-local treesit-font-lock-settings
+              (append zig-ts--font-lock-settings
+                      mm/zig-onedark-font-lock-settings))
   (setq-local treesit-font-lock-level 4)
   (treesit-font-lock-recompute-features)
   (font-lock-flush))
 
 (after! zig-ts-mode
+  (setq mm/zig-onedark-font-lock-settings
+        (treesit-font-lock-rules
+         :language 'zig
+         :feature 'definition
+         :override t
+         '((enum_declaration
+            (container_field (identifier) @font-lock-constant-face))
+           (variable_declaration
+            (identifier) @font-lock-type-face
+            "=" [(struct_declaration)
+                 (enum_declaration)
+                 (union_declaration)
+                 (opaque_declaration)]))))
   (add-hook 'zig-ts-mode-hook #'mm/zig-ts-max-font-lock-h))
 
 (defconst mm/zig-max-inline-parameters 3
@@ -195,101 +217,135 @@ parameters."
 
 (setq doom-theme 'doom-one)
 
+(after! gcmh
+  ;; The startup cap prevents a large one-time allocation peak.  Once editing,
+  ;; retain Doom's performance-oriented threshold so completion and LSP JSON
+  ;; processing do not trigger garbage collection too frequently.  Doom's LSP
+  ;; module temporarily doubles this while a language server is active.
+  (setq gcmh-high-cons-threshold (* 64 1024 1024)))
+
 (defface mm-modeline-mode-normal
-  '((t (:foreground "#282c34" :background "#98c379" :weight bold)))
+  '((t (:foreground "#000000" :background "#98e06c" :weight bold)))
   "Face for normal state in the lualine-style modeline.")
 
 (defface mm-modeline-mode-insert
-  '((t (:foreground "#282c34" :background "#61afef" :weight bold)))
+  '((t (:foreground "#000000" :background "#5aa9ff" :weight bold)))
   "Face for insert state in the lualine-style modeline.")
 
 (defface mm-modeline-mode-visual
-  '((t (:foreground "#282c34" :background "#c678dd" :weight bold)))
+  '((t (:foreground "#000000" :background "#d787ff" :weight bold)))
   "Face for visual state in the lualine-style modeline.")
 
 (defface mm-modeline-mode-command
-  '((t (:foreground "#282c34" :background "#e5c07b" :weight bold)))
+  '((t (:foreground "#000000" :background "#ffd866" :weight bold)))
   "Face for command state in the lualine-style modeline.")
 
 (defface mm-modeline-mode-terminal
-  '((t (:foreground "#282c34" :background "#56b6c2" :weight bold)))
+  '((t (:foreground "#000000" :background "#56d4dd" :weight bold)))
   "Face for terminal state in the lualine-style modeline.")
 
 (defface mm-modeline-mode-replace
-  '((t (:foreground "#282c34" :background "#e06c75" :weight bold)))
+  '((t (:foreground "#000000" :background "#ff5f6d" :weight bold)))
   "Face for replace state in the lualine-style modeline.")
 
 (defface mm-modeline-branch
-  '((t (:foreground "#abb2bf" :background "#3e4452")))
+  '((t (:foreground "#d8dee9" :background "#161b22")))
   "Face for the branch section in the lualine-style modeline.")
 
 (defface mm-modeline-workspace-current
-  '((t (:foreground "#282c34" :background "#61afef" :weight bold)))
+  '((t (:foreground "#000000" :background "#5aa9ff" :weight bold)))
   "Face for the current workspace in the modeline.")
 
 
 (defun mm/apply-onedark-faces ()
   "Tune Doom's theme to match the Neovim onedark palette."
   (custom-set-faces!
-    '(default :foreground "#abb2bf" :background "#282c34")
-    '(font-lock-comment-face :foreground "#5c6370" :slant italic)
-    '(font-lock-doc-face :foreground "#5c6370" :slant italic)
-    '(font-lock-string-face :foreground "#98c379")
-    '(font-lock-function-name-face :foreground "#61afef")
-    '(font-lock-keyword-face :foreground "#c678dd")
-    '(font-lock-builtin-face :foreground "#56b6c2")
-    '(font-lock-preprocessor-face :foreground "#56b6c2")
-    '(font-lock-type-face :foreground "#e5c07b")
-    '(font-lock-constant-face :foreground "#56b6c2")
-    '(font-lock-number-face :foreground "#d19a66")
-    '(font-lock-variable-name-face :foreground "#abb2bf")
-    '(font-lock-property-name-face :foreground "#e86671")
-    '(font-lock-property-use-face :foreground "#e86671")
-    '(font-lock-operator-face :foreground "#c678dd")
-    '(line-number :foreground "#5c6370" :background "#282c34")
-    '(line-number-current-line :foreground "#abb2bf" :background "#31353f")
-    '(hl-line :background "#31353f")
-    '(region :background "#3b3f4c")
-    '(mode-line :foreground "#abb2bf" :background "#31353f")
-    '(mode-line-buffer-id :foreground "#61afef" :weight bold)
-    '(doom-modeline :foreground "#abb2bf" :background "#31353f")
-    '(doom-modeline-bar :background "#61afef")
-    '(doom-modeline-bar-inactive :background "#282c34")
-    '(doom-modeline-emphasis :foreground "#abb2bf" :background "#31353f")
-    '(doom-modeline-highlight :foreground "#61afef" :background "#31353f")
-    '(mm-modeline-mode-normal :foreground "#282c34" :background "#98c379" :weight bold)
-    '(mm-modeline-mode-insert :foreground "#282c34" :background "#61afef" :weight bold)
-    '(mm-modeline-mode-visual :foreground "#282c34" :background "#c678dd" :weight bold)
-    '(mm-modeline-mode-command :foreground "#282c34" :background "#e5c07b" :weight bold)
-    '(mm-modeline-mode-terminal :foreground "#282c34" :background "#56b6c2" :weight bold)
-    '(mm-modeline-mode-replace :foreground "#282c34" :background "#e06c75" :weight bold)
-    '(mm-modeline-branch :foreground "#abb2bf" :background "#3e4452")
-    '(mm-modeline-workspace-current :foreground "#282c34" :background "#61afef" :weight bold)
-    '(doom-modeline-buffer-file :foreground "#61afef" :weight bold)
-    '(doom-modeline-buffer-path :foreground "#61afef" :weight bold)
-    '(doom-modeline-buffer-modified :foreground "#56b6c2" :background "#31353f" :weight bold)
-    '(doom-modeline-buffer-major-mode :foreground "#abb2bf" :background "#31353f")
-    '(doom-modeline-project-dir :foreground "#abb2bf" :background "#31353f")
-    '(doom-modeline-project-root-dir :foreground "#61afef" :background "#31353f")
-    '(doom-modeline-vcs-default :foreground "#5c6370" :background "#31353f")
-    '(solaire-mode-line-face :foreground "#abb2bf" :background "#31353f")
-    '(solaire-mode-line-inactive-face :foreground "#5c6370" :background "#282c34")
-    '(mode-line-inactive :foreground "#5c6370" :background "#282c34")
-    '(centaur-tabs-default :foreground "#abb2bf" :background "#282c34")
-    '(centaur-tabs-selected :foreground "#282c34" :background "#61afef" :weight normal)
-    '(centaur-tabs-selected-modified :foreground "#282c34" :background "#61afef" :weight normal)
-    '(centaur-tabs-unselected :foreground "#5c6370" :background "#282c34" :weight normal)
-    '(centaur-tabs-unselected-modified :foreground "#56b6c2" :background "#282c34" :weight normal)
-    '(centaur-tabs-close-unselected :foreground "#5c6370" :background "#282c34")
-    '(centaur-tabs-close-selected :foreground "#282c34" :background "#61afef")
-    '(centaur-tabs-modified-marker-unselected :foreground "#56b6c2" :background "#282c34")
-    '(centaur-tabs-modified-marker-selected :foreground "#282c34" :background "#61afef")
-    '(centaur-tabs-active-bar-face :background "#61afef")
-    '(tab-line :foreground "#abb2bf" :background "#282c34")
-    '(tab-line-tab :foreground "#abb2bf" :background "#282c34")
-    '(tab-line-tab-current :foreground "#282c34" :background "#61afef")
-    '(tab-line-tab-inactive :foreground "#5c6370" :background "#282c34")
-    '(header-line :foreground "#abb2bf" :background "#282c34")))
+    '(default :foreground "#d8dee9" :background "#000000")
+    '(fringe :foreground "#6b7280" :background "#000000")
+    '(vertical-border :foreground "#161b22" :background "#000000")
+    '(window-divider :foreground "#161b22" :background "#000000")
+    '(tooltip :foreground "#d8dee9" :background "#0d1117")
+    '(company-tooltip :foreground "#d8dee9" :background "#0d1117")
+    '(company-tooltip-selection :foreground "#000000" :background "#5aa9ff")
+    '(company-scrollbar-bg :background "#0d1117")
+    '(company-scrollbar-fg :background "#21262d")
+    '(solaire-default-face :foreground "#d8dee9" :background "#000000")
+    '(solaire-hl-line-face :background "#0d1117")
+    '(font-lock-comment-face :foreground "#6b7280" :slant normal)
+    '(font-lock-doc-face :foreground "#6b7280" :slant normal)
+    '(font-lock-string-face :foreground "#98e06c")
+    '(font-lock-function-name-face :foreground "#5aa9ff")
+    '(font-lock-keyword-face :foreground "#d787ff")
+    '(font-lock-builtin-face :foreground "#56d4dd")
+    '(font-lock-preprocessor-face :foreground "#56d4dd")
+    '(font-lock-type-face :foreground "#ffd866")
+    '(font-lock-constant-face :foreground "#ff9f43")
+    '(font-lock-number-face :foreground "#ff9f43")
+    '(font-lock-variable-name-face :foreground "#d8dee9")
+    '(font-lock-property-name-face :foreground "#56d4dd")
+    '(font-lock-property-use-face :foreground "#56d4dd")
+    '(font-lock-variable-use-face :foreground "#d8dee9")
+    '(font-lock-function-call-face :foreground "#5aa9ff")
+    '(font-lock-operator-face :foreground "#d8dee9")
+    '(font-lock-bracket-face :foreground "#d8dee9")
+    '(font-lock-delimiter-face :foreground "#d8dee9")
+    ;; Eglot's semantic-token faces layer over Tree-sitter in Zig buffers.
+    ;; Match the corresponding One Dark LSP groups used by Neovim.
+    '(eglot-semantic-static :foreground "#ff9f43")
+    '(eglot-semantic-parameter :foreground "#ff5f6d")
+    '(eglot-semantic-variable :foreground "#d8dee9")
+    '(eglot-semantic-function :foreground "#5aa9ff")
+    '(eglot-semantic-type :foreground "#ffd866")
+    ;; Rust-specific Tree-sitter and rust-analyzer semantic categories.
+    '(font-lock-escape-face :foreground "#ff5f6d")
+    '(rust-ampersand-face :foreground "#d8dee9")
+    '(eglot-semantic-macro :foreground "#56d4dd")
+    '(eglot-semantic-namespace :foreground "#ffd866")
+    '(eglot-semantic-enumMember :foreground "#ff9f43")
+    '(line-number :foreground "#6b7280" :background "#000000")
+    '(line-number-current-line :foreground "#d8dee9" :background "#0d1117")
+    '(hl-line :background "#0d1117")
+    '(region :background "#21262d")
+    '(mode-line :foreground "#d8dee9" :background "#0d1117")
+    '(mode-line-buffer-id :foreground "#5aa9ff" :weight bold)
+    '(doom-modeline :foreground "#d8dee9" :background "#0d1117")
+    '(doom-modeline-bar :background "#5aa9ff")
+    '(doom-modeline-bar-inactive :background "#000000")
+    '(doom-modeline-emphasis :foreground "#d8dee9" :background "#0d1117")
+    '(doom-modeline-highlight :foreground "#5aa9ff" :background "#0d1117")
+    '(mm-modeline-mode-normal :foreground "#000000" :background "#98e06c" :weight bold)
+    '(mm-modeline-mode-insert :foreground "#000000" :background "#5aa9ff" :weight bold)
+    '(mm-modeline-mode-visual :foreground "#000000" :background "#d787ff" :weight bold)
+    '(mm-modeline-mode-command :foreground "#000000" :background "#ffd866" :weight bold)
+    '(mm-modeline-mode-terminal :foreground "#000000" :background "#56d4dd" :weight bold)
+    '(mm-modeline-mode-replace :foreground "#000000" :background "#ff5f6d" :weight bold)
+    '(mm-modeline-branch :foreground "#d8dee9" :background "#161b22")
+    '(mm-modeline-workspace-current :foreground "#000000" :background "#5aa9ff" :weight bold)
+    '(doom-modeline-buffer-file :foreground "#5aa9ff" :weight bold)
+    '(doom-modeline-buffer-path :foreground "#5aa9ff" :weight bold)
+    '(doom-modeline-buffer-modified :foreground "#56d4dd" :background "#0d1117" :weight bold)
+    '(doom-modeline-buffer-major-mode :foreground "#d8dee9" :background "#0d1117")
+    '(doom-modeline-project-dir :foreground "#d8dee9" :background "#0d1117")
+    '(doom-modeline-project-root-dir :foreground "#5aa9ff" :background "#0d1117")
+    '(doom-modeline-vcs-default :foreground "#6b7280" :background "#0d1117")
+    '(solaire-mode-line-face :foreground "#d8dee9" :background "#0d1117")
+    '(solaire-mode-line-inactive-face :foreground "#6b7280" :background "#000000")
+    '(mode-line-inactive :foreground "#6b7280" :background "#000000")
+    '(centaur-tabs-default :foreground "#d8dee9" :background "#000000")
+    '(centaur-tabs-selected :foreground "#000000" :background "#5aa9ff" :weight normal)
+    '(centaur-tabs-selected-modified :foreground "#000000" :background "#5aa9ff" :weight normal)
+    '(centaur-tabs-unselected :foreground "#6b7280" :background "#000000" :weight normal)
+    '(centaur-tabs-unselected-modified :foreground "#56d4dd" :background "#000000" :weight normal)
+    '(centaur-tabs-close-unselected :foreground "#6b7280" :background "#000000")
+    '(centaur-tabs-close-selected :foreground "#000000" :background "#5aa9ff")
+    '(centaur-tabs-modified-marker-unselected :foreground "#56d4dd" :background "#000000")
+    '(centaur-tabs-modified-marker-selected :foreground "#000000" :background "#5aa9ff")
+    '(centaur-tabs-active-bar-face :background "#5aa9ff")
+    '(tab-line :foreground "#d8dee9" :background "#000000")
+    '(tab-line-tab :foreground "#d8dee9" :background "#000000")
+    '(tab-line-tab-current :foreground "#000000" :background "#5aa9ff")
+    '(tab-line-tab-inactive :foreground "#6b7280" :background "#000000")
+    '(header-line :foreground "#d8dee9" :background "#000000")))
 
 
 (add-hook 'doom-load-theme-hook #'mm/apply-onedark-faces)
@@ -481,14 +537,14 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
 (defun mm/apply-centaur-tabs-onedark ()
     "Keep centaur-tabs' fill/background matched to Neovim onedark."
     (set-face-attribute centaur-tabs-display-line nil
-                        :foreground "#abb2bf"
-                        :background "#282c34"
+                        :foreground "#d8dee9"
+                        :background "#000000"
                         :box nil
                         :overline nil
                         :underline nil)
     (set-face-attribute 'centaur-tabs-default nil
-                        :foreground "#abb2bf"
-                        :background "#282c34"
+                        :foreground "#d8dee9"
+                        :background "#000000"
                         :height 0.9)
     (dolist (face '(centaur-tabs-selected
                     centaur-tabs-selected-modified
@@ -500,11 +556,65 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
   (mm/apply-centaur-tabs-onedark))
 
 (after! treemacs
+  ;; Keep the project drawer visually aligned with Neo-tree: compact nesting,
+  ;; a quiet background, blue project/folder accents, and one clear selection.
+  (setq treemacs-width 34
+        treemacs-indentation 1
+        treemacs-indent-guide-style 'line
+        treemacs-space-between-root-nodes nil
+        treemacs-collapse-dirs 0
+        treemacs-show-hidden-files t)
+
+  (custom-set-faces!
+    '(treemacs-window-background-face :foreground "#d8dee9" :background "#000000")
+    '(treemacs-hl-line-face :foreground "#d8dee9" :background "#161b22" :extend t)
+    '(treemacs-root-face :foreground "#5aa9ff" :weight bold :underline nil :height 1.0)
+    '(treemacs-directory-face :foreground "#5aa9ff" :weight normal)
+    '(treemacs-directory-collapsed-face :foreground "#5aa9ff")
+    '(treemacs-file-face :foreground "#d8dee9")
+    '(treemacs-git-unmodified-face :foreground "#d8dee9")
+    '(treemacs-git-modified-face :foreground "#ffd866")
+    '(treemacs-git-added-face :foreground "#98e06c")
+    '(treemacs-git-untracked-face :foreground "#56d4dd")
+    '(treemacs-git-ignored-face :foreground "#6b7280" :slant italic)
+    '(treemacs-git-conflict-face :foreground "#ff5f6d" :weight bold)
+    '(treemacs-fringe-indicator-face :foreground "#5aa9ff"))
+
+  (treemacs-indent-guide-mode 1)
+
+  ;; Simple Git mode only decorates files.  Extended mode also marks ignored
+  ;; build/cache directories such as `.zig-cache', `zig-out', and `zig-pkg'.
+  (when-let ((python (executable-find "python3")))
+    (setq treemacs-python-executable python)
+    (treemacs-git-mode 'extended))
+
   (treemacs-define-RET-action 'file-node-open #'treemacs-visit-node-close-treemacs)
   (treemacs-define-RET-action 'file-node-closed #'treemacs-visit-node-close-treemacs))
 
-;; This determines the style of line numbers in effect. If set to `nil', line
-;; numbers are disabled. For relative line numbers, set this to `relative'.
+(defun mm/treemacs-no-wrap-h ()
+  "Keep Treemacs entries on one clipped line, like Neo-tree."
+  (visual-line-mode -1)
+  (setq-local truncate-lines t
+              word-wrap nil)
+  (dolist (window (get-buffer-window-list (current-buffer) nil t))
+    (set-window-hscroll window 0)))
+
+(add-hook 'treemacs-mode-hook #'mm/treemacs-no-wrap-h 110)
+
+(defun mm/treemacs-apply-git-faces-now-h ()
+  "Apply cached Git faces to every visible Treemacs node."
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (when (derived-mode-p 'treemacs-mode)
+        (treemacs-apply-annotations-in-buffer buffer)))))
+
+(defun mm/treemacs-apply-git-faces-h (&rest _)
+  "Apply Git faces after Treemacs has finished its asynchronous refresh."
+  (run-at-time 0.6 nil #'mm/treemacs-apply-git-faces-now-h))
+
+(after! treemacs
+  (add-hook 'treemacs-post-project-refresh-functions
+            #'mm/treemacs-apply-git-faces-h))
 
 (setq scroll-margin 20
       maximum-scroll-margin 0.5
@@ -523,32 +633,50 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
 (use-package! indent-bars
   :hook ((prog-mode conf-mode) . indent-bars-mode)
   :config
-  (setq indent-bars-color '("#61afef" :face-bg nil :blend 0)
+  (setq indent-bars-color '("#5aa9ff" :face-bg nil :blend 0)
         indent-bars-prefer-character t
         indent-bars-no-stipple-char ?|
         indent-bars-display-on-blank-lines t
         ;; The current-depth idle timer can run before a perspective-restored
         ;; buffer has a live window position, producing a nil marker error.
         indent-bars-highlight-current-depth nil
-        indent-bars-current-depth-color '("#e5c07b" :face-bg nil :blend 0)))
+        indent-bars-current-depth-color '("#ffd866" :face-bg nil :blend 0)))
 
 ;; Keep completion suggestions usable in both GUI and terminal Emacs.
 
 (after! company
-  (setq company-idle-delay 0.18
+  (setq company-idle-delay 0
         company-minimum-prefix-length 1
+        ;; Keep an exact candidate visible while point remains in the word.
+        ;; Company will still close normally when a separator ends the prefix.
+        company-abort-on-unique-match nil
         company-tooltip-limit 14
-        company-backends '(company-capf)
+        ;; Merge LSP/CAPF candidates with identifiers already used in the
+        ;; current buffer (and other buffers in the same major mode).
+        company-backends '((company-capf :with company-dabbrev-code))
+        company-dabbrev-code-ignore-case t
         company-selection-wrap-around t
         company-auto-complete nil
         company-auto-commit nil)
-  (setq-default company-backends '(company-capf))
+  (setq-default company-backends '((company-capf :with company-dabbrev-code)))
   ;; Navigate LSP candidates immediately.  Company's default TAB command
   ;; expands the longest common prefix before it starts moving through them.
   (define-key company-active-map [tab] #'company-select-next)
   (define-key company-active-map (kbd "TAB") #'company-select-next)
   (define-key company-active-map [backtab] #'company-select-previous)
   (global-company-mode 1))
+
+(defun mm/company-merge-buffer-words-h ()
+  "Merge LSP, same-language buffer words, and snippets in code buffers."
+  (when (derived-mode-p 'prog-mode)
+    ;; Doom's `+company-init-backends-h' prepends a standalone `company-capf'
+    ;; when Company starts.  That backend wins before a later merged backend
+    ;; can run, so replace the final buffer-local value after Doom's hook.
+    (setq-local company-backends
+                '((company-capf :with company-dabbrev-code company-yasnippet)))))
+
+(after! company
+  (add-hook 'company-mode-hook #'mm/company-merge-buffer-words-h 90))
 
 
 (map! :i "C-SPC" #'company-complete
@@ -573,7 +701,7 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
                 ;; after nearly every keystroke. `.'/`::' still complete
                 ;; instantly via `mm/rust-company-complete-after-trigger'.
                 company-idle-delay 0.2
-                company-backends '(company-capf))
+                company-backends '((company-capf :with company-dabbrev-code)))
     (add-hook 'before-save-hook #'mm/rust-organize-imports nil t)
     (add-hook 'post-self-insert-hook #'mm/rust-company-complete-after-trigger nil t)))
 
@@ -648,13 +776,49 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
       (quit-window nil window)
     (flycheck-list-errors)))
 
+(defconst mm/left-reading-gutter-ratio 0.30
+  "Fraction of a window reserved as a left reading gutter.")
+
+(defun mm/apply-left-reading-gutter (window)
+  "Recalculate the proportional left reading gutter for WINDOW."
+  (when (and (window-live-p window)
+             (window-parameter window 'mm-left-reading-gutter))
+    (let* ((frame (window-frame window))
+           (char-width (max 1 (frame-char-width frame)))
+           (columns (max 1
+                         (floor (/ (* (window-pixel-width window)
+                                      mm/left-reading-gutter-ratio)
+                                   char-width))))
+           (original (window-parameter
+                      window 'mm-left-reading-gutter-original-margins)))
+      (unless (equal (window-margins window)
+                     (cons columns (cdr-safe original)))
+        (set-window-margins window columns (cdr-safe original))))))
+
+(defun mm/refresh-left-reading-gutters (frame)
+  "Refresh enabled reading gutters after windows resize in FRAME."
+  (walk-windows #'mm/apply-left-reading-gutter 'no-minibuf frame))
+
+(defun mm/toggle-left-reading-gutter ()
+  "Toggle a 30% left gutter in the selected window."
+  (interactive)
+  (let ((window (selected-window)))
+    (if (window-parameter window 'mm-left-reading-gutter)
+        (let ((original (window-parameter
+                         window 'mm-left-reading-gutter-original-margins)))
+          (set-window-parameter window 'mm-left-reading-gutter nil)
+          (set-window-parameter window 'mm-left-reading-gutter-original-margins nil)
+          (set-window-margins window (car-safe original) (cdr-safe original))
+          (message "Left reading gutter disabled"))
+      (set-window-parameter window 'mm-left-reading-gutter-original-margins
+                            (window-margins window))
+      (set-window-parameter window 'mm-left-reading-gutter t)
+      (mm/apply-left-reading-gutter window)
+      (message "Left reading gutter: 30%%"))))
+
+(add-hook 'window-size-change-functions #'mm/refresh-left-reading-gutters)
+
 (map! :leader
-      ;; Clear Doom's default leader surface, then restore only the requested
-      ;; Neovim-compatible allowlist below.
-      "'" nil "*" nil "," nil "." nil "/" nil ":" nil ";" nil "<" nil
-      "RET" nil "X" nil "`" nil "a" nil "b" nil "c" nil "d" nil "e" nil
-      "f" nil "g" nil "h" nil "i" nil "m" nil "n" nil "o" nil "p" nil "q" nil
-      "r" nil "s" nil "t" nil "u" nil "w" nil "x" nil "~" nil "TAB" nil
       :desc "Repeat Action" "'" #'vertico-repeat
       :desc "Jump to bookmark" "RET" #'bookmark-jump
       :desc "Find files" "SPC" #'mm/project-find-file
@@ -665,6 +829,7 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
       :desc "Toggle Which-Key" "w" #'mm/toggle-which-key
       :desc "Terminal Popup" "t" #'mm/toggle-bottom-terminal
       :desc "Terminal Window" "T" #'mm/open-ghostel-frame
+      :desc "Toggle left reading gutter" "z" #'mm/toggle-left-reading-gutter
       (:prefix ("b" . "Bookmark")
        :desc "Set bookmark" "m" #'bookmark-set
        :desc "Delete bookmark" "M" #'bookmark-delete)
@@ -677,7 +842,7 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
        :desc "List errors" "x" #'+default/diagnostics
        :desc "Toggle Codex" "c" #'mm/codex-toggle
        :desc "Toggle Cursor" "u" #'mm/cursor-toggle
-       :desc "Open OpenCode session" "o" #'opencode)
+       :desc "Toggle OpenCode" "o" #'mm/opencode-toggle)
       :desc "Mise task" "j" #'mm/mise-select
       (:prefix ("m" . "Multicursor")
        :desc "Select all matches" "a" #'evil-mc-make-all-cursors
@@ -720,14 +885,56 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
 ;; Let Doom/Projectile discover projects kept in ~/dev subfolders.
 ;; Use `SPC p p` to switch projects, or `SPC p a` to add one manually.
 
+(defconst mm/aerospace-ghostel-helper
+  (expand-file-name "scripts/aerospace-place-ghostel" doom-user-dir)
+  "Detached helper that places a Ghostel frame without blocking Emacs.")
+
 (defun mm/open-ghostel-frame ()
-  "Open Ghostel in a new frame."
+  "Open a repo-root Ghostel frame on the left at 37% screen width."
   (interactive)
-  (let ((frame (make-frame))
+  ;; Declare Ghostel's special variables before dynamically binding them below.
+  ;; Loading the deferred package from inside the binding prevents Ghostel from
+  ;; initializing and leaves an empty frame behind.
+  (require 'ghostel)
+  (let* ((origin-buffer (window-buffer (selected-window)))
+         (root
+          (with-current-buffer origin-buffer
+            (or (ignore-errors (doom-project-root))
+                (when-let ((project (project-current nil default-directory)))
+                  (project-root project))
+                (locate-dominating-file default-directory ".git")
+                default-directory)))
+         (window-token (format "Ghostel-%d-%d"
+                               (emacs-pid) (truncate (* 1000 (float-time)))))
+         (workarea (frame-monitor-attribute 'workarea (selected-frame)))
+         (target-width (max 320 (round (* (nth 2 workarea) 0.37))))
+         (background (face-background 'default (selected-frame) t))
+         (frame (make-frame `((title . ,window-token)
+                              (background-color . ,background)
+                              (ns-transparent-titlebar . t)
+                              (ns-appearance . dark))))
         (display-buffer-alist nil)
         (ghostel-buffer-name (generate-new-buffer-name "*ghostel-frame*")))
+    (set-face-background 'default background frame)
     (select-frame-set-input-focus frame)
-    (ghostel)))
+    (with-selected-frame frame
+      ;; `default-directory' is buffer-local, so bind it only after selecting
+      ;; the new frame's inherited buffer.
+      (let ((default-directory (file-name-as-directory root)))
+        (ghostel)))
+    ;; Never call AeroSpace synchronously from Emacs: its accessibility query
+    ;; can wait on Emacs's UI thread and deadlock both processes.
+    (when (file-executable-p mm/aerospace-ghostel-helper)
+      (let ((process
+             (start-process "aerospace-place-ghostel" nil
+                            mm/aerospace-ghostel-helper
+                            (number-to-string (emacs-pid))
+                            window-token
+                            (number-to-string target-width))))
+        (set-process-query-on-exit-flag process nil)))
+    ;; Keep the unique title only long enough for the detached helper to find
+    ;; the new native window.
+    (run-at-time 5 nil #'modify-frame-parameters frame '((title . nil)))))
 
 
 (after! eshell
@@ -749,6 +956,34 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
 
   (add-hook 'eshell-directory-change-hook #'mm/zoxide-add-dir))
 
+(defun mm/apply-ghostel-vivid-faces ()
+  "Apply the shared true-black vivid palette to Ghostel."
+  (custom-set-faces!
+    '(ghostel-default :foreground "#d8dee9" :background "#000000")
+    '(ghostel-color-black :foreground "#000000")
+    '(ghostel-color-red :foreground "#ff5f6d")
+    '(ghostel-color-green :foreground "#98e06c")
+    '(ghostel-color-yellow :foreground "#ffd866")
+    '(ghostel-color-blue :foreground "#5aa9ff")
+    '(ghostel-color-magenta :foreground "#d787ff")
+    '(ghostel-color-cyan :foreground "#56d4dd")
+    '(ghostel-color-white :foreground "#d8dee9")
+    '(ghostel-color-bright-black :foreground "#6b7280")
+    '(ghostel-color-bright-red :foreground "#ff7b86")
+    '(ghostel-color-bright-green :foreground "#b3f58c")
+    '(ghostel-color-bright-yellow :foreground "#ffe38a")
+    '(ghostel-color-bright-blue :foreground "#80bcff")
+    '(ghostel-color-bright-magenta :foreground "#e6a0ff")
+    '(ghostel-color-bright-cyan :foreground "#7cebf2")
+    '(ghostel-color-bright-white :foreground "#ffffff"))
+  ;; Ghostel's renderer caches the ANSI palette internally.  Updating the
+  ;; Emacs faces alone does not affect programs such as eza that emit indexed
+  ;; ANSI colors, so push the new palette into every live terminal as well.
+  (when (fboundp 'ghostel-sync-theme)
+    (ghostel-sync-theme)))
+
+(add-hook 'doom-load-theme-hook #'mm/apply-ghostel-vivid-faces)
+
 (use-package! ghostel
   :defer t
   :init
@@ -759,25 +994,9 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
         ghostel-shell "/opt/homebrew/bin/fish")
   :config
   (setq ghostel-buffer-name-function nil
-        ghostel-query-before-killing nil)
-  (custom-set-faces!
-    '(ghostel-default :foreground "#abb2bf" :background "#282c34")
-    '(ghostel-color-black :foreground "#282c34")
-    '(ghostel-color-red :foreground "#e86671")
-    '(ghostel-color-green :foreground "#98c379")
-    '(ghostel-color-yellow :foreground "#e5c07b")
-    '(ghostel-color-blue :foreground "#61afef")
-    '(ghostel-color-magenta :foreground "#c678dd")
-    '(ghostel-color-cyan :foreground "#56b6c2")
-    '(ghostel-color-white :foreground "#abb2bf")
-    '(ghostel-color-bright-black :foreground "#5c6370")
-    '(ghostel-color-bright-red :foreground "#e86671")
-    '(ghostel-color-bright-green :foreground "#98c379")
-    '(ghostel-color-bright-yellow :foreground "#e5c07b")
-    '(ghostel-color-bright-blue :foreground "#61afef")
-    '(ghostel-color-bright-magenta :foreground "#c678dd")
-    '(ghostel-color-bright-cyan :foreground "#56b6c2")
-    '(ghostel-color-bright-white :foreground "#ffffff")))
+        ghostel-query-before-killing nil
+        ghostel-bold-color 'bright)
+  (mm/apply-ghostel-vivid-faces))
 
 (defun mm/ghostel-popup-double-escape ()
   "Preserve the first Escape and close this bottom popup on the second."
@@ -796,10 +1015,31 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
       (evil-local-set-key state (kbd "<escape>")
                           #'mm/ghostel-popup-double-escape))))
 
+(defun mm/evil-ghostel-forward-or-accept (count)
+  "Move right in scrollback, or let Fish handle Right Arrow at its prompt.
+
+At the end of live input Fish uses Right Arrow to accept its full gray
+autosuggestion.  Evil-Ghostel normally keeps `l' entirely inside Emacs, so the
+shell never receives that key."
+  (interactive "p")
+  (if (and (fboundp 'evil-ghostel--prompt-active-p)
+           (evil-ghostel--prompt-active-p))
+      (progn
+        (dotimes (_ (or count 1))
+          (ghostel-send-key "right"))
+        (when (fboundp 'evil-ghostel--sync-render)
+          (evil-ghostel--sync-render))
+        (when (fboundp 'evil-ghostel--reset-cursor-point)
+          (evil-ghostel--reset-cursor-point)))
+    (evil-forward-char count)))
+
 (use-package! evil-ghostel
   :after (ghostel evil)
   :hook ((ghostel-mode . evil-ghostel-mode)
-         (evil-ghostel-mode . mm/setup-ghostel-popup-double-escape-h)))
+         (evil-ghostel-mode . mm/setup-ghostel-popup-double-escape-h))
+  :config
+  (evil-define-key* 'normal evil-ghostel-mode-map
+    (kbd "l") #'mm/evil-ghostel-forward-or-accept))
 
 ;; Use Doom's popup manager so this behaves like Doom's former vterm popup,
 ;; rather than a regular side-window split.
@@ -841,6 +1081,26 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
 (defvar-local mm/ghostel-follow-timer nil
   "Idle timer that keeps pumping Ghostel output after programmatic sends.")
 
+(defun mm/ghostel-follow-tick (buffer deadline)
+  "Drain and redraw Ghostel BUFFER until DEADLINE.
+
+This is a named timer function rather than a closure because Doom tangles this
+configuration without lexical binding enabled."
+  (if (and (buffer-live-p buffer)
+           (< (float-time) deadline))
+      (with-current-buffer buffer
+        (when (and (derived-mode-p 'ghostel-mode)
+                   (bound-and-true-p ghostel--process)
+                   (process-live-p ghostel--process))
+          (accept-process-output ghostel--process 0.01 nil t)
+          (when (fboundp 'ghostel--redraw-now)
+            (ghostel--redraw-now buffer))))
+    (when (buffer-live-p buffer)
+      (with-current-buffer buffer
+        (when (timerp mm/ghostel-follow-timer)
+          (cancel-timer mm/ghostel-follow-timer))
+        (setq mm/ghostel-follow-timer nil)))))
+
 (defun mm/ghostel-ensure-ready (&optional timeout)
   "Wait briefly for the current Ghostel PTY to become ready."
   (let ((deadline (+ (float-time) (or timeout 1.0))))
@@ -870,28 +1130,10 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
   (when mm/ghostel-follow-timer
     (cancel-timer mm/ghostel-follow-timer)
     (setq mm/ghostel-follow-timer nil))
-  (let* ((buffer (current-buffer))
-         (deadline (+ (float-time) (or seconds 8.0)))
-         (timer nil))
-    (setq timer
-          (run-with-timer
-           0.05 0.1
-           (lambda ()
-             (if (and (buffer-live-p buffer)
-                      (< (float-time) deadline))
-                 (with-current-buffer buffer
-                   (when (and (derived-mode-p 'ghostel-mode)
-                              (bound-and-true-p ghostel--process)
-                              (process-live-p ghostel--process))
-                     (accept-process-output ghostel--process 0.01 nil t)
-                     (when (fboundp 'ghostel--redraw-now)
-                       (ghostel--redraw-now buffer))))
-               (when (timerp timer)
-                 (cancel-timer timer))
-               (when (buffer-live-p buffer)
-                 (with-current-buffer buffer
-                   (setq mm/ghostel-follow-timer nil)))))))
-    (setq mm/ghostel-follow-timer timer)))
+  (let ((buffer (current-buffer))
+        (deadline (+ (float-time) (or seconds 8.0))))
+    (setq mm/ghostel-follow-timer
+          (run-with-timer 0.05 0.1 #'mm/ghostel-follow-tick buffer deadline))))
 
 (defun mm/send-command-to-current-terminal (command)
   "Send COMMAND to the current terminal buffer."
@@ -938,6 +1180,14 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
         (with-current-buffer (current-buffer)
           (mm/send-command-to-current-terminal command)))))))
 
+(defun mm/run-command-in-full-terminal (command directory)
+  "Run COMMAND in a fresh full-window Ghostel buffer at DIRECTORY."
+  (let ((default-directory directory)
+        (ghostel-buffer-name (generate-new-buffer-name "*mise-run*")))
+    (ghostel)
+    (with-current-buffer (current-buffer)
+      (mm/send-command-to-current-terminal command))))
+
 ;; `SPC o t` toggles the Ghostel popup; `SPC o T` opens Ghostel in a new frame.
 
 (after! flycheck
@@ -982,57 +1232,113 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
       (put-text-property 0 1 'cursor t text))
     text)
 
+  (defun mm/flyover-available-columns (overlay window)
+    "Return columns available after OVERLAY in WINDOW's current visual line."
+    ;; `posn-at-point' can report a position after a long after-string, so hide
+    ;; the annotation while measuring the source position.
+    (let ((after-string (overlay-get overlay 'after-string)))
+      (unwind-protect
+          (progn
+            (overlay-put overlay 'after-string nil)
+            (when-let* ((posn (posn-at-point (overlay-start overlay) window))
+                        (xy (posn-x-y posn)))
+              ;; Reserve a column so a glyph touching the right edge cannot
+              ;; create a continuation line because of pixel rounding.
+              (max 0 (/ (max 0 (- (window-body-width window t)
+                                  (car xy)
+                                  (window-font-width window)))
+                        (window-font-width window)))))
+        (overlay-put overlay 'after-string after-string))))
+
+  (defun mm/flyover-clip-eol-overlay (overlay)
+    "Clip OVERLAY's annotation before it can wrap onto another visual line."
+    (when (and flyover-show-at-eol
+               (overlayp overlay)
+               (overlay-buffer overlay)
+               (overlay-get overlay 'after-string))
+      (let* ((full-text (or (overlay-get overlay 'mm/flyover-full-text)
+                            (overlay-get overlay 'after-string)))
+             (windows (get-buffer-window-list (overlay-buffer overlay) nil t))
+             (widths (delq nil
+                           (mapcar (lambda (window)
+                                     (mm/flyover-available-columns overlay window))
+                                   windows))))
+        (overlay-put overlay 'mm/flyover-full-text full-text)
+        (when widths
+          ;; An overlay has one after-string even when its buffer is visible in
+          ;; several windows, so fit it to the narrowest visible occurrence.
+          (let ((width (apply #'min widths)))
+            (overlay-put overlay 'after-string
+                         (if (zerop width)
+                             ""
+                           (truncate-string-to-width
+                            full-text width nil nil "…"))))))))
+
+  (defun mm/flyover-clip-new-overlay-a (overlay &rest _)
+    "Clip a newly configured Flyover OVERLAY."
+    (mm/flyover-clip-eol-overlay overlay))
+
+  (defun mm/flyover-reclip-window-overlays (window &rest _)
+    "Reclip Flyover annotations displayed in WINDOW."
+    (when (window-live-p window)
+      (with-current-buffer (window-buffer window)
+        (when (bound-and-true-p flyover-mode)
+          (dolist (overlay flyover--overlays)
+            (mm/flyover-clip-eol-overlay overlay))))))
+
+  (defun mm/flyover-reclip-frame-overlays (frame)
+    "Reclip Flyover annotations after windows in FRAME change size."
+    (dolist (window (window-list frame 'no-minibuffer))
+      (mm/flyover-reclip-window-overlays window)))
+
+  (advice-remove #'flyover--build-final-overlay-string
+                 #'mm/flyover-keep-cursor-before-eol-a)
   (advice-add #'flyover--build-final-overlay-string :filter-return
-              #'mm/flyover-keep-cursor-before-eol-a))
+              #'mm/flyover-keep-cursor-before-eol-a)
+  (advice-remove #'flyover--configure-overlay
+                 #'mm/flyover-clip-new-overlay-a)
+  (advice-add #'flyover--configure-overlay :after
+              #'mm/flyover-clip-new-overlay-a)
+  (add-hook 'window-scroll-functions #'mm/flyover-reclip-window-overlays)
+  (add-hook 'window-size-change-functions #'mm/flyover-reclip-frame-overlays))
 
 (let ((paths (seq-filter (lambda (path)
                            (not (or (string-prefix-p "/nix/" path)
-                                    (string-prefix-p (expand-file-name "~/.nix-profile/") path))))
+                                    (string-prefix-p (expand-file-name "~/.nix-profile/") path)
+                                    ;; A retired standalone Zig install left this
+                                    ;; directory on the GUI launch PATH.  It must
+                                    ;; not shadow mise's `zig' shim.
+                                    (string= path "/usr/local/bin/zig"))))
                          (split-string (or (getenv "PATH") "") path-separator t))))
   (setenv "PATH" (string-join paths path-separator))
   (setq exec-path (append paths (list exec-directory))))
-(dolist (path '("/opt/homebrew/bin" "~/.cargo/bin" "~/.local/bin" "~/.bun/bin"))
+(dolist (path '("~/.local/share/mise/shims" "/opt/homebrew/bin" "~/.cargo/bin" "~/.local/bin" "~/.bun/bin"))
   (let ((expanded-path (expand-file-name path)))
     (when (file-directory-p expanded-path)
       (add-to-list 'exec-path expanded-path)
       (setenv "PATH" (concat expanded-path ":" (getenv "PATH"))))))
 
-;; Load direnv before Doom restores workspaces.  The stock module waits for the
-;; first file, which is too late when a session restores an existing buffer and
-;; starts its LSP server before `envrc-global-mode' has been enabled.
-(use-package! envrc
-  :demand t
-  :config
-  (envrc-global-mode 1)
-  ;; The Doom module normally delays this until `doom-first-file'.  Since we
-  ;; enable it before session restore, leaving that hook would toggle it twice.
-  (remove-hook 'doom-first-file-hook #'envrc-global-mode)
+;; The graphical login session may outlive a Nix removal.  Do not inherit its
+;; deleted shell path when Emacs starts processes.
+(setenv "SHELL" "/opt/homebrew/bin/fish")
+(setq shell-file-name "/opt/homebrew/bin/fish"
+      explicit-shell-file-name "/opt/homebrew/bin/fish")
 
-  (defun mm/envrc-refresh-workspace-h (&rest _)
-    "Apply the nearest direnv environment to every visible workspace buffer."
-    (when envrc-global-mode
-      (dolist (buffer
-               (delete-dups
-                (cons (current-buffer)
-                      (when (fboundp '+workspace-buffer-list)
-                        (+workspace-buffer-list)))))
-        (when (buffer-live-p buffer)
-          (with-current-buffer buffer
-            (when (and default-directory
-                       (not (file-remote-p default-directory)))
-              (unless envrc-mode
-                (envrc-mode 1))
-              (envrc--update)))))))
+(defun mm/prune-deleted-nix-workspace-buffers ()
+  "Discard unmodified workspace buffers for Nix files removed during migration."
+  (dolist (buffer (buffer-list))
+    (when-let ((file (buffer-file-name buffer)))
+      (when (and (string-match-p
+                  (rx (or "/.config/home-manager/"
+                          "/.config/nix/"
+                          "/flake.nix" "/flake.lock" "/shell.nix" "/default.nix"))
+                  file)
+                 (not (file-exists-p file))
+                 (not (buffer-modified-p buffer)))
+        (kill-buffer buffer)))))
 
-  (defun mm/envrc-refresh-workspace-deferred-h (&rest _)
-    "Refresh direnv after workspace/session state has finished switching."
-    (run-at-time 0 nil #'mm/envrc-refresh-workspace-h))
-
-  (add-hook 'projectile-after-switch-project-hook
-            #'mm/envrc-refresh-workspace-deferred-h 100)
-  (with-eval-after-load 'persp-mode
-    (add-hook 'persp-activated-functions
-              #'mm/envrc-refresh-workspace-deferred-h 100)))
+(add-hook 'emacs-startup-hook
+          (lambda () (run-at-time 1 nil #'mm/prune-deleted-nix-workspace-buffers)))
 
 (after! project
   (defun mm/project-try-cargo (dir)
@@ -1042,22 +1348,31 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
   (cl-defmethod project-root ((project (head mm/cargo)))
     (cdr project))
 
+  ;; Projectile's project type is a cons cell in this Doom/Emacs pairing.
+  ;; Teach project.el (and Marginalia) how to obtain its root.
+  (cl-defmethod project-root ((project (head projectile)))
+    (cdr project))
+
   (add-hook 'project-find-functions #'mm/project-try-cargo))
 
 
 (defun mm/project-find-file ()
-  "Find a file in this project, or across known projects when outside one."
+  "Find a file case-insensitively in this or any known project."
   (interactive)
   (when (fboundp 'projectile-invalidate-cache)
     (projectile-invalidate-cache nil))
-  (mm/with-evil-minibuffer-nav
-   (if (projectile-project-p)
-       #'projectile-find-file
-     (progn
-       (unless (projectile-known-projects)
-         (projectile-discover-projects-in-search-path)
-         (projectile-save-known-projects))
-       #'projectile-find-file-in-known-projects))))
+  (let ((completion-ignore-case t)
+        (read-file-name-completion-ignore-case t)
+        ;; Disable smart-case here so even uppercase input stays insensitive.
+        (orderless-smart-case nil))
+    (mm/with-evil-minibuffer-nav
+     (if (projectile-project-p)
+         #'projectile-find-file
+       (progn
+         (unless (projectile-known-projects)
+           (projectile-discover-projects-in-search-path)
+           (projectile-save-known-projects))
+         #'projectile-find-file-in-known-projects)))))
 
 
 (after! projectile
@@ -1066,6 +1381,8 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
                                          ("~/dev" . 3)
                                          ("~/dev" . 4))
         projectile-auto-discover t)
+  (add-to-list 'projectile-globally-ignored-directories "zig-pkg")
+  (add-to-list 'projectile-globally-ignored-directories ".zig-cache")
   (run-with-idle-timer
    2 nil
    (lambda ()
@@ -1106,15 +1423,94 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
                 (message "Rust Eglot failed: %s" (error-message-string err))))))))
      (current-buffer))))
 
+(defun mm/zig-tool-executable (tool)
+  "Return a reliable executable path for Zig TOOL.
+
+GUI Emacs does not always inherit mise's shell PATH.  Prefer the active PATH,
+then fall back to the installed mise ZLS and Homebrew Zig locations."
+  (or (executable-find tool)
+      (seq-find #'file-executable-p
+                (pcase tool
+                  ("zls" (file-expand-wildcards
+                          "~/.local/share/mise/installs/zls/*/zls"))
+                  ("zig" '("/opt/homebrew/bin/zig"))))))
+
+(defconst mm/zig-zls-executable (mm/zig-tool-executable "zls"))
+(defconst mm/zig-executable (mm/zig-tool-executable "zig"))
+
+(defun mm/zig-eglot-start-h ()
+  "Start one ZLS instance for the current Zig project."
+  (when (and buffer-file-name mm/zig-zls-executable)
+    (require 'eglot)
+    (unless (bound-and-true-p eglot--managed-mode)
+      (eglot-ensure))))
+
+(defun mm/zig-company-complete-after-trigger-h ()
+  "Request ZLS completion after Zig's high-value trigger characters."
+  (when (and (derived-mode-p 'zig-mode 'zig-ts-mode)
+             (bound-and-true-p eglot--managed-mode)
+             (memq last-command-event '(?. ?@ ?\")))
+    (company-manual-begin)))
+
+(defun mm/zig-build (step)
+  "Run `zig build STEP' from the current project root."
+  (interactive "sZig build step: ")
+  (let* ((root (or (when-let ((project (project-current nil)))
+                     (project-root project))
+                   default-directory))
+         (command (format "cd %s && %s build %s"
+                          (shell-quote-argument root)
+                          (shell-quote-argument (or mm/zig-executable "zig"))
+                          (shell-quote-argument step))))
+    (compilation-start command 'compilation-mode
+                       (lambda (_) (format "*zig build %s*" step)))))
+
+(defun mm/zig-build-check ()
+  "Run the fast, non-linking Zig `check' build step."
+  (interactive)
+  (mm/zig-build "check"))
+
+(defun mm/zig-build-test ()
+  "Run the Zig `test' build step on demand."
+  (interactive)
+  (mm/zig-build "test"))
+
+(add-hook! '(zig-mode-hook zig-ts-mode-hook)
+  #'mm/zig-eglot-start-h
+  (defun mm/zig-editor-speed-setup-h ()
+    ;; Keep normal typing quiet; punctuation above requests completions instantly.
+    (setq-local company-minimum-prefix-length 1
+                ;; Match Neovim Blink's immediate keyword trigger.
+                company-idle-delay 0
+                company-backends '((company-capf :with company-dabbrev-code)))
+    (add-hook 'post-self-insert-hook
+              #'mm/zig-company-complete-after-trigger-h nil t)))
+
 (after! eglot
   (add-to-list 'eglot-server-programs
                '((rust-mode rustic-mode rust-ts-mode) . ("rust-analyzer")))
+  (add-to-list 'eglot-server-programs
+               '((conf-toml-mode toml-ts-mode) . ("taplo" "lsp" "stdio")))
+  ;; Start Taplo as soon as a TOML buffer is visited.
+  (add-hook 'conf-toml-mode-hook #'eglot-ensure)
+  (add-hook 'toml-ts-mode-hook #'eglot-ensure)
+  ;; Register both Zig major modes explicitly.  The absolute fallback makes
+  ;; ZLS work from a GUI launch even when mise's shims are not in its PATH.
+  (when mm/zig-zls-executable
+    (dolist (mode '(zig-mode zig-ts-mode))
+      (setf (alist-get mode eglot-server-programs)
+            `(,mm/zig-zls-executable
+              :initializationOptions (:zig_exe_path ,mm/zig-executable)))))
   (setq eglot-autoshutdown t)
   ;; Apply the global hint preference whenever Eglot starts managing a buffer.
-  (add-hook 'eglot-managed-mode-hook #'mm/apply-global-lsp-inlay-hints-h)
+   (add-hook 'eglot-managed-mode-hook #'mm/apply-global-lsp-inlay-hints-h)
   (setq-default eglot-workspace-configuration
                 '(:gopls (:completeUnimported t)
-                  :zls (:build_on_save_args ["check" "test" "-fincremental"])
+                  ;; Let ZLS discover the project's `check' step.  It compiles
+                  ;; without linking, and incremental compilation makes save
+                  ;; diagnostics substantially cheaper than also running tests.
+                  :zls (:build_on_save_args ["-fincremental"]
+                        :semantic_tokens "partial")
                   :rust-analyzer
                   ( ;; Default features only. `:allFeatures t' forces
                     ;; rust-analyzer to analyze every feature of every crate,
@@ -1149,12 +1545,24 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
                (and (file-regular-p path) path)))
            mm/mise-config-names))
 
+(defun mm/current-session-directory ()
+  "Return the active Doom workspace's project root, when available.
+
+Workspace restoration can leave buffers from another project visible briefly.
+Mise tasks must follow the active workspace rather than whichever buffer was
+selected during that transition."
+  (when-let* ((workspace (and (fboundp '+workspace-current)
+                              (+workspace-current))))
+    (or (persp-parameter '+workspace-project workspace)
+        (persp-parameter 'last-project-root workspace))))
+
 (defun mm/mise-root (&optional start)
   "Return the nearest directory containing a Mise configuration."
   (let* ((start (expand-file-name (or start (mm/current-buffer-directory))))
          (candidates (cl-delete-duplicates
                       (delq nil
-                            (list start
+                            (list (mm/current-session-directory)
+                                  start
                                   default-directory
                                   (when (fboundp 'doom-project-root)
                                     (ignore-errors (doom-project-root)))
@@ -1213,7 +1621,7 @@ modeline redisplay. VC's gutter remains the lightweight live diff display."
         (user-error "No Mise tasks found in %s" directory))))
 
 (defun mm/mise-select ()
-  "Pick a Mise task with completion and run it in a popup terminal."
+  "Pick a Mise task with completion and run it in a terminal."
   (interactive)
   (let* ((directory (mm/mise-root))
          (task (completing-read "Mise task: "
@@ -1230,6 +1638,10 @@ close that popup after the recipe exits."
     (user-error "The `mise' executable is not available on Emacs's PATH"))
   (let ((command (format "mise run %s" (shell-quote-argument task))))
     (cond
+     ;; `run' is interactive: use a dedicated full-window terminal.
+     ;; All other tasks retain their existing popup flow.
+     ((string= task "run")
+      (mm/run-command-in-full-terminal command directory))
      ((and popup close-on-exit)
       (mm/run-program-in-popup-terminal command directory))
      (popup
@@ -1251,8 +1663,27 @@ close that popup after the recipe exits."
 
 (after! hl-todo
   (setq hl-todo-keyword-faces
-        '(("TODO" mm/comment-todo-keyword bold)
-          ("NOTE" mm/comment-note-keyword bold))
+        '(("FIX" mm/comment-error-keyword bold)
+          ("FIXME" mm/comment-error-keyword bold)
+          ("BUG" mm/comment-error-keyword bold)
+          ("FIXIT" mm/comment-error-keyword bold)
+          ("ISSUE" mm/comment-error-keyword bold)
+          ("TODO" mm/comment-todo-keyword bold)
+          ("UNIMPLEMENTED" mm/comment-todo-keyword bold)
+          ("HACK" mm/comment-warning-keyword bold)
+          ("WARN" mm/comment-warning-keyword bold)
+          ("WARNING" mm/comment-warning-keyword bold)
+          ("XXX" mm/comment-warning-keyword bold)
+          ("PERF" mm/comment-perf-keyword bold)
+          ("OPTIM" mm/comment-perf-keyword bold)
+          ("PERFORMANCE" mm/comment-perf-keyword bold)
+          ("OPTIMIZE" mm/comment-perf-keyword bold)
+          ("NOTE" mm/comment-note-keyword bold)
+          ("INFO" mm/comment-info-keyword bold)
+          ("TEST" mm/comment-test-keyword bold)
+          ("TESTING" mm/comment-test-keyword bold)
+          ("PASSED" mm/comment-test-keyword bold)
+          ("FAILED" mm/comment-test-keyword bold))
         hl-todo-exclude-modes (delq 'org-mode hl-todo-exclude-modes))
   (when global-hl-todo-mode
     (global-hl-todo-mode -1)
@@ -1380,9 +1811,13 @@ as the location is shown."
   (org-clock-persistence-insinuate))
 
 (after! evil-org
-  (map! :map evil-org-mode-map
-        :n "gh" #'evil-first-non-blank
-        :n "gl" #'evil-end-of-line))
+  ;; `evil-org-mode' is a minor mode, so its state maps outrank both Evil's
+  ;; defaults and `org-mode-map'.  Use the starred form to replace its
+  ;; `org-up-element'/`org-down-element' bindings rather than being overwritten
+  ;; when Evil Org initializes its auxiliary maps.
+  (evil-define-key* '(normal motion) evil-org-mode-map
+    (kbd "g h") #'evil-first-non-blank
+    (kbd "g l") #'evil-end-of-line))
 
 (use-package! org-super-agenda
   :after org-agenda
@@ -1679,9 +2114,11 @@ as the location is shown."
           (previous-error)
         (error nil)))))
 
-(map! :m
-      :desc "Next diagnostic" "]d" #'mm/next-error-cyclic
-      :desc "Previous diagnostic" "[d" #'mm/previous-error-cyclic)
+(after! evil
+  ;; Keep these prefixes out of `global-map'; otherwise `[' and `]' stop being
+  ;; self-inserting characters in Evil's insert state.
+  (define-key evil-normal-state-map (kbd "]d") #'mm/next-error-cyclic)
+  (define-key evil-normal-state-map (kbd "[d") #'mm/previous-error-cyclic))
 
 (defun mm/workspace-new-from-project ()
   "Refresh projects, then create a workspace for the selected project."
@@ -1937,6 +2374,32 @@ as the location is shown."
   (interactive)
   (mm/with-evil-minibuffer-nav #'+default/search-emacsd))
 
+(defconst mm/zig-search-excluded-globs
+  '("--glob=!**/zig-pkg/**"
+    "--glob=!**/.zig-cache/**")
+  "Ripgrep globs excluded from every project search.")
+
+(defun mm/vertico-add-zig-search-exclusions-a (arguments)
+  "Add Zig dependency/cache exclusions to `+vertico-file-search' ARGUMENTS."
+  (let ((extra-args (plist-get arguments :args)))
+    (dolist (glob mm/zig-search-excluded-globs)
+      (cl-pushnew glob extra-args :test #'equal))
+    (plist-put arguments :args extra-args)))
+
+(after! consult
+  ;; Apply these at the ripgrep backend so every Consult-based search ignores
+  ;; Zig dependency/cache trees, including project, symbol, TODO, and cwd search.
+  (dolist (glob mm/zig-search-excluded-globs)
+    (unless (string-match-p (regexp-quote glob) consult-ripgrep-args)
+      (setq consult-ripgrep-args
+            (concat consult-ripgrep-args " " glob))))
+  ;; Doom's search wrapper dynamically replaces `consult-ripgrep-args', so
+  ;; inject the same globs through its supported :args keyword as well.
+  (advice-remove #'+vertico-file-search
+                 #'mm/vertico-add-zig-search-exclusions-a)
+  (advice-add #'+vertico-file-search :filter-args
+              #'mm/vertico-add-zig-search-exclusions-a))
+
 (defun mm/search-project ()
   "Search project, including hidden files, with Evil minibuffer navigation."
   (interactive)
@@ -1949,13 +2412,13 @@ as the location is shown."
   "Consult regexp matching Neovim todo-comments keywords and aliases.")
 
 (defun mm/search-project-todos ()
-  "Search the project for Neovim-style TODO comment markers, ignoring case."
+  "Search the project for case-sensitive Neovim-style TODO markers."
   (interactive)
   (mm/with-recorded-search #'mm/search-project-todos
     (let ((project-root (or (doom-project-root)
                             (user-error "Not in a project")))
           (consult-ripgrep-args
-           (concat consult-ripgrep-args " --ignore-case")))
+           (concat consult-ripgrep-args " --case-sensitive")))
       (minibuffer-with-setup-hook #'mm/minibuffer-evil-nav-setup-h
         (consult-ripgrep project-root mm/todo-comments-ripgrep-pattern)))))
 
@@ -2004,17 +2467,192 @@ as the location is shown."
 
 (defface mm/comment-todo-keyword
   '((t (:foreground "#000000"
-        :background "#61afef"
+        :background "#5aa9ff"
         :weight bold
-        :box (:line-width (1 . -1) :color "#61afef"))))
+        :box (:line-width (1 . -1) :color "#5aa9ff"))))
   "Face for TODO keywords in code comments.")
 
 (defface mm/comment-note-keyword
   '((t (:foreground "#000000"
-        :background "#c678dd"
+        :background "#d787ff"
         :weight bold
-        :box (:line-width (1 . -1) :color "#c678dd"))))
+        :box (:line-width (1 . -1) :color "#d787ff"))))
   "Face for NOTE keywords in code comments, matching Neovim's hint purple.")
+
+(defface mm/comment-error-keyword
+  '((t (:foreground "#000000" :background "#ff5f6d" :weight bold
+        :box (:line-width (1 . -1) :color "#ff5f6d"))))
+  "Face for fix and error markers in code comments.")
+
+(defface mm/comment-warning-keyword
+  '((t (:foreground "#000000" :background "#ffd866" :weight bold
+        :box (:line-width (1 . -1) :color "#ffd866"))))
+  "Face for warning markers in code comments.")
+
+(defface mm/comment-perf-keyword
+  '((t (:foreground "#000000" :background "#ff9f43" :weight bold
+        :box (:line-width (1 . -1) :color "#ff9f43"))))
+  "Face for performance markers in code comments.")
+
+(defface mm/comment-info-keyword
+  '((t (:foreground "#000000" :background "#56d4dd" :weight bold
+        :box (:line-width (1 . -1) :color "#56d4dd"))))
+  "Face for informational markers in code comments.")
+
+(defface mm/comment-test-keyword
+  '((t (:foreground "#000000" :background "#98e06c" :weight bold
+        :box (:line-width (1 . -1) :color "#98e06c"))))
+  "Face for test markers in code comments.")
+
+(defface mm/comment-error-body '((t (:foreground "#ff5f6d")))
+  "Face for text belonging to an error comment marker.")
+(defface mm/comment-todo-body '((t (:foreground "#5aa9ff")))
+  "Face for text belonging to a TODO comment marker.")
+(defface mm/comment-warning-body '((t (:foreground "#ffd866")))
+  "Face for text belonging to a warning comment marker.")
+(defface mm/comment-perf-body '((t (:foreground "#ff9f43")))
+  "Face for text belonging to a performance comment marker.")
+(defface mm/comment-note-body '((t (:foreground "#d787ff")))
+  "Face for text belonging to a NOTE comment marker.")
+(defface mm/comment-info-body '((t (:foreground "#56d4dd")))
+  "Face for text belonging to an INFO comment marker.")
+(defface mm/comment-test-body '((t (:foreground "#98e06c")))
+  "Face for text belonging to a test comment marker.")
+
+(defconst mm/todo-comment-keyword-regexp
+  "\\_<\\(FIX\\|FIXME\\|BUG\\|FIXIT\\|ISSUE\\|TODO\\|UNIMPLEMENTED\\|HACK\\|WARN\\|WARNING\\|XXX\\|PERF\\|OPTIM\\|PERFORMANCE\\|OPTIMIZE\\|NOTE\\|INFO\\|TEST\\|TESTING\\|PASSED\\|FAILED\\)\\_>[:!]"
+  "Case-sensitive regexp for supported TODO-style comment markers.")
+
+(defconst mm/todo-comment-body-faces
+  '(("FIX" . mm/comment-error-body) ("FIXME" . mm/comment-error-body)
+    ("BUG" . mm/comment-error-body) ("FIXIT" . mm/comment-error-body)
+    ("ISSUE" . mm/comment-error-body)
+    ("TODO" . mm/comment-todo-body) ("UNIMPLEMENTED" . mm/comment-todo-body)
+    ("HACK" . mm/comment-warning-body) ("WARN" . mm/comment-warning-body)
+    ("WARNING" . mm/comment-warning-body) ("XXX" . mm/comment-warning-body)
+    ("PERF" . mm/comment-perf-body) ("OPTIM" . mm/comment-perf-body)
+    ("PERFORMANCE" . mm/comment-perf-body) ("OPTIMIZE" . mm/comment-perf-body)
+    ("NOTE" . mm/comment-note-body) ("INFO" . mm/comment-info-body)
+    ("TEST" . mm/comment-test-body) ("TESTING" . mm/comment-test-body)
+    ("PASSED" . mm/comment-test-body) ("FAILED" . mm/comment-test-body))
+  "Foreground-only face used for each marker's comment body.")
+
+(defconst mm/todo-comment-keyword-faces
+  '(("FIX" . mm/comment-error-keyword) ("FIXME" . mm/comment-error-keyword)
+    ("BUG" . mm/comment-error-keyword) ("FIXIT" . mm/comment-error-keyword)
+    ("ISSUE" . mm/comment-error-keyword)
+    ("TODO" . mm/comment-todo-keyword) ("UNIMPLEMENTED" . mm/comment-todo-keyword)
+    ("HACK" . mm/comment-warning-keyword) ("WARN" . mm/comment-warning-keyword)
+    ("WARNING" . mm/comment-warning-keyword) ("XXX" . mm/comment-warning-keyword)
+    ("PERF" . mm/comment-perf-keyword) ("OPTIM" . mm/comment-perf-keyword)
+    ("PERFORMANCE" . mm/comment-perf-keyword) ("OPTIMIZE" . mm/comment-perf-keyword)
+    ("NOTE" . mm/comment-note-keyword) ("INFO" . mm/comment-info-keyword)
+    ("TEST" . mm/comment-test-keyword) ("TESTING" . mm/comment-test-keyword)
+    ("PASSED" . mm/comment-test-keyword) ("FAILED" . mm/comment-test-keyword))
+  "High-priority badge face used for each comment marker.")
+
+(defconst mm/todo-line-comment-prefix-regexp "^[ \t]*//+!?[ \t]*"
+  "Regexp matching the prefix of a slash-style line comment.")
+
+(defvar-local mm/todo-comment-body-face nil
+  "Face selected by `mm/font-lock-todo-comment-body-matcher'.")
+
+(defun mm/todo-comment-line-info ()
+  "Return (CONTENT-START KEYWORD-END KEYWORD) for this // line.
+
+KEYWORD-END and KEYWORD are nil when the line continues an earlier marker."
+  (save-excursion
+    (beginning-of-line)
+    (when (looking-at mm/todo-line-comment-prefix-regexp)
+      (let ((content-start (match-end 0))
+            (line-end (line-end-position)))
+        (goto-char content-start)
+        (if (re-search-forward mm/todo-comment-keyword-regexp line-end t)
+            (list content-start (match-end 0)
+                  (match-string-no-properties 1))
+          (list content-start nil nil))))))
+
+(defun mm/todo-comment-inherited-keyword ()
+  "Return the nearest marker above point in this consecutive // block."
+  (save-excursion
+    (catch 'keyword
+      (while (zerop (forward-line -1))
+        (if-let ((info (mm/todo-comment-line-info)))
+            (when (nth 2 info)
+              (throw 'keyword (nth 2 info)))
+          (throw 'keyword nil))))))
+
+(defun mm/font-lock-todo-comment-body-matcher (limit)
+  "Find the next colored TODO comment body before LIMIT."
+  (catch 'match
+    (while (re-search-forward mm/todo-line-comment-prefix-regexp limit t)
+      (let* ((info (mm/todo-comment-line-info))
+             (content-start (nth 0 info))
+             (keyword-end (nth 1 info))
+             (keyword (or (nth 2 info)
+                          (mm/todo-comment-inherited-keyword)))
+             (body-start (or keyword-end content-start))
+             (body-end (line-end-position)))
+        (when keyword
+          (save-excursion
+            (goto-char body-start)
+            (skip-chars-forward " \t" body-end)
+            (setq body-start (point)))
+          (when (< body-start body-end)
+            (setq mm/todo-comment-body-face
+                  (alist-get keyword mm/todo-comment-body-faces nil nil #'string=))
+            (set-match-data (list body-start body-end))
+            (throw 'match t)))))))
+
+(defconst mm/todo-comment-body-font-lock-keywords
+  '((mm/font-lock-todo-comment-body-matcher
+     (0 mm/todo-comment-body-face prepend)))
+  "Font-lock rule for marker descriptions and // continuation lines.")
+
+(defun mm/refresh-todo-comment-badges (&optional beg end)
+  "Refresh high-priority TODO badge overlays between BEG and END."
+  (let ((beg (save-excursion
+               (goto-char (or beg (point-min)))
+               (line-beginning-position)))
+        (end (save-excursion
+               (goto-char (or end (point-max)))
+               (line-end-position))))
+    (remove-overlays beg end 'mm/todo-comment-badge t)
+    (save-excursion
+      (goto-char beg)
+      (while (re-search-forward mm/todo-line-comment-prefix-regexp end t)
+        (let ((line-end (line-end-position)))
+          (while (re-search-forward mm/todo-comment-keyword-regexp line-end t)
+            (let* ((keyword (match-string-no-properties 1))
+                   (face (alist-get keyword mm/todo-comment-keyword-faces
+                                    nil nil #'string=))
+                   (overlay (make-overlay (match-beginning 1) (match-end 0)
+                                          nil nil nil)))
+              ;; `hl-line' is an overlay too.  A positive priority keeps this
+              ;; badge fill above the current-line background.
+              (overlay-put overlay 'face face)
+              (overlay-put overlay 'priority 100)
+              (overlay-put overlay 'evaporate t)
+              (overlay-put overlay 'mm/todo-comment-badge t))))))))
+
+(defun mm/refresh-todo-comment-badges-after-change-h (beg end _old-length)
+  "Refresh TODO badge overlays on lines changed between BEG and END."
+  (mm/refresh-todo-comment-badges beg end))
+
+(defun mm/setup-todo-comment-body-font-lock-h ()
+  "Color TODO descriptions and their consecutive // continuation lines."
+  (font-lock-add-keywords nil mm/todo-comment-body-font-lock-keywords 'append)
+  (add-hook 'after-change-functions
+            #'mm/refresh-todo-comment-badges-after-change-h nil t)
+  (mm/refresh-todo-comment-badges))
+
+(add-hook 'prog-mode-hook #'mm/setup-todo-comment-body-font-lock-h)
+
+(dolist (buffer (buffer-list))
+  (with-current-buffer buffer
+    (when (derived-mode-p 'prog-mode)
+      (mm/setup-todo-comment-body-font-lock-h)
+      (font-lock-flush))))
 
 (after! org
   (font-lock-add-keywords
@@ -2122,20 +2760,24 @@ program; when it dies, `mm/close-popup-terminal-on-exit' removes the window."
   "Opening and closing pairs expanded by `mm/smart-newline-between-pairs'.")
 
 (defun mm/smart-newline-between-pairs ()
-  "Expand an empty pair onto three lines, or insert a normal newline.
+  "Continue comments, expand an empty pair, or insert a normal newline.
 
-When point is directly between {}, (), or [], put the closing delimiter on
-its own line and leave point correctly indented on the blank middle line."
+Inside a comment, use the major mode's comment continuation command.  When
+point is directly between {}, (), or [], put the closing delimiter on its own
+line and leave point correctly indented on the blank middle line."
   (interactive)
-  (if (eq (alist-get (char-before) mm/matching-pairs) (char-after))
-      (progn
-        ;; Move the closer down first so indentation sees a genuinely empty
-        ;; interior line rather than a line beginning with the closer.
-        (newline 2)
-        (indent-according-to-mode)
-        (forward-line -1)
-        (indent-according-to-mode))
-    (newline-and-indent)))
+  (cond
+   ((nth 4 (syntax-ppss))
+    (funcall (or comment-line-break-function #'comment-indent-new-line)))
+   ((eq (alist-get (char-before) mm/matching-pairs) (char-after))
+    ;; Move the closer down first so indentation sees a genuinely empty
+    ;; interior line rather than a line beginning with the closer.
+    (newline 2)
+    (indent-according-to-mode)
+    (forward-line -1)
+    (indent-according-to-mode))
+   (t
+    (newline-and-indent))))
 
 (defun mm/setup-smart-pair-newline-h ()
   "Use smart pair newlines locally in programming buffers."
@@ -2201,8 +2843,22 @@ its own line and leave point correctly indented on the blank middle line."
 (map! :n "gh" #'evil-first-non-blank)
 (map! :n "gl" #'evil-end-of-line)
 (map! :n "gd" #'mm/goto-definition-in-split)
-(map! :n "gte" #'mm/next-error-cyclic)
-(map! :n "gtE" #'mm/previous-error-cyclic)
+
+(defvar mm/evil-error-navigation-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "e") #'mm/next-error-cyclic)
+    (define-key map (kbd "E") #'mm/previous-error-cyclic)
+    map)
+  "Evil `g t' prefix map for diagnostic navigation.")
+
+(defun mm/setup-evil-error-navigation-h ()
+  "Install the `g t' diagnostic prefix after Doom's tab bindings."
+  (define-key evil-normal-state-map (kbd "g t")
+              mm/evil-error-navigation-map))
+
+;; Evil and the tabs module both bind `g t' directly.  Wait until all Doom
+;; modules finish configuring so `g t e'/`g t E' remain the final bindings.
+(add-hook 'doom-after-init-hook #'mm/setup-evil-error-navigation-h 100)
 
 ;; Match Vim/Neovim's number increment and decrement commands.
 (map! :nv "C-a" #'evil-numbers/inc-at-pt
@@ -2218,6 +2874,7 @@ its own line and leave point correctly indented on the blank middle line."
 (use-package! agent-shell
   :commands (agent-shell-openai-start-codex
              agent-shell-cursor-start-agent
+             agent-shell-opencode-start-agent
              agent-shell-toggle)
   :init
   (setq agent-shell-display-action
@@ -2227,11 +2884,19 @@ its own line and leave point correctly indented on the blank middle line."
           (window-width . 0.38)
           (window-parameters . ((no-delete-other-windows . t)))))
   :config
+  (require 'agent-shell-opencode)
   (setq agent-shell-openai-authentication
         (agent-shell-openai-make-authentication :login t)
         agent-shell-openai-default-session-mode-id "agent-full-access"
         agent-shell-session-strategy 'prompt
         agent-shell-session-restore-verbosity 'full
+        ;; codex-acp is installed globally by npm, but npm 11 did not create
+        ;; its executable shim in Homebrew's bin directory on this machine.
+        ;; Invoke the installed ACP adapter directly so GUI Emacs does not
+        ;; depend on its shell PATH.
+        agent-shell-openai-codex-acp-command
+        (list (or (executable-find "node") "/opt/homebrew/bin/node")
+              "/opt/homebrew/lib/node_modules/@agentclientprotocol/codex-acp/dist/index.js")
         ;; Official binary is `cursor-agent` (Home Manager installs it that way).
         agent-shell-cursor-acp-command
         (list (or (executable-find "cursor-agent")
@@ -2239,7 +2904,13 @@ its own line and leave point correctly indented on the blank middle line."
                   "cursor-agent")
               "acp")
         agent-shell-cursor-authentication
-        (agent-shell-cursor-make-authentication :none t)))
+        (agent-shell-cursor-make-authentication :none t)
+        ;; Reuse the OpenCode CLI's existing authenticated providers.  The
+        ;; Agent Shell ACP adapter supplies its richer model-picker UI.
+        agent-shell-opencode-acp-command
+        (list (or (executable-find "opencode") "/opt/homebrew/bin/opencode") "acp")
+        agent-shell-opencode-authentication
+        (agent-shell-opencode-make-authentication :none t)))
 
 (defun mm/agent-shell-use-full-window-height-h ()
   "Do not reserve editor scroll margins in Agent Shell buffers."
@@ -2265,6 +2936,11 @@ its own line and leave point correctly indented on the blank middle line."
   "Show or hide Cursor Agent beside the editor, starting it when necessary."
   (interactive)
   (mm/agent-shell-toggle-or-start #'agent-shell-cursor-start-agent))
+
+(defun mm/opencode-toggle ()
+  "Show or hide OpenCode in Agent Shell, starting it when necessary."
+  (interactive)
+  (mm/agent-shell-toggle-or-start #'agent-shell-opencode-start-agent))
 
 (defun mm/evil-close-kills-agent-shell-a (original &rest args)
   "Kill Agent Shell when Evil closes its window; otherwise call ORIGINAL."
@@ -2306,7 +2982,16 @@ its own line and leave point correctly indented on the blank middle line."
            data)
       (match-string 1 data)))
   (advice-add #'opencode-sse--extract-event-type :override
-              #'mm/opencode-sse-extract-event-type))
+              #'mm/opencode-sse-extract-event-type)
+  ;; The client reserves `C-c C-c' for submit and makes RET insert a newline.
+  ;; In a chat pane that is easy to mistake for a stalled request, so use the
+  ;; conventional chat binding and retain an explicit multiline alternative.
+  (after! evil
+    ;; Evil's insert-state map otherwise captures RET as `evil-ret'.
+    (evil-define-key* 'insert opencode-session-mode-map (kbd "RET")
+      #'opencode-session-send-input)
+    (evil-define-key* 'insert opencode-session-mode-map (kbd "S-RET")
+      #'newline)))
 
 ;; Move between Emacs windows with Option/Alt + h/j/k/l.
 (map! "M-h" #'windmove-left

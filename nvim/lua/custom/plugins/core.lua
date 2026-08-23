@@ -19,8 +19,77 @@ return {
     'navarasu/onedark.nvim',
     priority = 1000,
     config = function()
-      require('onedark').setup { style = 'dark', code_style = { comments = 'none' }, highlights = { LspInlayHint = { fg = '#5c6370' } } }
+      require('onedark').setup {
+        style = 'dark',
+        code_style = { comments = 'none' },
+        colors = {
+          black = '#000000',
+          bg0 = '#000000',
+          bg1 = '#0d1117',
+          bg2 = '#161b22',
+          bg3 = '#21262d',
+          bg_d = '#050505',
+          bg_blue = '#5aa9ff',
+          bg_yellow = '#ffd866',
+          fg = '#d8dee9',
+          grey = '#6b7280',
+          light_grey = '#9ca3af',
+          red = '#ff5f6d',
+          orange = '#ff9f43',
+          yellow = '#ffd866',
+          green = '#98e06c',
+          cyan = '#56d4dd',
+          blue = '#5aa9ff',
+          purple = '#d787ff',
+        },
+        highlights = { LspInlayHint = { fg = '#6b7280' } },
+      }
       vim.cmd.colorscheme 'onedark'
+
+      local function apply_popup_palette()
+        local set = vim.api.nvim_set_hl
+
+        -- LSP hover, signature, definition preview, and diagnostic floats.
+        set(0, 'NormalFloat', { fg = '#d8dee9', bg = '#000000' })
+        set(0, 'FloatBorder', { fg = '#5aa9ff', bg = '#000000' })
+
+        -- Which-Key
+        set(0, 'WhichKeyNormal', { fg = '#d8dee9', bg = '#000000' })
+        set(0, 'WhichKeyBorder', { fg = '#5aa9ff', bg = '#000000' })
+        set(0, 'WhichKeyTitle', { fg = '#000000', bg = '#5aa9ff', bold = true })
+        set(0, 'WhichKey', { fg = '#ffd866', bold = true })
+        set(0, 'WhichKeyGroup', { fg = '#d787ff', bold = true })
+        set(0, 'WhichKeyDesc', { fg = '#5aa9ff' })
+        set(0, 'WhichKeySeparator', { fg = '#6b7280' })
+        set(0, 'WhichKeyValue', { fg = '#98e06c' })
+
+        -- Native and Blink completion menus, including command-line results.
+        set(0, 'Pmenu', { fg = '#d8dee9', bg = '#000000' })
+        set(0, 'PmenuSel', { fg = '#000000', bg = '#5aa9ff', bold = true })
+        set(0, 'PmenuSbar', { bg = '#000000' })
+        set(0, 'PmenuThumb', { bg = '#6b7280' })
+        set(0, 'WildMenu', { fg = '#000000', bg = '#5aa9ff', bold = true })
+        set(0, 'BlinkCmpMenu', { fg = '#d8dee9', bg = '#000000' })
+        set(0, 'BlinkCmpMenuBorder', { fg = '#5aa9ff', bg = '#000000' })
+        set(0, 'BlinkCmpMenuSelection', { fg = '#000000', bg = '#5aa9ff', bold = true })
+        set(0, 'BlinkCmpLabel', { fg = '#d8dee9', bg = '#000000' })
+        set(0, 'BlinkCmpLabelMatch', { fg = '#ffd866', bg = '#000000', bold = true })
+        set(0, 'BlinkCmpLabelDeprecated', { fg = '#6b7280', bg = '#000000', strikethrough = true })
+        set(0, 'BlinkCmpLabelDetail', { fg = '#9ca3af', bg = '#000000' })
+        set(0, 'BlinkCmpLabelDescription', { fg = '#6b7280', bg = '#000000' })
+        set(0, 'BlinkCmpDoc', { fg = '#d8dee9', bg = '#000000' })
+        set(0, 'BlinkCmpDocBorder', { fg = '#5aa9ff', bg = '#000000' })
+        set(0, 'BlinkCmpDocSeparator', { fg = '#161b22', bg = '#000000' })
+        set(0, 'BlinkCmpSignatureHelp', { fg = '#d8dee9', bg = '#000000' })
+        set(0, 'BlinkCmpSignatureHelpBorder', { fg = '#5aa9ff', bg = '#000000' })
+        set(0, 'BlinkCmpGhostText', { fg = '#6b7280', italic = true })
+      end
+
+      apply_popup_palette()
+      vim.api.nvim_create_autocmd('ColorScheme', {
+        pattern = 'onedark',
+        callback = apply_popup_palette,
+      })
     end,
   },
   {
