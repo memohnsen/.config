@@ -1,10 +1,10 @@
 local in_zellij = vim.env.ZELLIJ ~= nil
 
 if not in_zellij then
-  vim.keymap.set('n', '<A-h>', '<C-w>h', { desc = 'Navigate left', silent = true })
-  vim.keymap.set('n', '<A-j>', '<C-w>j', { desc = 'Navigate down', silent = true })
-  vim.keymap.set('n', '<A-k>', '<C-w>k', { desc = 'Navigate up', silent = true })
-  vim.keymap.set('n', '<A-l>', '<C-w>l', { desc = 'Navigate right', silent = true })
+  vim.keymap.set('n', '<C-h>', '<C-w>h', { desc = 'Navigate left', silent = true })
+  vim.keymap.set('n', '<C-j>', '<C-w>j', { desc = 'Navigate down', silent = true })
+  vim.keymap.set('n', '<C-k>', '<C-w>k', { desc = 'Navigate up', silent = true })
+  vim.keymap.set('n', '<C-l>', '<C-w>l', { desc = 'Navigate right', silent = true })
 end
 
 local wincmd_for = { left = 'h', down = 'j', up = 'k', right = 'l' }
@@ -114,8 +114,7 @@ local function navigate(direction)
     cached_session = nil
     local message = vim.trim(result.stderr ~= '' and result.stderr or (result.stdout or ''))
     vim.notify(
-      ('zellij-nav: zellij action %s %s failed (exit %d)'):format(action, direction, result.code)
-        .. (message ~= '' and (': ' .. message) or ''),
+      ('zellij-nav: zellij action %s %s failed (exit %d)'):format(action, direction, result.code) .. (message ~= '' and (': ' .. message) or ''),
       vim.log.levels.WARN
     )
   end
@@ -127,10 +126,10 @@ return {
     cond = in_zellij,
     event = 'VeryLazy',
     keys = {
-      { '<A-h>', function() navigate 'left' end, desc = 'Navigate left or tab', silent = true },
-      { '<A-j>', function() navigate 'down' end, desc = 'Navigate down', silent = true },
-      { '<A-k>', function() navigate 'up' end, desc = 'Navigate up', silent = true },
-      { '<A-l>', function() navigate 'right' end, desc = 'Navigate right or tab', silent = true },
+      { '<C-h>', function() navigate 'left' end, desc = 'Navigate left or tab', silent = true },
+      { '<C-j>', function() navigate 'down' end, desc = 'Navigate down', silent = true },
+      { '<C-k>', function() navigate 'up' end, desc = 'Navigate up', silent = true },
+      { '<C-l>', function() navigate 'right' end, desc = 'Navigate right or tab', silent = true },
     },
     opts = {},
   },

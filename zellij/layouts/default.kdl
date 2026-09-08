@@ -23,9 +23,6 @@ layout {
         }
     }
 
-    tab name="scratch" focus=false {
-    }
-
     tab name="nvim" focus=true {
         pane split_direction="vertical" {
             pane command="fish" size="60%" {

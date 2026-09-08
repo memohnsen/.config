@@ -14,7 +14,6 @@ keybinds clear-defaults=true {
         bind "c" { SwitchToMode "renamepane"; PaneNameInput 0; }
         bind "d" { NewPane "down"; SwitchToMode "normal"; }
         bind "e" { TogglePaneEmbedOrFloating; SwitchToMode "normal"; }
-        bind "f" { ToggleFocusFullscreen; SwitchToMode "normal"; }
         bind "h" { MoveFocus "left"; }
         bind "i" { TogglePanePinned; SwitchToMode "normal"; }
         bind "j" { MoveFocus "down"; }
@@ -146,10 +145,11 @@ keybinds clear-defaults=true {
         }
     }
     shared_except "locked" {
-        bind "Alt left" { MoveFocusOrTab "left"; }
-        bind "Alt down" { MoveFocus "down"; }
-        bind "Alt up" { MoveFocus "up"; }
-        bind "Alt right" { MoveFocusOrTab "right"; }
+        bind "Ctrl left" { MoveFocusOrTab "left"; }
+        bind "Ctrl down" { MoveFocus "down"; }
+        bind "Ctrl up" { MoveFocus "up"; }
+        bind "Ctrl right" { MoveFocusOrTab "right"; }
+        bind "Ctrl f" { ToggleFocusFullscreen; SwitchToMode "normal"; }
         bind "Alt +" { Resize "Increase"; }
         bind "Alt -" { Resize "Decrease"; }
         bind "Alt =" { Resize "Increase"; }
@@ -157,7 +157,7 @@ keybinds clear-defaults=true {
         bind "Alt ]" { NextSwapLayout; }
         bind "Alt f" { ToggleFloatingPanes; }
         bind "Ctrl g" { SwitchToMode "locked"; }
-        bind "Alt h" {
+        bind "Ctrl h" {
             MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.3.0/vim-zellij-navigator.wasm" {
                 name "move_focus_or_tab"
                 payload "left"
@@ -165,21 +165,21 @@ keybinds clear-defaults=true {
             }
         }
         bind "Alt i" { MoveTab "left"; }
-        bind "Alt j" {
+        bind "Ctrl j" {
             MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.3.0/vim-zellij-navigator.wasm" {
                 name "move_focus"
                 payload "down"
                 move_mod "alt"
             }
         }
-        bind "Alt k" {
+        bind "Ctrl k" {
             MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.3.0/vim-zellij-navigator.wasm" {
                 name "move_focus"
                 payload "up"
                 move_mod "alt"
             }
         }
-        bind "Alt l" {
+        bind "Ctrl l" {
             MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.3.0/vim-zellij-navigator.wasm" {
                 name "move_focus_or_tab"
                 payload "right"
@@ -262,7 +262,7 @@ keybinds clear-defaults=true {
                 "close pane"               "ctrl + p + x"
                 "rename pane"              "ctrl + p + c"
                 "move panes"               "alt + hjkl"
-                "toggle fullscreen"        "ctrl + p + f"
+                "toggle fullscreen"        "ctrl + f"
                 "toggle floating pane"     "alt + f"
                 "toggle embeded pane"      "ctrl + p + e"
                 "new tab"                  "ctrl + t + n"

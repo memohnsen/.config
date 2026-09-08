@@ -58,7 +58,20 @@
             "=" [(struct_declaration)
                  (enum_declaration)
                  (union_declaration)
-                 (opaque_declaration)]))))
+                 (opaque_declaration)]))
+         :language 'zig
+         :feature 'type
+         :override t
+         '((parameter type: (identifier) @font-lock-type-face)
+           ((identifier) @font-lock-type-face
+            (:match "^[A-Z_][a-zA-Z0-9_]*$" @font-lock-type-face)))
+         :language 'zig
+         :feature 'constant
+         :override t
+         '((field_expression :anchor "."
+                             member: (identifier) @font-lock-constant-face)
+           ((identifier) @font-lock-constant-face
+            (:match "^[A-Z][A-Z_0-9]+$" @font-lock-constant-face)))))
   (add-hook 'zig-ts-mode-hook #'mm/zig-ts-max-font-lock-h))
 
 (defconst mm/zig-max-inline-parameters 3
@@ -289,13 +302,19 @@ parameters."
     '(font-lock-operator-face :foreground "#d8dee9")
     '(font-lock-bracket-face :foreground "#d8dee9")
     '(font-lock-delimiter-face :foreground "#d8dee9")
-    ;; Eglot's semantic-token faces layer over Tree-sitter in Zig buffers.
+    ;; Eglot's semantic-token faces layer over Tree-sitter.
     ;; Match the corresponding One Dark LSP groups used by Neovim.
     '(eglot-semantic-static :foreground "#ff9f43")
     '(eglot-semantic-parameter :foreground "#ff5f6d")
     '(eglot-semantic-variable :foreground "#d8dee9")
     '(eglot-semantic-function :foreground "#5aa9ff")
     '(eglot-semantic-type :foreground "#ffd866")
+    ;; Default modifier faces inherit `font-lock-function-name-face', so a
+    ;; type/variable ZLS has already analyzed turns blue while a newly typed
+    ;; identifier of the same kind still has its Tree-sitter color.
+    '(eglot-semantic-definition :inherit unspecified)
+    '(eglot-semantic-declaration :inherit unspecified)
+    '(eglot-semantic-modification :inherit unspecified)
     ;; Rust-specific Tree-sitter and rust-analyzer semantic categories.
     '(font-lock-escape-face :foreground "#ff5f6d")
     '(rust-ampersand-face :foreground "#d8dee9")
@@ -1445,6 +1464,15 @@ then fall back to the installed mise ZLS and Homebrew Zig locations."
     (unless (bound-and-true-p eglot--managed-mode)
       (eglot-ensure))))
 
+(defun mm/zig-disable-semantic-tokens-h ()
+  "Keep Zig highlighting on Tree-sitter instead of ZLS tokens.
+
+Eglot applies semantic tokens after the fact, so a newly added
+identifier keeps its Tree-sitter face until ZLS replies — often a
+different color than the existing identifiers of the same kind."
+  (when (derived-mode-p 'zig-mode 'zig-ts-mode)
+    (eglot-semantic-tokens-mode -1)))
+
 (defun mm/zig-company-complete-after-trigger-h ()
   "Request ZLS completion after Zig's high-value trigger characters."
   (when (and (derived-mode-p 'zig-mode 'zig-ts-mode)
@@ -1502,15 +1530,18 @@ then fall back to the installed mise ZLS and Homebrew Zig locations."
             `(,mm/zig-zls-executable
               :initializationOptions (:zig_exe_path ,mm/zig-executable)))))
   (setq eglot-autoshutdown t)
+  (setq eglot-semantic-token-modifiers
+        (seq-difference eglot-semantic-token-modifiers
+                        '("declaration" "definition" "modification")))
   ;; Apply the global hint preference whenever Eglot starts managing a buffer.
    (add-hook 'eglot-managed-mode-hook #'mm/apply-global-lsp-inlay-hints-h)
+   (add-hook 'eglot-managed-mode-hook #'mm/zig-disable-semantic-tokens-h)
   (setq-default eglot-workspace-configuration
                 '(:gopls (:completeUnimported t)
                   ;; Let ZLS discover the project's `check' step.  It compiles
                   ;; without linking, and incremental compilation makes save
                   ;; diagnostics substantially cheaper than also running tests.
-                  :zls (:build_on_save_args ["-fincremental"]
-                        :semantic_tokens "partial")
+                  :zls (:build_on_save_args ["-fincremental"])
                   :rust-analyzer
                   ( ;; Default features only. `:allFeatures t' forces
                     ;; rust-analyzer to analyze every feature of every crate,

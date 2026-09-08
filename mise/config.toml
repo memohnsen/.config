@@ -1,0 +1,6 @@
+[tools]
+zig = "0.16.0"
+rust-analyzer = "2026-08-17.4"
+zls = "0.16.0"
+taplo = "0.10.0"
+"npm:eas-cli" = "22.4.0"

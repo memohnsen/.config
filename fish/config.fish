@@ -14,7 +14,9 @@ set --erase NIX_PROFILES NIX_PATH NIX_SSL_CERT_FILE
 if status is-interactive
     # Commands to run in interactive sessions can go here
 	abbr -a .. cd ..
-	abbr -a n nvim
+	abbr -a nvim zellij
+	abbr -a vim zellij
+	abbr -a vi zellij
 	abbr -a ga git add .
 	abbr -a gs git status
 	abbr -a gc git commit
@@ -27,14 +29,9 @@ if status is-interactive
 	abbr -a zda zellij da
 	abbr -a zka zellij ka
 	abbr -a za zellij a
-	abbr -a mr mise run run
-	abbr -a mb mise run build
-	abbr -a mt mise run test
-	abbr -a ml mise run lint
 	abbr -a top btop
 	abbr -a co codex
 	abbr -a cl clear
-    abbr -a emacs emacs -nw
 end
 
 # Prefer Home Manager packages while retaining Homebrew as a fallback.
