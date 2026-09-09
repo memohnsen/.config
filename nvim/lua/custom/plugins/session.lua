@@ -34,14 +34,14 @@ return {
 
       require('auto-session').setup {
         auto_save = true,
-        auto_restore = true,
+        auto_restore = false,
         auto_create = false,
         auto_delete_empty_sessions = false,
         cwd_change_handling = true,
         git_use_branch_name = false,
         git_auto_restore_on_branch_change = false,
         suppressed_dirs = { '~/Downloads', '/' },
-        close_filetypes_on_save = { 'AnvilStatus', 'checkhealth', 'help', 'lazy', 'neo-tree', 'qf', 'trouble' },
+        close_filetypes_on_save = { 'AnvilStatus', 'checkhealth', 'help', 'lazy', 'neo-tree', 'qf', 'snacks_dashboard', 'trouble' },
         preserve_buffer_on_restore = function() return false end,
         session_lens = {
           picker = 'telescope',
@@ -168,6 +168,12 @@ return {
         local order = read_workspace_order()
         local pruned = vim.tbl_filter(function(entry) return entry ~= session_name end, order)
         write_workspace_order(pruned)
+      end
+
+      local function workspace_display_name(session)
+        local name = session.display_name or session.session_name or ''
+        name = name:gsub('^~/', ''):gsub('^' .. vim.pesc(vim.fn.expand '~') .. '/', '')
+        return vim.fn.fnamemodify(name, ':t')
       end
 
       local function recent_workspaces()
@@ -471,6 +477,13 @@ return {
       local function delete_workspace_from_list()
         select_workspace('Delete saved workspace:', function(session) delete_workspace(session) end)
       end
+
+      _G.kickstart_workspaces = {
+        recent = recent_workspaces,
+        restore = restore_workspace,
+        display_name = workspace_display_name,
+        new = new_workspace,
+      }
 
       vim.keymap.set('n', '<leader><Tab><Tab>', cycle_workspace, { desc = 'Next Workspace' })
       vim.keymap.set('n', '<leader><Tab>l', load_workspace, { desc = 'Load Workspace' })
