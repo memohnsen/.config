@@ -83,6 +83,19 @@ return {
         set(0, 'BlinkCmpSignatureHelp', { fg = '#d8dee9', bg = '#000000' })
         set(0, 'BlinkCmpSignatureHelpBorder', { fg = '#5aa9ff', bg = '#000000' })
         set(0, 'BlinkCmpGhostText', { fg = '#6b7280', italic = true })
+
+        -- Start page uses the same onedark blue as floats, which-key, and bufferline.
+        local colors = require 'onedark.colors'
+        set(0, 'SnacksDashboardNormal', { fg = colors.fg, bg = colors.bg0 })
+        set(0, 'SnacksDashboardHeader', { fg = colors.blue, bold = true })
+        set(0, 'SnacksDashboardTitle', { fg = colors.blue, bold = true })
+        set(0, 'SnacksDashboardIcon', { fg = colors.blue })
+        set(0, 'SnacksDashboardDesc', { fg = colors.fg })
+        set(0, 'SnacksDashboardKey', { fg = colors.yellow, bold = true })
+        set(0, 'SnacksDashboardSpecial', { fg = colors.blue })
+        set(0, 'SnacksDashboardFooter', { fg = colors.grey })
+        set(0, 'SnacksDashboardDir', { fg = colors.grey })
+        set(0, 'SnacksDashboardFile', { fg = colors.fg })
       end
 
       apply_popup_palette()

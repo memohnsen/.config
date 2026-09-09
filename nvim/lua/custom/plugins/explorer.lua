@@ -1,9 +1,13 @@
 return {
   {
     'folke/snacks.nvim',
+    lazy = false,
     config = function()
+      local home = require 'custom.home'
       local snacks = require 'snacks'
+      home.hide_chrome()
       snacks.setup {
+        dashboard = home.dashboard(),
         explorer = { replace_netrw = false },
         terminal = {
           win = {
