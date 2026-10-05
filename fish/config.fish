@@ -14,12 +14,12 @@ set --erase NIX_PROFILES NIX_PATH NIX_SSL_CERT_FILE
 if status is-interactive
     # Commands to run in interactive sessions can go here
 	abbr -a .. cd ..
-	abbr -a nvim zellij
-	abbr -a vim zellij
-	abbr -a vi zellij
+	abbr -a vim nvim
+	abbr -a vi nvim
 	abbr -a ga git add .
 	abbr -a gs git status
 	abbr -a gc git commit
+	abbr -a gp git pull
 	abbr -a ls eza --icons
 	abbr -a ll eza -lh --icons --git
 	abbr -a la eza -lah --icons --git

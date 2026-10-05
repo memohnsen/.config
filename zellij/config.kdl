@@ -100,6 +100,7 @@ keybinds clear-defaults=true {
     }
     session {
         bind "d" { Detach; }
+        bind "q" { Quit; }
         bind "a" {
             LaunchOrFocusPlugin "zellij:about" {
                 floating true
@@ -276,7 +277,7 @@ keybinds clear-defaults=true {
                 "move pane"                "ctrl + m + hjkl"
                 "detach session"           "ctrl + o + d"
                 "open session manager"     "ctrl + o + w"
-                "quit zellij"              "ctrl + q"
+                "quit zellij"              "ctrl + o + q"
                 floating true
             }
         }

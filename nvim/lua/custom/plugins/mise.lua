@@ -16,17 +16,6 @@ return {
         if interactive then vim.cmd 'startinsert' end
       end
 
-      local function run_in_zellij_scratch()
-        if not vim.env.ZELLIJ or vim.fn.executable 'zellij' ~= 1 then return false end
-        local open_scratch = vim.system({ 'zellij', 'action', 'go-to-tab-name', 'scratch', '--create' }):wait()
-        if open_scratch.code ~= 0 then return false end
-        local command = 'cd ' .. vim.fn.shellescape(vim.fn.getcwd()) .. ' && mise run run'
-        local result = vim.system({ 'zellij', 'action', 'write-chars', command }):wait()
-        if result.code ~= 0 then return false end
-        vim.system({ 'zellij', 'action', 'send-keys', 'Enter' })
-        return true
-      end
-
       local function select_task()
         local result = vim.system({ 'mise', 'tasks', 'ls', '--name-only' }, { cwd = vim.fn.getcwd(), text = true }):wait()
         if result.code ~= 0 then
@@ -35,10 +24,7 @@ return {
         end
         local tasks = vim.split(vim.trim(result.stdout), '\n', { trimempty = true })
         vim.ui.select(tasks, { prompt = 'Mise task: ' }, function(task)
-          if task then
-            if task == 'run' and run_in_zellij_scratch() then return end
-            open_terminal(task, task == 'run')
-          end
+          if task then open_terminal(task, task == 'run') end
         end)
       end
 

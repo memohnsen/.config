@@ -113,42 +113,40 @@ return function()
   vim.api.nvim_create_user_command('Bdelete', function(opts) Snacks.bufdelete { force = opts.bang } end, { bang = true })
   vim.cmd [[cnoreabbrev <expr> bd (getcmdtype() == ':' && getcmdline() == 'bd') ? 'Bdelete' : 'bd']]
 
-  pcall(function()
-    require('which-key').add {
-      { '<leader>z', desc = 'Toggle Left Reading Gutter' },
-      { '<leader>x', group = 'Diagnostics' },
-      { '<leader>b', group = 'Bookmarks' },
-      { '<leader>bm', desc = 'Set Bookmark' },
-      { '<leader>bM', desc = 'Delete Bookmark' },
-      { '<leader>t', desc = 'Toggle Terminal Popup' },
-      { '<leader>j', group = 'Mise Tasks' },
-      { '<leader>o', group = 'Org' },
-      { '<leader>c', group = 'AI' },
-      { '<leader>cc', group = 'Codex' },
-      { '<leader>co', desc = 'Opencode Toggle' },
-      { '<leader>cu', desc = 'Toggle Cursor Agent' },
-      { '<leader>od', desc = 'Daily Note' },
-      { '<leader>of', desc = 'Find Org Note' },
-      { '<leader>og', desc = 'Grep Org Notes' },
-      { '<leader>oa', desc = 'Org Super Agenda' },
-      { '<leader>oc', desc = 'Org Capture' },
-      { '<leader><Tab>', group = 'Workspace' },
-      { '<leader><Tab><Tab>', desc = 'Next Workspace' },
-      { '<leader><Tab>l', desc = 'Load Workspace' },
-      { '<leader><Tab>1', desc = 'Workspace 1' },
-      { '<leader><Tab>2', desc = 'Workspace 2' },
-      { '<leader><Tab>3', desc = 'Workspace 3' },
-      { '<leader><Tab>4', desc = 'Workspace 4' },
-      { '<leader><Tab>n', desc = 'New Workspace' },
-      { '<leader><Tab>d', desc = 'Close Workspace' },
-      { '<leader><Tab>D', desc = 'Delete Saved Workspace' },
-      { 'gh', desc = 'Go to Line Start' },
-      { 'gl', desc = 'Go to Line End' },
-      { 'U', desc = 'Redo' },
-      { 'H', desc = 'Previous Buffer' },
-      { 'L', desc = 'Next Buffer' },
-      { '<leader><leader>', desc = 'Find files' },
-      { '<leader><CR>', desc = 'Jump to Bookmark' },
-    }
-  end)
+  pcall(
+    function()
+      require('which-key').add {
+        { '<leader>z', desc = 'Toggle Left Reading Gutter' },
+        { '<leader>x', group = 'Diagnostics' },
+        { '<leader>b', group = 'Bookmarks' },
+        { '<leader>bm', desc = 'Set Bookmark' },
+        { '<leader>bM', desc = 'Delete Bookmark' },
+        { '<leader>t', desc = 'Toggle Terminal Popup' },
+        { '<leader>j', group = 'Mise Tasks' },
+        { '<leader>o', group = 'Org' },
+        { '<leader>od', desc = 'Daily Note' },
+        { '<leader>of', desc = 'Find Org Note' },
+        { '<leader>og', desc = 'Grep Org Notes' },
+        { '<leader>oa', desc = 'Org Super Agenda' },
+        { '<leader>oc', desc = 'Org Capture' },
+        { '<leader><Tab>', group = 'Workspace' },
+        { '<leader><Tab><Tab>', desc = 'Next Workspace' },
+        { '<leader><Tab>l', desc = 'Load Workspace' },
+        { '<leader><Tab>1', desc = 'Workspace 1' },
+        { '<leader><Tab>2', desc = 'Workspace 2' },
+        { '<leader><Tab>3', desc = 'Workspace 3' },
+        { '<leader><Tab>4', desc = 'Workspace 4' },
+        { '<leader><Tab>n', desc = 'New Workspace' },
+        { '<leader><Tab>d', desc = 'Close Workspace' },
+        { '<leader><Tab>D', desc = 'Delete Saved Workspace' },
+        { 'gh', desc = 'Go to Line Start' },
+        { 'gl', desc = 'Go to Line End' },
+        { 'U', desc = 'Redo' },
+        { 'H', desc = 'Previous Buffer' },
+        { 'L', desc = 'Next Buffer' },
+        { '<leader><leader>', desc = 'Find files' },
+        { '<leader><CR>', desc = 'Jump to Bookmark' },
+      }
+    end
+  )
 end
